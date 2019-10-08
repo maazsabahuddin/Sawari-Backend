@@ -34,3 +34,10 @@ def check_email_verification(email, otp):
         if str(user.email_otp) == otp:
             return True
     return False
+
+
+def verify_user_otp(user, otp):
+    if user:
+        if user.otp == otp:
+            return True
+    return False

@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from django.utils.encoding import force_bytes, force_text
 from Verify.token_generator import account_activation_token
-from .twilio_verify import send_verification_code, check_verification_code, check_email_verification
+from .twilio_verify import send_verification_code, check_verification_code, check_email_verification, verify_user_otp
 from .models import User, Customer
 from django.core.mail import EmailMessage
 import math, random
@@ -78,19 +78,19 @@ class Register(APIView):
             if user_email or user_phone_no:
                 return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'Email/Phone already registered.'})
 
-            otp = generate_otp()
             with transaction.atomic():
                 if email is not '' and phone_number is not '':
                     return JsonResponse({'status': HTTP_404_NOT_FOUND, 'message': 'Ruko abhi kuch krty hen...'})
 
+                otp = generate_otp()
                 if email is not '':
                     user = User.objects.create(
                         email=email,
                         password=make_password(password),
                         phone_number=None,
                         is_active=False,
-                        is_email_verified=False,
-                        email_otp=otp,
+                        is_verified=False,
+                        otp=otp,
                     )
                     user.save()
                     Customer.objects.create(user=user)
@@ -108,23 +108,25 @@ class Register(APIView):
                     content = {"%s: %s" % (key, value) for (key, value) in message.items()}
                     content = "\n".join(content)
                     to_email = email
-                    email = EmailMessage(
+                    send_email = EmailMessage(
                         mail_subject, content, to=[to_email]
                     )
-                    email.send()
-                    return JsonResponse({'status': HTTP_200_OK,
-                                         'token': token.key,
-                                         'message': 'Verify OTP Via email.'})
+                    send_email.send()
+                    return JsonResponse({
+                        'status': HTTP_200_OK,
+                        'token': token.key,
+                        'message': 'OTP has been successfully sent.',
+                    })
 
                 if phone_number is not '':
-
                     send_verification_code(phone_number)
                     user = User.objects.create(
                         email=None,
-                        email_otp=None,
+                        email_otp=None, # will be change soon as twilio ka masla hal hjae....
+                        # otp=otp,
                         password=make_password(password),
                         phone_number=phone_number,
-                        is_phone_verified=False,
+                        is_verified=False,
                         is_active=False,
                     )
                     user.save()
@@ -135,7 +137,7 @@ class Register(APIView):
                     return JsonResponse({
                         'status': HTTP_200_OK,
                         'token': token.key,
-                        'message': 'User Created, Verify your account!',
+                        'message': 'OTP has been successfully sent.',
                     })
 
         except Exception as e:
@@ -147,47 +149,27 @@ class Register(APIView):
             })
 
 
+# for contact number as well as for email..
 class IsVerified(APIView):
 
-    @method_decorator(csrf_exempt)
     def post(self, request):
         try:
-            phone_number = request.POST['contact_number']
-            email = request.POST['email']
-            # token = request.POST['token']
+            token = request.POST['token']
             otp = request.POST['otp']
 
-            user_email = User.objects.filter(email=email).first()
-            user_phone_no = User.objects.filter(phone_number=phone_number).first()
+            token_obj = Token.objects.filter(key=token).first()
 
-            if user_email:
-                if check_email_verification(email, otp):
-                    user_email.is_active = True
-                    user_email.is_email_verified = True
-                    user_email.save()
+            if token_obj:
+                if token_obj.user.is_active:
+                    return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'Already Verified', })
+
+                if verify_user_otp(token_obj.user, otp):
+                    token_obj.user.is_active = True
+                    token_obj.user.is_verified = True
+                    token_obj.user.save()
 
                     return JsonResponse({'status': HTTP_200_OK, 'message': 'Verified', })
                 return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'OTP not matched.', })
-
-            if user_phone_no:
-                if user_phone_no.is_phone_verified:
-                    return JsonResponse({'message': 'Already verified', })
-
-                verification = check_verification_code(user_phone_no.phone_number, otp)
-
-                if verification.status == "approved":
-                    user_phone_no.is_phone_verified = True
-                    user_phone_no.is_active = True
-                    user_phone_no.save()
-                    return JsonResponse({
-                        'is_verified': user_phone_no.is_active,
-                        'status': HTTP_200_OK
-                    })
-                else:
-                    return JsonResponse({
-                        'verification_status': verification.status,
-                        'status': HTTP_200_OK,
-                    })
 
             return JsonResponse({
                 'message': 'User not found',

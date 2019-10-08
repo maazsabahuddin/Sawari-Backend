@@ -6,10 +6,10 @@ from django.utils.translation import ugettext_lazy as _
 class User(AbstractUser):
     username = models.CharField(blank=True, null=True, max_length=60)
     phone_number = models.CharField(unique=True, max_length=15, null=True, blank=True)
-    is_phone_verified = models.BooleanField(default=False)
     email = models.EmailField(_('email address'), unique=True, blank=True, null=True)
-    email_otp = models.CharField(default=None, max_length=8, null=True, blank=True)
-    is_email_verified = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
+    otp = models.CharField(default=None, max_length=8, null=True, blank=True)
+    # is_email_verified = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'password', 'phone_number']
