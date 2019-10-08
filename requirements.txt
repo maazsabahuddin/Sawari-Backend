@@ -1,0 +1,3 @@
+djangorestframework
+phonenumbers
+django_twilio
