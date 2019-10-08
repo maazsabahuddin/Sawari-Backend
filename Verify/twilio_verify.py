@@ -1,4 +1,5 @@
-from rest_framework.fields import empty
+import math
+import random
 
 from A.settings import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN
 from django_twilio.client import Client
@@ -41,3 +42,14 @@ def verify_user_otp(user, otp):
         if user.otp == otp:
             return True
     return False
+
+
+def generate_otp():
+    digits = "0123456789"
+    otp = ""
+    for i in range(6):
+        otp += digits[math.floor(random.random() * 10)]
+    return otp
+
+
+

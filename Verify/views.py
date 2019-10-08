@@ -1,55 +1,20 @@
 from django.contrib.auth import authenticate
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.http import JsonResponse, HttpResponseForbidden
-from django.shortcuts import redirect
-from django.template.loader import render_to_string
+from django.http import JsonResponse
 from django.utils.decorators import method_decorator
-from django.utils.http import urlsafe_base64_encode
 from django.views.decorators.csrf import csrf_exempt
+from django.core.mail import EmailMessage
+
 from rest_framework.permissions import AllowAny
 from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
-
 from rest_framework.authtoken.models import Token
-from django.utils.encoding import force_bytes, force_text
-from Verify.token_generator import account_activation_token
-from .twilio_verify import send_verification_code, check_verification_code, check_email_verification, verify_user_otp
+
+from .twilio_verify import send_verification_code, verify_user_otp, generate_otp
 from .models import User, Customer
-from django.core.mail import EmailMessage
-import math, random
-
-
-def generate_otp():
-    digits = "0123456789"
-    otp = ""
-    for i in range(6):
-        otp += digits[math.floor(random.random() * 10)]
-    return otp
-
-
-class VerifyCode(APIView):
-
-    @method_decorator(csrf_exempt)
-    def post(self, request):
-        try:
-            contact_number = request.POST['contact_number']
-            verification_code = request.POST['v_code']
-
-            verification = check_verification_code(contact_number, verification_code)
-
-            if verification.status == "approved":
-                return JsonResponse({'status': 'Perfect'})
-            else:
-                return JsonResponse({'status': 'Perfect2'})
-
-        except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.info(e)
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST
-            })
 
 
 class Register(APIView):
@@ -152,6 +117,7 @@ class Register(APIView):
 # for contact number as well as for email..
 class IsVerified(APIView):
 
+    @method_decorator()
     def post(self, request):
         try:
             token = request.POST['token']
@@ -183,4 +149,63 @@ class IsVerified(APIView):
             return JsonResponse({
                 'status': HTTP_404_NOT_FOUND
             })
+
+
+class Login(APIView):
+
+    permission_classes = (AllowAny, )
+
+    def post(self, request):
+        try:
+            phone_number = request.POST["phone_number"]
+            email = request.POST['email']
+            password = request.POST['password']
+
+            if password is None:
+                return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'Password required.'})
+
+            if phone_number is None and email is None:
+                return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'Email/Phone required.'})
+
+            phone_number_db = User.objects.filter(phone_number=phone_number).first()
+            user = self.authenticate_user(email, phone_number_db, password)
+            if user:
+                token, _ = Token.objects.get_or_create(user=user)
+                return JsonResponse({'status': HTTP_200_OK, 'token': token.key})
+
+            return JsonResponse({'status': HTTP_404_NOT_FOUND, 'message': 'Invalid Credentials'})
+
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(e)
+            return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'Server down'})
+
+    # object return hura hay user ka..
+    def authenticate_user(self, email, phone_number_db, password):
+        if phone_number_db and password:
+            user = authenticate(email=phone_number_db.email, password=password)
+            if user:
+                return user
+
+        elif email and password:
+            user = authenticate(email=email, password=password)
+            if user:
+                return user
+
+
+class Logout(APIView):
+
+    @method_decorator(login_required)
+    def post(self, request):
+        return self.logout(request)
+
+    def logout(self, request):
+        try:
+            request.user.auth_token.delete()
+        except (AttributeError, ObjectDoesNotExist):
+            return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'Invalid Token.'})
+
+        logout(request)
+        return JsonResponse({'success': 'Logged out'}, status=HTTP_200_OK)
 

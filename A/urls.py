@@ -15,10 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from Verify.views import Register, IsVerified, VerifyCode
+from Verify.views import Register, IsVerified, Login, Logout
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('register/', Register.as_view(), name='user_register_api'),
     path('is_verified/', IsVerified.as_view(), name='user_is_verified'),
+    path('login', Login.as_view(), name='customer_login'),
+    path('logout', Logout.as_view(), name='customer_logout'),
 ]
