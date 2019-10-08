@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
@@ -117,7 +117,7 @@ class Register(APIView):
 # for contact number as well as for email..
 class IsVerified(APIView):
 
-    @method_decorator()
+    # @method_decorator()
     def post(self, request):
         try:
             token = request.POST['token']
@@ -151,7 +151,7 @@ class IsVerified(APIView):
             })
 
 
-class Login(APIView):
+class UserLogin(APIView):
 
     permission_classes = (AllowAny, )
 
@@ -182,6 +182,8 @@ class Login(APIView):
             return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'Server down'})
 
     # object return hura hay user ka..
+    # change should be mande.. said by maaz on 9th october 2019 12:35 AM
+    # contact no k through b login huna chaiye.. because email is not mandatory
     def authenticate_user(self, email, phone_number_db, password):
         if phone_number_db and password:
             user = authenticate(email=phone_number_db.email, password=password)
@@ -194,13 +196,13 @@ class Login(APIView):
                 return user
 
 
-class Logout(APIView):
+class UserLogout(APIView):
 
     @method_decorator(login_required)
     def post(self, request):
-        return self.logout(request)
+        return self.logout_method(request)
 
-    def logout(self, request):
+    def logout_method(self, request):
         try:
             request.user.auth_token.delete()
         except (AttributeError, ObjectDoesNotExist):
@@ -208,4 +210,3 @@ class Logout(APIView):
 
         logout(request)
         return JsonResponse({'success': 'Logged out'}, status=HTTP_200_OK)
-
