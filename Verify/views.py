@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate, logout
+from CustomAuthentication.backend_authentication import CustomAuthenticationBackend
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
@@ -157,21 +158,20 @@ class UserLogin(APIView):
 
     def post(self, request):
         try:
-            phone_number = request.POST["phone_number"]
-            email = request.POST['email']
+            email_or_phone = request.POST['email_or_phone']
             password = request.POST['password']
 
             if password is None:
                 return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'Password required.'})
 
-            if phone_number is None and email is None:
+            if not email_or_phone:
                 return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'Email/Phone required.'})
 
-            phone_number_db = User.objects.filter(phone_number=phone_number).first()
-            user = self.authenticate_user(email, phone_number_db, password)
-            if user:
-                token, _ = Token.objects.get_or_create(user=user)
-                return JsonResponse({'status': HTTP_200_OK, 'token': token.key})
+            if email_or_phone and password:
+                user = CustomAuthenticationBackend.authenticate(email_or_phone, password)
+                if user:
+                    token, _ = Token.objects.get_or_create(user=user)
+                    return JsonResponse({'status': HTTP_200_OK, 'token': token.key})
 
             return JsonResponse({'status': HTTP_404_NOT_FOUND, 'message': 'Invalid Credentials'})
 
@@ -184,16 +184,12 @@ class UserLogin(APIView):
     # object return hura hay user ka..
     # change should be mande.. said by maaz on 9th october 2019 12:35 AM
     # contact no k through b login huna chaiye.. because email is not mandatory
-    def authenticate_user(self, email, phone_number_db, password):
-        if phone_number_db and password:
-            user = authenticate(email=phone_number_db.email, password=password)
-            if user:
-                return user
-
-        elif email and password:
-            user = authenticate(email=email, password=password)
-            if user:
-                return user
+    # def authenticate_user(self, email_or_phone, password):
+    #
+    #     user = CustomAuthenticationBackend.authenticate(email_or_phone, password)
+    #     if user:
+    #         return user
+    #     return False
 
 
 class UserLogout(APIView):

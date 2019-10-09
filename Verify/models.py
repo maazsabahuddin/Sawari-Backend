@@ -11,8 +11,8 @@ class User(AbstractUser):
     otp = models.CharField(default=None, max_length=8, null=True, blank=True)
     # is_email_verified = models.BooleanField(default=False)
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'password', 'phone_number']
+    USERNAME_FIELD = 'phone_number'
+    REQUIRED_FIELDS = ['username', 'password']
 
     def __str__(self):
         return "{} - {}".format(self.email, self.phone_number)
