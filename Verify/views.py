@@ -15,7 +15,7 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 
 from .twilio_verify import send_verification_code, verify_user_otp, generate_otp
-from .models import User, Customer
+from .models import User, Customer, Ride
 
 
 class Register(APIView):
@@ -35,7 +35,7 @@ class Register(APIView):
             if password != confirm_password:
                 return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'Password Fields not matched'})
 
-            if not email or not password:
+            if not email and not phone_number:
                 return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'Email/Phone is required'})
 
             user_email = User.objects.filter(email=email).first()
@@ -118,7 +118,6 @@ class Register(APIView):
 # for contact number as well as for email..
 class IsVerified(APIView):
 
-    # @method_decorator()
     def post(self, request):
         try:
             token = request.POST['token']
@@ -181,16 +180,6 @@ class UserLogin(APIView):
             logger.info(e)
             return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'Server down'})
 
-    # object return hura hay user ka..
-    # change should be mande.. said by maaz on 9th october 2019 12:35 AM
-    # contact no k through b login huna chaiye.. because email is not mandatory
-    # def authenticate_user(self, email_or_phone, password):
-    #
-    #     user = CustomAuthenticationBackend.authenticate(email_or_phone, password)
-    #     if user:
-    #         return user
-    #     return False
-
 
 class UserLogout(APIView):
 
@@ -206,3 +195,43 @@ class UserLogout(APIView):
 
         logout(request)
         return JsonResponse({'success': 'Logged out'}, status=HTTP_200_OK)
+
+
+# class based views mae LoginRequiredMixin use rkty hen user login check krney k liye.. but in not in drf..
+class BusRoute(APIView):
+
+    # No such need pf login decorator because we're using Token authentication method. if there's a user it will be
+    # logged in via token and if no token will be there means no user. it will return invalid token.
+    # @method_decorator(login_required)
+    def post(self, request):
+
+        try:
+            # For safety purpose. Using login decorator as well as doing it explicitly..
+            # Don't remove it.
+            if not request.user.is_authenticated:
+                return JsonResponse({'message': 'User not authenticated'})
+
+            from_location = request.POST['from']
+            to_location = request.POST['to']
+
+            ride_obj = self.get_vehicle(from_location, to_location)
+
+            if ride_obj:
+                ride_list = list(ride_obj)
+                return JsonResponse(ride_list, safe=False)
+
+            return JsonResponse({'message': 'No Ride available right now'})
+
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(e)
+            return JsonResponse({'status': 'false', 'message': 'Error encountered'}, status=500)
+
+    def get_vehicle(self, from_location, to_location):
+        ride_obj = Ride.objects.filter(vehicle_id__from_loc=from_location, vehicle_id__to_loc=to_location) \
+            .values('seats_left', 'vehicle_id__vehicle_no_plate')
+
+        if ride_obj:
+            return ride_obj
+

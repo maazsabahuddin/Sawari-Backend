@@ -1,0 +1,42 @@
+[33mcommit 4581ce9758589dbb37f5154335035ba41fbf61ea[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+Merge: 1f3eb97 4e0aff3
+Author: Maaz Sabahuddin <maazsabahuddin@gmail.com>
+Date:   Wed Oct 9 22:15:40 2019 +0500
+
+    Merge branch 'master' of https://github.com/maazsabahuddin/instant_bus
+
+[33mcommit 1f3eb97df3dba480192ee3c7e1d7490785fcf69a[m
+Author: Maaz Sabahuddin <maazsabahuddin@gmail.com>
+Date:   Wed Oct 9 22:05:13 2019 +0500
+
+    Done logging VIA email and contact no.
+
+[33mcommit 4e0aff334ac457924924d55beaee4e4a06a7696b[m
+Author: Sohaib Aijaz <sohaibaijaz9@gmail.com>
+Date:   Wed Oct 9 02:02:26 2019 +0500
+
+    Add Requirements File
+
+[33mcommit 375d7247d6828bd547da3c4d31141c732260ab3b[m
+Author: Maaz Sabahuddin <maazsabahuddin@gmail.com>
+Date:   Wed Oct 9 00:41:40 2019 +0500
+
+    Some minor changes
+
+[33mcommit f07a542edac7c31c12c9958eca5786fc3c26d300[m
+Author: Maaz Sabahuddin <maazsabahuddin@gmail.com>
+Date:   Tue Oct 8 23:51:14 2019 +0500
+
+    Login and Logout API added
+
+[33mcommit 02e69b5a5ffa97e0cba7ca391398b2e11820b791[m
+Author: Maaz Sabahuddin <maazsabahuddin@gmail.com>
+Date:   Tue Oct 8 22:14:19 2019 +0500
+
+    Verified method changed
+
+[33mcommit 263bea753e74c5befb8d3352126e98558c51d744[m
+Author: Maaz Sabahuddin <maazsabahuddin@gmail.com>
+Date:   Tue Oct 8 15:31:40 2019 +0500
+
+    Initial Commit
