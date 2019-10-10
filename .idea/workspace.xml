@@ -2,11 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8f313339-ec22-4244-92ae-f8fa38488dcc" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/A/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/A/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Verify/hello.py" beforeDir="false" afterPath="$PROJECT_DIR$/Verify/hello.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Verify/twilio_verify.py" beforeDir="false" afterPath="$PROJECT_DIR$/Verify/twilio_verify.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Verify/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/Verify/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/db.sqlite3" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -28,50 +25,20 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Verify/views.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="215">
-              <caret line="83" column="26" lean-forward="true" selection-start-line="83" selection-start-column="26" selection-end-line="83" selection-end-column="26" />
-              <folding>
-                <element signature="e#0#52#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="289">
+              <caret line="17" selection-start-line="17" selection-end-line="17" selection-end-column="60" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/contextlib.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="114">
-              <caret line="73" selection-start-line="73" selection-end-line="73" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Verify/hello.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="136">
-              <caret line="8" column="30" selection-start-line="8" selection-start-column="30" selection-end-line="8" selection-end-column="30" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/dasd">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="272">
-              <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Verify/twilio_verify.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="191">
-              <caret line="48" selection-start-line="48" selection-end-line="48" />
+            <state relative-caret-position="291">
+              <caret line="60" column="13" lean-forward="true" selection-start-line="60" selection-start-column="13" selection-end-line="60" selection-end-column="13" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -82,7 +49,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/A/settings.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="216">
+            <state relative-caret-position="-1290">
               <caret line="53" column="54" lean-forward="true" selection-start-line="53" selection-start-column="54" selection-end-line="53" selection-end-column="54" />
             </state>
           </provider>
@@ -91,22 +58,10 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Verify/models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="379">
-              <caret line="83" column="28" lean-forward="true" selection-start-line="83" selection-start-column="28" selection-end-line="83" selection-end-column="28" />
+            <state relative-caret-position="294">
+              <caret line="78" lean-forward="true" selection-start-line="78" selection-end-line="78" />
               <folding>
                 <element signature="e#0#28#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/CustomAuthentication/backend_authentication.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="191">
-              <caret line="15" lean-forward="true" selection-start-line="15" selection-end-line="15" />
-              <folding>
-                <element signature="e#0#30#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -135,8 +90,8 @@
         <option value="$PROJECT_DIR$/requirements.txt" />
         <option value="$PROJECT_DIR$/A/settings.py" />
         <option value="$PROJECT_DIR$/Verify/hello.py" />
-        <option value="$PROJECT_DIR$/Verify/twilio_verify.py" />
         <option value="$PROJECT_DIR$/Verify/views.py" />
+        <option value="$PROJECT_DIR$/Verify/twilio_verify.py" />
       </list>
     </option>
   </component>
@@ -199,7 +154,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.hello">
+  <component name="RunManager" selected="Python.manage">
     <configuration name="hello" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="A" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -280,8 +235,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.hello" />
         <item itemvalue="Python.manage" />
+        <item itemvalue="Python.hello" />
         <item itemvalue="Python.views" />
       </list>
     </recent_temporary>
@@ -312,7 +267,7 @@
     <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49591282" visible="true" weight="0.18005952" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49591282" visible="true" weight="0.18005952" />
       <window_info id="Structure" order="1" sideWeight="0.5040872" side_tool="true" weight="0.17336309" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -355,7 +310,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Verify/twilio_verify.py</url>
-          <line>75</line>
+          <line>88</line>
           <option name="timeStamp" value="15" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -463,26 +418,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Verify/models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="379">
-          <caret line="83" column="28" lean-forward="true" selection-start-line="83" selection-start-column="28" selection-end-line="83" selection-end-column="28" />
-          <folding>
-            <element signature="e#0#28#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/A/urls.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="442">
-          <caret line="26" column="23" selection-start-line="26" selection-start-column="10" selection-end-line="26" selection-end-column="23" />
-          <folding>
-            <element signature="e#630#662#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/urllib/request.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="12">
@@ -504,16 +439,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/CustomAuthentication/backend_authentication.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="191">
-          <caret line="15" lean-forward="true" selection-start-line="15" selection-end-line="15" />
-          <folding>
-            <element signature="e#0#30#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/dasd">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="272">
@@ -528,17 +453,30 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/A/settings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="216">
-          <caret line="53" column="54" lean-forward="true" selection-start-line="53" selection-start-column="54" selection-end-line="53" selection-end-column="54" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/site-packages/rest_framework/views.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="342">
           <caret line="434" lean-forward="true" selection-start-line="434" selection-end-line="434" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CustomAuthentication/backend_authentication.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="15" lean-forward="true" selection-start-line="15" selection-end-line="15" />
+          <folding>
+            <element signature="e#0#30#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Verify/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="294">
+          <caret line="78" lean-forward="true" selection-start-line="78" selection-end-line="78" />
+          <folding>
+            <element signature="e#0#28#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -556,22 +494,36 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Verify/twilio_verify.py">
+    <entry file="file://$PROJECT_DIR$/A/urls.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="191">
-          <caret line="48" selection-start-line="48" selection-end-line="48" />
+        <state relative-caret-position="442">
+          <caret line="26" column="23" selection-start-line="26" selection-start-column="10" selection-end-line="26" selection-end-column="23" />
           <folding>
-            <element signature="e#0#11#0" expanded="true" />
+            <element signature="e#630#662#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Verify/views.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="215">
-          <caret line="83" column="26" lean-forward="true" selection-start-line="83" selection-start-column="26" selection-end-line="83" selection-end-column="26" />
+        <state relative-caret-position="289">
+          <caret line="17" selection-start-line="17" selection-end-line="17" selection-end-column="60" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/A/settings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1290">
+          <caret line="53" column="54" lean-forward="true" selection-start-line="53" selection-start-column="54" selection-end-line="53" selection-end-column="54" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Verify/twilio_verify.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="291">
+          <caret line="60" column="13" lean-forward="true" selection-start-line="60" selection-start-column="13" selection-end-line="60" selection-end-column="13" />
           <folding>
-            <element signature="e#0#52#0" expanded="true" />
+            <element signature="e#0#11#0" expanded="true" />
           </folding>
         </state>
       </provider>

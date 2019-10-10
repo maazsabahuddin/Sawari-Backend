@@ -272,4 +272,3 @@ class BusRoute(APIView):
 
         if ride_obj:
             return ride_obj
-

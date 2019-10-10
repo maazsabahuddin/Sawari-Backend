@@ -1,7 +1,7 @@
 import math
 import random
 
-from A.settings import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN
+from A.settings import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, EMAIL_HOST_USER
 from django_twilio.client import Client
 from .models import User
 from django.core.mail import EmailMessage
@@ -32,6 +32,7 @@ def send_otp_phone(phone_number, otp):
 
 def send_otp_email(email, otp):
     try:
+        from_email = EMAIL_HOST_USER
         mail_subject = 'Activate your account.'
         message = {
             'Email': email,
@@ -46,6 +47,7 @@ def send_otp_email(email, otp):
             mail_subject, content, to=[to_email]
         )
         send_email.send()
+        # test_send_mail(send_email, mail_subject, content, from_email, to_email)
         return True
 
     except Exception as e:
@@ -54,13 +56,24 @@ def send_otp_email(email, otp):
         logger.info(e)
         return False
 
-# def check_verification_code(contact_number, code):
-#
-#     verification_check = client.verify \
-#         .services('VA0f87bb3e0cbe8bbc2e009b410c5bec3f') \
-#         .verification_checks \
-#         .create(to=contact_number, code=code)
-#     return verification_check
+
+def test_send_mail(mail, mail_subject, content, from_email, to_email):
+    # Use Django send_mail function to construct a message
+    # Note that you don't have to use this function at all.
+    # Any other way of sending an email in Django would work just fine.
+    mail.send_mail(
+        'Example subject here',
+        'Here is the message body.',
+        'from@example.com',
+        ['to@example.com']
+    )
+
+    # Now you can test delivery and email contents
+    assert len(mail.outbox) == 1, "Inbox is not empty"
+    assert mail.outbox[0].subject == mail_subject
+    assert mail.outbox[0].body == content
+    assert mail.outbox[0].from_email == from_email
+    assert mail.outbox[0].to == to_email
 
 
 def check_email_verification(email, otp):
@@ -85,6 +98,4 @@ def generate_otp():
     for i in range(6):
         otp += digits[math.floor(random.random() * 10)]
     return otp
-
-
 
