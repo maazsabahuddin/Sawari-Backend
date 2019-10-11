@@ -2,8 +2,69 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8f313339-ec22-4244-92ae-f8fa38488dcc" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/Verify/twilio_verify.py" beforeDir="false" afterPath="$PROJECT_DIR$/Verify/twilio_verify.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Verify/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/Verify/views.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/User/admin.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/User/models.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/UserToken/user_token_authentication.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/A/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/A/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/A/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/A/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/User/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/admin.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/apps.py" beforeDir="false" afterPath="$PROJECT_DIR$/User/apps.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/hello.py" beforeDir="false" afterPath="$PROJECT_DIR$/User/hello.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/keys.py" beforeDir="false" afterPath="$PROJECT_DIR$/User/keys.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/migrations/0001_initial.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/migrations/0002_auto_20191008_2100.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/migrations/0003_auto_20191008_2105.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/migrations/0004_auto_20191009_2332.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/migrations/0005_auto_20191009_2334.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/migrations/0006_auto_20191009_2341.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/migrations/0007_auto_20191009_2344.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/migrations/0008_auto_20191009_2347.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/migrations/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/User/migrations/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/tests.py" beforeDir="false" afterPath="$PROJECT_DIR$/User/tests.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/token_generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/User/token_generator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/twilio_verify.py" beforeDir="false" afterPath="$PROJECT_DIR$/User/twilio_verify.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Verify/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/User/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/db.sqlite3" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/allauth/account/tests.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/allauth/account/tests.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/allauth/socialaccount/providers/slack/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/allauth/socialaccount/providers/slack/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/babel/messages/checkers.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/babel/messages/checkers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/django/contrib/auth/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/django/contrib/auth/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/django/contrib/auth/mixins.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/django/contrib/auth/mixins.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/django/contrib/gis/utils/layermapping.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/django/contrib/gis/utils/layermapping.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/django/db/models/sql/query.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/django/db/models/sql/query.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/oauthlib/oauth1/rfc5849/request_validator.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/oauthlib/oauth1/rfc5849/request_validator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/oauthlib/oauth1/rfc5849/signature.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/oauthlib/oauth1/rfc5849/signature.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/oauthlib/oauth2/rfc6749/request_validator.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/oauthlib/oauth2/rfc6749/request_validator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/openid/consumer/consumer.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/openid/consumer/consumer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/openid/server/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/openid/server/server.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/openid/server/trustroot.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/openid/server/trustroot.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/pip/_internal/cli/cmdoptions.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/pip/_internal/cli/cmdoptions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/pip/_internal/commands/check.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/pip/_internal/commands/check.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/pip/_vendor/cachecontrol/serialize.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/pip/_vendor/cachecontrol/serialize.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/pip/_vendor/distlib/compat.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/pip/_vendor/distlib/compat.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/pip/_vendor/distlib/index.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/pip/_vendor/distlib/index.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/pip/_vendor/requests/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/pip/_vendor/requests/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/pip/_vendor/requests/adapters.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/pip/_vendor/requests/adapters.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/pip/_vendor/urllib3/packages/ssl_match_hostname/_implementation.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/pip/_vendor/urllib3/packages/ssl_match_hostname/_implementation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/requests/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/requests/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/requests/adapters.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/requests/adapters.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/requests_oauthlib/oauth2_session.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/requests_oauthlib/oauth2_session.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/setuptools/command/easy_install.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/setuptools/command/easy_install.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/setuptools/dist.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/setuptools/dist.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/setuptools/ssl_support.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/setuptools/ssl_support.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/twilio/rest/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/twilio/rest/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/twilio/rest/verify/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/twilio/rest/verify/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/twilio/rest/verify/v2/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/twilio/rest/verify/v2/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/twilio/rest/verify/v2/service/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/twilio/rest/verify/v2/service/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/twilio/rest/verify/v2/service/messaging_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/twilio/rest/verify/v2/service/messaging_configuration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/twilio/rest/verify/v2/service/rate_limit/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/twilio/rest/verify/v2/service/rate_limit/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/twilio/rest/verify/v2/service/rate_limit/bucket.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/twilio/rest/verify/v2/service/rate_limit/bucket.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/twilio/rest/verify/v2/service/verification.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/twilio/rest/verify/v2/service/verification.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/twilio/rest/verify/v2/service/verification_check.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/twilio/rest/verify/v2/service/verification_check.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env/Lib/site-packages/urllib3/packages/ssl_match_hostname/_implementation.py" beforeDir="false" afterPath="$PROJECT_DIR$/env/Lib/site-packages/urllib3/packages/ssl_match_hostname/_implementation.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -14,33 +75,12 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/A/urls.py">
+        <entry file="file://$PROJECT_DIR$/User/views.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="442">
-              <caret line="26" column="23" selection-start-line="26" selection-start-column="10" selection-end-line="26" selection-end-column="23" />
+            <state relative-caret-position="867">
+              <caret line="90" column="50" selection-start-line="90" selection-start-column="50" selection-end-line="90" selection-end-column="50" />
               <folding>
-                <element signature="e#630#662#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Verify/views.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="289">
-              <caret line="17" selection-start-line="17" selection-end-line="17" selection-end-column="60" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/Verify/twilio_verify.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="291">
-              <caret line="60" column="13" lean-forward="true" selection-start-line="60" selection-start-column="13" selection-end-line="60" selection-end-column="13" />
-              <folding>
-                <element signature="e#0#11#0" expanded="true" />
+                <element signature="e#0#52#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -49,17 +89,98 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/A/settings.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1290">
-              <caret line="53" column="54" lean-forward="true" selection-start-line="53" selection-start-column="54" selection-end-line="53" selection-end-column="54" />
+            <state relative-caret-position="767">
+              <caret line="50" lean-forward="true" selection-start-line="50" selection-end-line="50" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Verify/models.py">
+        <entry file="file://$PROJECT_DIR$/Reservation/admin.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="294">
-              <caret line="78" lean-forward="true" selection-start-line="78" selection-end-line="78" />
+            <state relative-caret-position="68">
+              <caret line="4" column="32" lean-forward="true" selection-start-line="4" selection-start-column="32" selection-end-line="4" selection-end-column="32" />
+              <folding>
+                <element signature="e#0#32#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/RideSchedule/models.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="272">
+              <caret line="16" column="64" selection-start-line="16" selection-start-column="64" selection-end-line="16" selection-end-column="64" />
+              <folding>
+                <element signature="e#0#28#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/User/admin.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="85">
+              <caret line="5" column="28" selection-start-line="5" selection-start-column="28" selection-end-line="5" selection-end-column="28" />
+              <folding>
+                <element signature="e#0#32#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Payment/models.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="289">
+              <caret line="17" selection-start-line="17" selection-end-line="17" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/RideSchedule/admin.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="68">
+              <caret line="4" column="35" selection-start-line="4" selection-start-column="35" selection-end-line="4" selection-end-column="35" />
+              <folding>
+                <element signature="e#0#32#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/User/models.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="238">
+              <caret line="14" column="55" lean-forward="true" selection-start-line="14" selection-start-column="55" selection-end-line="14" selection-end-column="55" />
+              <folding>
+                <element signature="e#0#28#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Payment/admin.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="85">
+              <caret line="5" column="28" selection-start-line="5" selection-start-column="28" selection-end-line="5" selection-end-column="28" />
+              <folding>
+                <element signature="e#0#32#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Reservation/models.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="595">
+              <caret line="35" column="69" selection-start-line="35" selection-start-column="69" selection-end-line="35" selection-end-column="69" />
               <folding>
                 <element signature="e#0#28#0" expanded="true" />
               </folding>
@@ -84,22 +205,29 @@
       <list>
         <option value="$PROJECT_DIR$/Verify/token_generator.py" />
         <option value="$PROJECT_DIR$/CustomAuthentication/backend_authentication.py" />
-        <option value="$PROJECT_DIR$/A/urls.py" />
-        <option value="$PROJECT_DIR$/Verify/admin.py" />
-        <option value="$PROJECT_DIR$/Verify/models.py" />
         <option value="$PROJECT_DIR$/requirements.txt" />
-        <option value="$PROJECT_DIR$/A/settings.py" />
         <option value="$PROJECT_DIR$/Verify/hello.py" />
-        <option value="$PROJECT_DIR$/Verify/views.py" />
         <option value="$PROJECT_DIR$/Verify/twilio_verify.py" />
+        <option value="$PROJECT_DIR$/A/urls.py" />
+        <option value="$PROJECT_DIR$/UserToken/user_token_authentication.py" />
+        <option value="$PROJECT_DIR$/Payment/models.py" />
+        <option value="$PROJECT_DIR$/RideSchedule/models.py" />
+        <option value="$PROJECT_DIR$/Verify/models.py" />
+        <option value="$PROJECT_DIR$/Verify/admin.py" />
+        <option value="$PROJECT_DIR$/Reservation/models.py" />
+        <option value="$PROJECT_DIR$/Verify/views.py" />
+        <option value="$PROJECT_DIR$/A/settings.py" />
+        <option value="$PROJECT_DIR$/Reservation/admin.py" />
+        <option value="$PROJECT_DIR$/RideSchedule/admin.py" />
+        <option value="$PROJECT_DIR$/Payment/admin.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="-8" />
+    <option name="x" value="-65" />
     <option name="y" value="-8" />
-    <option name="width" value="697" />
-    <option name="height" value="735" />
+    <option name="width" value="1382" />
+    <option name="height" value="744" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -118,12 +246,46 @@
             <path>
               <item name="A" type="b2602c69:ProjectViewProjectNode" />
               <item name="A" type="462c0819:PsiDirectoryNode" />
-              <item name="CustomAuthentication" type="462c0819:PsiDirectoryNode" />
+              <item name="Payment" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="A" type="b2602c69:ProjectViewProjectNode" />
               <item name="A" type="462c0819:PsiDirectoryNode" />
-              <item name="Verify" type="462c0819:PsiDirectoryNode" />
+              <item name="Payment" type="462c0819:PsiDirectoryNode" />
+              <item name="migrations" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="A" type="b2602c69:ProjectViewProjectNode" />
+              <item name="A" type="462c0819:PsiDirectoryNode" />
+              <item name="Reservation" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="A" type="b2602c69:ProjectViewProjectNode" />
+              <item name="A" type="462c0819:PsiDirectoryNode" />
+              <item name="Reservation" type="462c0819:PsiDirectoryNode" />
+              <item name="migrations" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="A" type="b2602c69:ProjectViewProjectNode" />
+              <item name="A" type="462c0819:PsiDirectoryNode" />
+              <item name="RideSchedule" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="A" type="b2602c69:ProjectViewProjectNode" />
+              <item name="A" type="462c0819:PsiDirectoryNode" />
+              <item name="RideSchedule" type="462c0819:PsiDirectoryNode" />
+              <item name="migrations" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="A" type="b2602c69:ProjectViewProjectNode" />
+              <item name="A" type="462c0819:PsiDirectoryNode" />
+              <item name="User" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="A" type="b2602c69:ProjectViewProjectNode" />
+              <item name="A" type="462c0819:PsiDirectoryNode" />
+              <item name="User" type="462c0819:PsiDirectoryNode" />
+              <item name="migrations" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -267,7 +429,7 @@
     <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49591282" visible="true" weight="0.18005952" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49591282" visible="true" weight="0.20163691" />
       <window_info id="Structure" order="1" sideWeight="0.5040872" side_tool="true" weight="0.17336309" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -309,18 +471,18 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Verify/twilio_verify.py</url>
+          <url>file://$PROJECT_DIR$/User/twilio_verify.py</url>
           <line>88</line>
           <option name="timeStamp" value="15" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Verify/views.py</url>
-          <line>159</line>
+          <url>file://$PROJECT_DIR$/User/views.py</url>
+          <line>169</line>
           <option name="timeStamp" value="16" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Verify/views.py</url>
-          <line>197</line>
+          <url>file://$PROJECT_DIR$/User/views.py</url>
+          <line>206</line>
           <option name="timeStamp" value="32" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -329,14 +491,29 @@
           <option name="timeStamp" value="33" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Verify/views.py</url>
-          <line>32</line>
+          <url>file://$PROJECT_DIR$/User/views.py</url>
+          <line>39</line>
           <option name="timeStamp" value="38" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Verify/twilio_verify.py</url>
+          <url>file://$PROJECT_DIR$/User/twilio_verify.py</url>
           <line>33</line>
           <option name="timeStamp" value="39" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/User/views.py</url>
+          <line>333</line>
+          <option name="timeStamp" value="42" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/User/views.py</url>
+          <line>302</line>
+          <option name="timeStamp" value="46" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/User/views.py</url>
+          <line>383</line>
+          <option name="timeStamp" value="52" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -377,7 +554,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Verify/token_generator.py">
+    <entry file="file://$PROJECT_DIR$/User/token_generator.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="187">
           <caret line="11" selection-start-line="11" selection-end-line="11" />
@@ -398,23 +575,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="80">
           <caret line="61" column="4" selection-start-line="61" selection-start-column="4" selection-end-line="61" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/site-packages/django/contrib/auth/models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="399">
-          <caret line="429" column="8" selection-start-line="429" selection-start-column="8" selection-end-line="429" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Verify/admin.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="12" column="34" selection-start-line="12" selection-start-column="34" selection-end-line="12" selection-end-column="34" />
-          <folding>
-            <element signature="e#0#32#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -453,13 +613,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/site-packages/rest_framework/views.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="342">
-          <caret line="434" lean-forward="true" selection-start-line="434" selection-end-line="434" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/CustomAuthentication/backend_authentication.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="255">
@@ -470,17 +623,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Verify/models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="294">
-          <caret line="78" lean-forward="true" selection-start-line="78" selection-end-line="78" />
-          <folding>
-            <element signature="e#0#28#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Verify/hello.py">
+    <entry file="file://$PROJECT_DIR$/User/hello.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="136">
           <caret line="8" column="30" selection-start-line="8" selection-start-column="30" selection-end-line="8" selection-end-column="30" />
@@ -494,36 +637,161 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="289">
+          <caret line="17" column="6" lean-forward="true" selection-start-line="17" selection-start-column="6" selection-end-line="17" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/site-packages/django/views/generic/base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="229">
+          <caret line="37" column="23" selection-start-line="37" selection-start-column="23" selection-end-line="37" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/site-packages/django/contrib/auth/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="155">
+          <caret line="429" column="8" selection-start-line="429" selection-start-column="8" selection-end-line="429" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/site-packages/rest_framework/views.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="165">
+          <caret line="496" column="46" lean-forward="true" selection-start-line="496" selection-start-column="46" selection-end-line="496" selection-end-column="46" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/A/urls.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="442">
-          <caret line="26" column="23" selection-start-line="26" selection-start-column="10" selection-end-line="26" selection-end-column="23" />
+        <state relative-caret-position="444">
+          <caret line="28" column="22" selection-start-line="28" selection-start-column="10" selection-end-line="28" selection-end-column="22" />
           <folding>
             <element signature="e#630#662#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Verify/views.py">
+    <entry file="file://$PROJECT_DIR$/UserToken/user_token_authentication.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="289">
-          <caret line="17" selection-start-line="17" selection-end-line="17" selection-end-column="60" />
+        <state relative-caret-position="187">
+          <caret line="11" selection-start-line="11" selection-end-line="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python37-32/Lib/site-packages/django/utils/autoreload.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="165">
+          <caret line="360" column="69" lean-forward="true" selection-start-line="360" selection-start-column="69" selection-end-line="360" selection-end-column="69" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Payment/apps.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/User/twilio_verify.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-236">
+          <caret line="60" column="13" selection-start-line="60" selection-start-column="13" selection-end-line="60" selection-end-column="13" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/User/views.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="867">
+          <caret line="90" column="50" selection-start-line="90" selection-start-column="50" selection-end-line="90" selection-end-column="50" />
+          <folding>
+            <element signature="e#0#52#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/A/settings.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1290">
-          <caret line="53" column="54" lean-forward="true" selection-start-line="53" selection-start-column="54" selection-end-line="53" selection-end-column="54" />
+        <state relative-caret-position="767">
+          <caret line="50" lean-forward="true" selection-start-line="50" selection-end-line="50" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Verify/twilio_verify.py">
+    <entry file="file://$PROJECT_DIR$/Reservation/models.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="291">
-          <caret line="60" column="13" lean-forward="true" selection-start-line="60" selection-start-column="13" selection-end-line="60" selection-end-column="13" />
+        <state relative-caret-position="595">
+          <caret line="35" column="69" selection-start-line="35" selection-start-column="69" selection-end-line="35" selection-end-column="69" />
           <folding>
-            <element signature="e#0#11#0" expanded="true" />
+            <element signature="e#0#28#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Reservation/admin.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="68">
+          <caret line="4" column="32" lean-forward="true" selection-start-line="4" selection-start-column="32" selection-end-line="4" selection-end-column="32" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/RideSchedule/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="272">
+          <caret line="16" column="64" selection-start-line="16" selection-start-column="64" selection-end-line="16" selection-end-column="64" />
+          <folding>
+            <element signature="e#0#28#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/User/admin.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="5" column="28" selection-start-line="5" selection-start-column="28" selection-end-line="5" selection-end-column="28" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Payment/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="289">
+          <caret line="17" selection-start-line="17" selection-end-line="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/RideSchedule/admin.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="68">
+          <caret line="4" column="35" selection-start-line="4" selection-start-column="35" selection-end-line="4" selection-end-column="35" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/User/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="238">
+          <caret line="14" column="55" lean-forward="true" selection-start-line="14" selection-start-column="55" selection-end-line="14" selection-end-column="55" />
+          <folding>
+            <element signature="e#0#28#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Payment/admin.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="5" column="28" selection-start-line="5" selection-start-column="28" selection-end-line="5" selection-end-column="28" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
           </folding>
         </state>
       </provider>

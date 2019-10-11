@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from Verify.views import Register, IsVerified, UserLogin, UserLogout, BusRoute
+from User.views import Register, IsVerified, UserLogin, UserLogout, BusRoute, BookingDetails, BookRide
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,4 +25,6 @@ urlpatterns = [
     path('logout/', UserLogout.as_view(), name='customer_logout'),
 
     path('display_buses/', BusRoute.as_view(), name='bus_route'),
+    path('booking_details/', BookingDetails.as_view(), name='booking'),
+    path('reserve_ride/', BookRide.as_view(), name='reserve_a_ride'),
 ]

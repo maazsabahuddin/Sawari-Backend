@@ -28,6 +28,8 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -38,22 +40,20 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'Verify',
+    'User',
+    'Reservation',
+    'Payment',
+    'RideSchedule',
     'rest_framework',
     'rest_framework.authtoken',
     'django_twilio',
 ]
 
-# SITE_ID = 1
-# Before phele wali..
-# TWILIO_ACCOUNT_SID = 'AC9112b68a11025b3a666da39b94be1b29'
-# TWILIO_AUTH_TOKEN = '8a2aa489865225bc6067958e6d664458'
-
 # New wali test credentials
 TWILIO_ACCOUNT_SID = 'ACc2d21586f29d9728eb8be6b7f7cbab17'
 TWILIO_AUTH_TOKEN = '6b978d120ab33f30ce16ee4e275df2f9'
 
-AUTH_USER_MODEL = "Verify.User"
+AUTH_USER_MODEL = "User.User"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

@@ -1,0 +1,49 @@
+from django.db import models
+from django.contrib.auth.models import AbstractUser
+
+
+class User(AbstractUser):
+    username = models.CharField(blank=True, null=True, max_length=60)
+    phone_number = models.CharField(unique=True, max_length=15, null=True, blank=True)
+    email = models.EmailField(unique=True, null=True, blank=True)
+    is_verified = models.BooleanField(default=False)
+    otp = models.CharField(default=None, max_length=8, null=True, blank=True)
+    is_customer = models.BooleanField(default=False)
+    is_captain = models.BooleanField(default=False)
+
+    USERNAME_FIELD = 'phone_number'
+    REQUIRED_FIELDS = ['username', 'password', 'email']
+
+    def __str__(self):
+        return "{} - {}".format(self.email, self.phone_number)
+
+
+class Customer(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer')
+    created_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return "{} - {} - {}".format(self.id, self.user.email, self.user.phone_number)
+
+
+class Captain(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='captain_id')
+    vendor = models.ForeignKey('user', on_delete=models.CASCADE, blank=True, null=True, related_name='vendor_id')
+    is_owner = models.BooleanField(default=False)
+    created_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return "{} - {}".format(self.id, self.user.email)
+
+
+# from django.conf import settings
+# from django.db.models.signals import post_save
+# from django.dispatch import receiver
+# from rest_framework.authtoken.models import Token
+#
+#
+# @receiver(post_save, sender=settings.AUTH_USER_MODEL)
+# def create_auth_token(sender, instance=None, created=False, **kwargs):
+#     if created:
+#         Token.objects.create(user=instance)
+
