@@ -24,7 +24,7 @@ from .models import User, Customer
 from Reservation.models import Ride
 from Payment.models import Pricing
 
-from UserToken.user_token_authentication import UserMixin
+from .user_token_authentication import UserMixin
 
 account_sid = TWILIO_ACCOUNT_SID
 auth_token = TWILIO_AUTH_TOKEN

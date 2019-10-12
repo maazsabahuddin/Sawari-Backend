@@ -19,4 +19,4 @@ class UserRideDetail(models.Model):
     ride_date = models.DateField(auto_now_add=True)
 
     def __str__(self):
-        return "{}".format(self.ride_id)
+        return "{} - {}".format(self.reservation_id, self.ride_id)

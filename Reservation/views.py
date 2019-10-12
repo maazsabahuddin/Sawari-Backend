@@ -1,3 +1,2 @@
-from django.shortcuts import render
+from .models import Reservation, Vehicle,Ride, Customer,Captain
 
-# Create your views here.
