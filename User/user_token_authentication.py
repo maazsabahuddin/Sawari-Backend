@@ -2,6 +2,9 @@ from rest_framework.authtoken.models import Token
 
 
 # Put those methods in mixin which can be used through out..
+from User.models import Customer
+
+
 class UserMixin(object):
 
     vehicle_no_plate = None
@@ -15,4 +18,11 @@ class UserMixin(object):
 
         if token_obj:
             return token_obj.user
+        return None
+
+    # get customer from user model
+    def get_customer(self, user):
+        customer_obj = Customer.objects.filter(user=user).first()
+        if customer_obj:
+            return customer_obj
         return None

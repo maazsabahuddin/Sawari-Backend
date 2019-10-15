@@ -23,3 +23,16 @@
 #      )
 #
 # print(message.sid)
+
+# Checking formula
+# price_per_km = 5.5
+# kilometer = 20
+# service_fee = 10
+# amount = price_per_km * kilometer
+# service_fee_amount = (service_fee / 100) * amount
+#
+# print(amount)
+# print(round(amount + service_fee_amount))
+from datetime import date
+
+print(date.today())
