@@ -7,12 +7,12 @@ from rest_framework.authtoken.models import Token
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
 from rest_framework.views import APIView
 
-from Payment.models import Pricing, PaymentMethod
 from Payment.views import PaymentMixin
 from RideSchedule.models import UserRideDetail
 from RideSchedule.views import RideMixin
 from User.user_token_authentication import UserMixin
-from .models import Reservation, Vehicle,Ride, Customer,Captain
+from .models import Reservation, Ride
+from .reservation_pattern import ReservationNumber
 
 
 # class based views mae LoginRequiredMixin use rkty hen user login check krney k liye.. but in not in drf..
@@ -185,8 +185,16 @@ class BookRide(UserMixin, PaymentMixin, RideMixin, APIView):
                 drop_up_point = request.session['drop_up_point']
 
                 fare_price = self.fare_price_online(payment_method, float(price_per_km), float(kilometer))
+                reservation_number = ReservationNumber().generate_new_reservation_number()
+
+                if not reservation_number:
+                    return JsonResponse({
+                        'status': HTTP_404_NOT_FOUND,
+                        'message': "Reservation Number Error.",
+                    })
 
                 reservation = Reservation.objects.create(
+                    reservation_number=reservation_number,
                     customer_id=customer_obj,
                     ride_id=ride_obj,
                     reservation_seats=req_seats,
@@ -207,9 +215,15 @@ class BookRide(UserMixin, PaymentMixin, RideMixin, APIView):
                     drop_up_point=drop_up_point,
                 )
                 user_ride.save()
+                if not self.update_ride(vehicle_no_plate, req_seats):
+                    return JsonResponse({
+                        'status': HTTP_404_NOT_FOUND,
+                        'message': "Server Error",
+                    })
 
             return JsonResponse({
                 'status': HTTP_200_OK,
+                'Reservation Number': reservation_number,
                 'Vehicle': vehicle_no_plate,
                 'Fare': fare_price,
                 'price_per_km': price_per_km,
@@ -227,3 +241,4 @@ class BookRide(UserMixin, PaymentMixin, RideMixin, APIView):
                 'status': HTTP_404_NOT_FOUND,
                 'message': e,
             })
+
