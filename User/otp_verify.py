@@ -106,11 +106,13 @@ def verify_user_otp(user, otp, time_now):
         if not otp_user_obj:
             return False
 
-        # adding timezone to local time.
+        # adding current timezone to local time.
         time_now_format = local_tz.localize(time_now)
 
-        # db time.
+        # fetch db time
         otp_send_time = otp_user_obj.otp_time
+
+        # adding seconds to db time..s
         otp_end_time = otp_send_time + datetime.timedelta(0, OTP_VALID_TIME)
 
         # convert db time utc to local time format
@@ -123,11 +125,6 @@ def verify_user_otp(user, otp, time_now):
                     otp_user_obj.is_verified = True
                     otp_user_obj.save()
                     return True
-            # else:
-            #     otp_counter = otp_user_obj.otp_counter
-            #     otp_counter += 1
-            #     otp_user_obj.otp_counter = otp_counter
-            #     return False
 
         return False
 

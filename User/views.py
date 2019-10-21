@@ -3,7 +3,7 @@ import datetime
 from django.contrib.auth import logout
 from rest_framework import generics
 
-from CustomAuthentication.backend_authentication import CustomAuthenticationBackend
+from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
@@ -224,7 +224,7 @@ class IsVerified(APIView):
 
 
 class UserLogin(APIView):
-    permission_classes = (AllowAny,)
+    # permission_classes = (AllowAny,)
 
     def post(self, request):
         try:
@@ -232,51 +232,72 @@ class UserLogin(APIView):
             password = request.POST['password']
 
             if password is None:
-                return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'Password required.'})
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Password required.',
+                })
 
             if not email_or_phone:
-                return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'Email/Phone required.'})
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Email/Phone required.',
+                 })
 
             if email_or_phone and password:
                 user = CustomAuthenticationBackend.authenticate(email_or_phone, password)
                 if user:
                     token, _ = Token.objects.get_or_create(user=user)
-                    return JsonResponse({'status': HTTP_200_OK, 'token': token.key})
+                    return JsonResponse({
+                        'status': HTTP_200_OK,
+                        'token': token.key
+                    })
 
-            return JsonResponse({'status': HTTP_404_NOT_FOUND, 'message': 'Invalid Credentials'})
+            return JsonResponse({
+                'status': HTTP_404_NOT_FOUND,
+                'message': 'Invalid Credentials',
+            })
 
         except Exception as e:
             import logging
             logger = logging.getLogger(__name__)
             logger.info(e)
-            return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'Server down'})
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'Server down',
+            })
 
 
-class UserLogout(APIView):
+class UserLogout(generics.GenericAPIView):
 
-    @method_decorator(login_required)
+    @login_decorator
     def post(self, request):
-        return self.logout_method(request)
-
-    @staticmethod
-    def logout_method(request):
         try:
-            request.user.auth_token.delete()
-        except (AttributeError, ObjectDoesNotExist):
-            return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'Invalid Token.'})
+            user = self.user
 
-        logout(request)
-        return JsonResponse({'success': 'Logged out'}, status=HTTP_200_OK)
+            if not user:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Invalid token'
+                })
+
+            user.auth_token.delete()
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'message': 'Logged out',
+            })
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'Error.'
+            })
 
 
 class UserResendOtp(UserMixin, generics.GenericAPIView):
 
-    @method_decorator(transaction.atomic)
+    @method_decorator(transaction.atomic, login_decorator)
     def post(self, request):
         try:
-            token = request.POST['token']
-
-            user = self.get_user_via_token(token)
+            user = self.user
 
             if not user:
                 return JsonResponse({
@@ -367,81 +388,46 @@ class UserResendOtp(UserMixin, generics.GenericAPIView):
 
 
 # Work in progress
-class ForgotPassword(generics.GenericAPIView):
-
-    @login_decorator
-    def post(self, request):
-
-        user = self.user
-        email = request.POST['email']
-        phone_number = request.POST['email']
-
-        if not user:
-            return JsonResponse({
-                'status': HTTP_404_NOT_FOUND,
-                'message': 'No user found',
-            })
-        
-        if not email and not phone_number:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Email/Phone is required'
-            })
-
-        user_email = User.objects.filter(email=email).first()
-        user_phone_no = User.objects.filter(phone_number=phone_number).first()
-
-        if user_email or user_phone_no:
-            if user_email and user_phone_no:
-                pass
-            if user_email:
-                pass
-            if user_phone_no:
-                pass
-
-        return JsonResponse({
-            # 'user': user.phone_number,
-            'status': HTTP_200_OK,
-            'message': 'Fine',
-        })
-
-
-from django.contrib.auth.hashers import check_password
-# Work in progress
 class PasswordChange(generics.GenericAPIView):
 
     @login_decorator
     def post(self, request):
-        user = self.user
-        old_password = request.POST['old_password']
-        password = request.POST['password']
-        confirm_password = request.POST['confirm_password']
+        try:
+            user = self.user
+            old_password = request.POST['old_password']
+            password = request.POST['password']
+            confirm_password = request.POST['confirm_password']
 
-        if not user:
-            return JsonResponse({
-                'status': HTTP_404_NOT_FOUND,
-                'message': 'No user found',
-            })
+            if not user:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'No user found',
+                })
 
-        if not (old_password and password and confirm_password):
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'All field are required.',
-            })
+            if not (old_password and password and confirm_password):
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'All field are required.',
+                })
 
-        if password != confirm_password:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Password Fields not matched.',
-            })
+            if password != confirm_password:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Password Fields not matched.',
+                })
 
-        if password == old_password:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'You cannot set old password as new password',
-            })
+            if password == old_password:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'You cannot set old password as new password.',
+                })
 
-        if user.check_password(old_password) and user.is_active:
+            if not user.check_password(old_password) and not user.is_active:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Old Password not matched.',
+                })
+
             user.set_password(password)
             user.save()
 
@@ -450,8 +436,146 @@ class PasswordChange(generics.GenericAPIView):
                 'message': 'Password has been changed.',
             })
 
-        else:
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(e)
             return JsonResponse({
                 'status': HTTP_400_BAD_REQUEST,
-                'message': 'Old Password not matched.',
+                'message': str(e),
+            })
+
+
+# Work in progress
+class PasswordReset(UserMixin, generics.GenericAPIView):
+
+    def post(self, request):
+        try:
+            email_or_phone = request.POST['email_or_phone']
+            user = CustomUserCheck.check_user(email_or_phone)
+
+            if not user:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'No user found',
+                })
+
+            if not email_or_phone:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Email/Phone is required'
+                })
+
+            email = user.email
+            phone_number = user.phone_number
+
+            user_otp_obj = UserOtp.objects.filter(user=user).first()
+            if not user_otp_obj:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'User not found.',
+                })
+
+            with transaction.atomic():
+
+                otp = generate_otp()
+                if email and phone_number:
+                    if send_otp_email(email, otp) and send_otp_phone(phone_number, otp):
+                        self.user_otp_save(user_otp_obj, otp)
+                        request.session['user'] = user
+                        return JsonResponse({
+                            'status': HTTP_200_OK,
+                            'message': 'OTP has been successfully sent.',
+                        })
+                    return JsonResponse({
+                        'status': HTTP_400_BAD_REQUEST,
+                        'message': 'Invalid Email/Phone',
+                    })
+
+                if email:
+                    if send_otp_email(email, otp):
+                        self.user_otp_save(user_otp_obj, otp)
+                        request.session['user'] = user
+                        return JsonResponse({
+                            'status': HTTP_200_OK,
+                            'message': 'OTP has been successfully sent.',
+                        })
+                    return JsonResponse({
+                        'status': HTTP_400_BAD_REQUEST,
+                        'message': 'Invalid Email',
+                    })
+
+                if phone_number:
+                    if send_otp_phone(phone_number, otp):
+                        self.user_otp_save(user_otp_obj, otp)
+                        request.session['user'] = user
+                        return JsonResponse({
+                            'status': HTTP_200_OK,
+                            'message': 'OTP has been successfully sent.',
+                        })
+                    return JsonResponse({
+                        'status': HTTP_400_BAD_REQUEST,
+                        'message': 'Invalid phone number',
+                    })
+                    print(otp)
+
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(e)
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e),
+            })
+
+
+class PasswordResetCheck(generics.GenericAPIView):
+
+    @method_decorator(transaction.atomic)
+    def post(self, request):
+        try:
+            user = request.session['user']
+            otp = request.POST['otp']
+            password = request.POST['password']
+            confirm_password = request.POST['confirm_password']
+
+            if not user:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'No user found',
+                })
+
+            if password != confirm_password:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Password Fields not matched.',
+                })
+
+            if password == user.password:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'You cannot set old password as new password.',
+                })
+
+            with transaction.atomic():
+
+                time_now = datetime.datetime.today()
+                if not verify_user_otp(user, otp, time_now):
+                    return JsonResponse({
+                        'status': HTTP_400_BAD_REQUEST,
+                        'message': 'OTP not matched.',
+                    })
+
+                user.set_password(password)
+                user.is_active = True
+                user.save()
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'message': 'Password successfully reset.',
+                })
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'Server Error.',
             })
