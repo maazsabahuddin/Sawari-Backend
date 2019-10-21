@@ -3,7 +3,6 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from rest_framework import generics
-from rest_framework.authtoken.models import Token
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
 from rest_framework.views import APIView
 
@@ -44,9 +43,10 @@ class BusRoute(APIView):
             import logging
             logger = logging.getLogger(__name__)
             logger.info(e)
-            return JsonResponse({'status': 'false', 'message': 'Error encountered'}, status=500)
+            return JsonResponse({'status': 'false', 'message': e}, status=500)
 
-    def get_vehicle(self, from_location, to_location):
+    @staticmethod
+    def get_vehicle(from_location, to_location):
         ride_obj = Ride.objects.filter(vehicle_id__from_loc=from_location, vehicle_id__to_loc=to_location) \
             .values('seats_left', 'vehicle_id__vehicle_no_plate')
 
@@ -63,7 +63,8 @@ class BookingDetails(UserMixin, RideMixin, generics.GenericAPIView):
         self.drop_up_point = request.POST['to']
         self.kilometer = request.POST['kilometer']
 
-    def create_session(self, request, vehicle_no_plate, req_seats, pick_up_point, drop_up_point, kilometer, fare_price, kilometer_price):
+    @staticmethod
+    def create_session(request, vehicle_no_plate, req_seats, pick_up_point, drop_up_point, kilometer, fare_price, kilometer_price):
         request.session['vehicle_no_plate'] = vehicle_no_plate
         request.session['req_seats'] = req_seats
         request.session['pick_up_point'] = pick_up_point

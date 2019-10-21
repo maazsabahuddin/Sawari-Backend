@@ -6,8 +6,8 @@ class User(AbstractUser):
     username = models.CharField(blank=True, null=True, max_length=60)
     phone_number = models.CharField(unique=True, max_length=15, null=True, blank=True)
     email = models.EmailField(unique=True, null=True, blank=True)
-    is_verified = models.BooleanField(default=False)
-    otp = models.CharField(default=None, max_length=8, null=True, blank=True)
+    # is_verified = models.BooleanField(default=False)
+    # otp = models.CharField(default=None, max_length=8, null=True, blank=True)
     is_customer = models.BooleanField(default=False)
     is_captain = models.BooleanField(default=False)
 
@@ -16,6 +16,17 @@ class User(AbstractUser):
 
     def __str__(self):
         return "{} - {}".format(self.email, self.phone_number)
+
+
+class UserOtp(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_otp')
+    otp = models.CharField(default=None, max_length=8, null=True, blank=False)
+    otp_time = models.DateTimeField(null=False, blank=False)
+    otp_counter = models.IntegerField(null=False, blank=False, default=0)
+    is_verified = models.BooleanField(default=False)
+
+    def __str__(self):
+        return "{} - {} - {}".format(self.user.email, self.user.phone_number, self.is_verified)
 
 
 class Customer(models.Model):

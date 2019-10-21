@@ -1,5 +1,6 @@
-from django.contrib.auth import authenticate, logout
-from django.views.decorators.cache import never_cache
+import datetime
+
+from django.contrib.auth import logout
 from rest_framework import generics
 
 from CustomAuthentication.backend_authentication import CustomAuthenticationBackend
@@ -7,10 +8,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.http import JsonResponse, request
+from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from django.core.mail import EmailMessage
 
 from rest_framework.permissions import AllowAny
 from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_200_OK, HTTP_400_BAD_REQUEST
@@ -18,9 +18,12 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 
 from django_twilio.client import Client
-from A.settings import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID
-from .twilio_verify import verify_user_otp, generate_otp, send_otp_phone, send_otp_email
-from .models import User, Customer
+from A.settings import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_COUNTER
+from .otp_verify import verify_user_otp, generate_otp, send_otp_phone, send_otp_email
+from .models import User, Customer, UserOtp
+from .user_token_authentication import UserMixin
+from .decorators import login_decorator
+
 
 account_sid = TWILIO_ACCOUNT_SID
 auth_token = TWILIO_AUTH_TOKEN
@@ -46,7 +49,7 @@ class Register(APIView):
                     'message': 'Password Fields not matched'
                 })
 
-            if not email and not password:
+            if not email and not phone_number:
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
                     'message': 'Email/Phone is required'
@@ -61,93 +64,118 @@ class Register(APIView):
             with transaction.atomic():
 
                 otp = generate_otp()
-                if email is not '' and phone_number is not '':
+                if email and phone_number:
 
-                    send_otp_email(email, otp)
-                    if send_otp_phone(phone_number, otp):
-
-                        user = User.objects.create(
-                            email=email,
-                            phone_number=phone_number,
-                            password=make_password(password),
-                            is_active=False,
-                            is_verified=False,
-                            otp=otp,
-                            is_customer=is_customer,
-                        )
-                        user.save()
-                        Customer.objects.create(user=user)
-                        if user:
-                            token, _ = Token.objects.get_or_create(user=user)
-
+                    if not send_otp_email(email, otp):
                         return JsonResponse({
-                            'status': HTTP_200_OK,
-                            'token': token.key,
-                            'message': 'OTP has been successfully sent.',
-                            # 'message_sid': message.sid,
+                            'status': HTTP_400_BAD_REQUEST,
+                            'message': 'Invalid Email',
                         })
 
+                    if not send_otp_phone(phone_number, otp):
+                        return JsonResponse({
+                            'status': HTTP_400_BAD_REQUEST,
+                            'message': 'Invalid phone number',
+                        })
+
+                    user = User.objects.create(
+                        email=email,
+                        phone_number=phone_number,
+                        password=make_password(password),
+                        is_active=False,
+                        is_customer=is_customer,
+                    )
+                    user_otp = UserOtp.objects.create(
+                        user=user,
+                        otp=otp,
+                        opt_time=datetime.datetime.today(),
+                        otp_counter=OTP_INITIAL_COUNTER,
+                        is_verified=False,
+                    )
+                    user_otp.save()
+                    user.save()
+
+                    Customer.objects.create(user=user)
+                    if user:
+                        token, _ = Token.objects.get_or_create(user=user)
+
                     return JsonResponse({
-                        'status': HTTP_400_BAD_REQUEST,
-                        'message': 'Invalid Email',
+                        'status': HTTP_200_OK,
+                        'token': token.key,
+                        'message': 'OTP has been successfully sent.',
+                        # 'message_sid': message.sid,
                     })
 
-                if email is not '':
+                if email:
 
                     # Sending OTP Via Email
-                    if send_otp_email(email, otp):
-
-                        user = User.objects.create(
-                            email=email,
-                            password=make_password(password),
-                            phone_number=None,
-                            is_active=False,
-                            is_verified=False,
-                            otp=otp,
-                            is_customer=is_customer,
-                        )
-                        user.save()
-                        Customer.objects.create(user=user)
-                        if user:
-                            token, _ = Token.objects.get_or_create(user=user)
-
+                    if not send_otp_email(email, otp):
                         return JsonResponse({
-                            'status': HTTP_200_OK,
-                            'token': token.key,
-                            'message': 'OTP has been successfully sent.',
+                            'status': HTTP_400_BAD_REQUEST,
+                            'message': 'Invalid Email',
                         })
 
+                    user = User.objects.create(
+                        email=email,
+                        password=make_password(password),
+                        phone_number=None,
+                        is_active=False,
+                        is_customer=is_customer,
+                    )
+                    user_otp = UserOtp.objects.create(
+                        user=user,
+                        otp=otp,
+                        opt_time=datetime.datetime.today(),
+                        otp_counter=OTP_INITIAL_COUNTER,
+                        is_verified=False,
+                    )
+                    user_otp.save()
+                    user.save()
+
+                    Customer.objects.create(user=user)
+                    if user:
+                        token, _ = Token.objects.get_or_create(user=user)
+
                     return JsonResponse({
-                        'status': HTTP_400_BAD_REQUEST,
-                        'message': 'Invalid Email',
+                        'status': HTTP_200_OK,
+                        'token': token.key,
+                        'message': 'OTP has been successfully sent.',
                     })
 
-                if phone_number is not '':
-                    if send_otp_phone(phone_number, otp):
-                        user = User.objects.create(
-                            email=None,
-                            otp=otp,
-                            password=make_password(password),
-                            phone_number=phone_number,
-                            is_verified=False,
-                            is_active=False,
-                            is_customer=is_customer,
-                        )
-                        user.save()
-                        Customer.objects.create(user=user)
-                        if user:
-                            token, _ = Token.objects.get_or_create(user=user)
-
+                if phone_number:
+                    if not send_otp_phone(phone_number, otp):
                         return JsonResponse({
-                            'status': HTTP_200_OK,
-                            'token': token.key,
-                            'message': 'OTP has been successfully sent.',
-                            # 'otp_phone_sid': message.sid,
+                            'status': HTTP_400_BAD_REQUEST,
+                            'message': 'Invalid Phone Number',
                         })
 
+                    user = User.objects.create(
+                        email=None,
+                        password=make_password(password),
+                        phone_number=phone_number,
+                        is_active=False,
+                        is_customer=is_customer,
+                    )
+                    user_otp = UserOtp.objects.create(
+                        user=user,
+                        otp=otp,
+                        otp_time=datetime.datetime.today(),
+                        otp_counter=OTP_INITIAL_COUNTER,
+                        is_verified=False,
+                    )
+                    user_otp.save()
+                    user.save()
+                    print(otp)
+
+                    Customer.objects.create(user=user)
+                    if user:
+                        token, _ = Token.objects.get_or_create(user=user)
+
                     return JsonResponse({
-                        'status': HTTP_400_BAD_REQUEST,
-                        'message': 'Invalid Phone Number',
+                        'status': HTTP_200_OK,
+                        'token': token.key,
+                        'message': 'OTP has been successfully sent.',
+                        # 'otp_phone_sid': message.sid,
                     })
 
         except Exception as e:
@@ -173,9 +201,9 @@ class IsVerified(APIView):
                 if token_obj.user.is_active:
                     return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'Already Verified', })
 
-                if verify_user_otp(token_obj.user, otp):
+                time_now = datetime.datetime.today()
+                if verify_user_otp(token_obj.user, otp, time_now):
                     token_obj.user.is_active = True
-                    token_obj.user.is_verified = True
                     token_obj.user.save()
 
                     return JsonResponse({'status': HTTP_200_OK, 'message': 'Verified', })
@@ -230,7 +258,8 @@ class UserLogout(APIView):
     def post(self, request):
         return self.logout_method(request)
 
-    def logout_method(self, request):
+    @staticmethod
+    def logout_method(request):
         try:
             request.user.auth_token.delete()
         except (AttributeError, ObjectDoesNotExist):
@@ -240,3 +269,189 @@ class UserLogout(APIView):
         return JsonResponse({'success': 'Logged out'}, status=HTTP_200_OK)
 
 
+class UserResendOtp(UserMixin, generics.GenericAPIView):
+
+    @method_decorator(transaction.atomic)
+    def post(self, request):
+        try:
+            token = request.POST['token']
+
+            user = self.get_user_via_token(token)
+
+            if not user:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Invalid token'
+                })
+
+            email = user.email
+            phone_number = user.phone_number
+
+            if not email and not phone_number:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Use not registered.'
+                })
+
+            user_otp_obj = UserOtp.objects.filter(user=user).first()
+            if not user_otp_obj:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'User not found.',
+                })
+
+            with transaction.atomic():
+
+                otp = generate_otp()
+                if email and phone_number:
+                    if not send_otp_email(email, otp):
+                        return JsonResponse({
+                            'status': HTTP_400_BAD_REQUEST,
+                            'message': 'Invalid Email',
+                        })
+
+                    if not send_otp_phone(phone_number, otp):
+                        return JsonResponse({
+                            'status': HTTP_400_BAD_REQUEST,
+                            'message': 'Invalid phone number',
+                        })
+
+                    self.user_otp_save(user_otp_obj, otp)
+
+                    return JsonResponse({
+                        'status': HTTP_200_OK,
+                        'message': 'OTP has been successfully sent.',
+                    })
+
+                if email:
+                    if not send_otp_email(email, otp):
+                        return JsonResponse({
+                            'status': HTTP_400_BAD_REQUEST,
+                            'message': 'Invalid Email',
+                        })
+
+                    self.user_otp_save(user_otp_obj, otp)
+
+                    return JsonResponse({
+                        'status': HTTP_200_OK,
+                        'message': 'OTP has been successfully sent.',
+                    })
+
+                if phone_number:
+                    if not send_otp_phone(phone_number, otp):
+                        return JsonResponse({
+                            'status': HTTP_400_BAD_REQUEST,
+                            'message': 'Invalid phone number',
+                        })
+
+                    if not self.user_otp_save(user_otp_obj, otp):
+                        return JsonResponse({
+                            'status': HTTP_200_OK,
+                            'message': 'User_otp model Error.',
+                        })
+                    print(otp)
+
+                    return JsonResponse({
+                        'status': HTTP_200_OK,
+                        'message': 'OTP has been successfully sent.',
+                    })
+
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(e)
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e),
+            })
+
+
+# Work in progress
+class ForgotPassword(generics.GenericAPIView):
+
+    @login_decorator
+    def post(self, request):
+
+        user = self.user
+        email = request.POST['email']
+        phone_number = request.POST['email']
+
+        if not user:
+            return JsonResponse({
+                'status': HTTP_404_NOT_FOUND,
+                'message': 'No user found',
+            })
+        
+        if not email and not phone_number:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'Email/Phone is required'
+            })
+
+        user_email = User.objects.filter(email=email).first()
+        user_phone_no = User.objects.filter(phone_number=phone_number).first()
+
+        if user_email or user_phone_no:
+            if user_email and user_phone_no:
+                pass
+            if user_email:
+                pass
+            if user_phone_no:
+                pass
+
+        return JsonResponse({
+            # 'user': user.phone_number,
+            'status': HTTP_200_OK,
+            'message': 'Fine',
+        })
+
+
+from django.contrib.auth.hashers import check_password
+# Work in progress
+class PasswordChange(generics.GenericAPIView):
+
+    @login_decorator
+    def post(self, request):
+        user = self.user
+        old_password = request.POST['old_password']
+        password = request.POST['password']
+        confirm_password = request.POST['confirm_password']
+
+        if not user:
+            return JsonResponse({
+                'status': HTTP_404_NOT_FOUND,
+                'message': 'No user found',
+            })
+
+        if not (old_password and password and confirm_password):
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'All field are required.',
+            })
+
+        if password != confirm_password:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'Password Fields not matched.',
+            })
+
+        if password == old_password:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'You cannot set old password as new password',
+            })
+
+        if user.check_password(old_password) and user.is_active:
+            user.set_password(password)
+            user.save()
+
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'message': 'Password has been changed.',
+            })
+
+        else:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'Old Password not matched.',
+            })
