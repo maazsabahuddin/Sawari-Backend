@@ -137,8 +137,13 @@
 # A.static_foo(1)
 
 
-a = ''
-if a:
-    print("Yes")
-else:
-    print('No')
+# a = ''
+# if a:
+#     print("Yes")
+# else:
+#     print('No')
+
+
+a = 'False'
+if not a:
+    print("WOW")

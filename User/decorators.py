@@ -1,11 +1,12 @@
+from functools import wraps
 from django.http import JsonResponse
 from rest_framework.authtoken.models import Token
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
-from functools import wraps
+from rest_framework.status import HTTP_400_BAD_REQUEST
 
 
 def login_decorator(f):
 
+    @wraps(f)
     def decorated_function(*args):
         try:
             request = args[1]
@@ -27,6 +28,9 @@ def login_decorator(f):
             return f(user, request)
 
         except Exception as e:
-            return False
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'Server problem',
+            })
 
     return decorated_function

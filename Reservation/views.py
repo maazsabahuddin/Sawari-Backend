@@ -9,41 +9,62 @@ from rest_framework.views import APIView
 from Payment.views import PaymentMixin
 from RideSchedule.models import UserRideDetail
 from RideSchedule.views import RideMixin
+from User.decorators import login_decorator
 from User.user_token_authentication import UserMixin
 from .models import Reservation, Ride
 from .reservation_pattern import ReservationNumber
 
 
-# class based views mae LoginRequiredMixin use rkty hen user login check krney k liye.. but in not in drf..
-class BusRoute(APIView):
+# No such need pf login decorator because we're using Token authentication method. if there's a user it will be
+# logged in via token and if no token will be there means no user. it will return invalid token.
+class BusRoute(generics.GenericAPIView):
 
-    # No such need pf login decorator because we're using Token authentication method. if there's a user it will be
-    # logged in via token and if no token will be there means no user. it will return invalid token.
-    # @method_decorator(login_required)
+    @login_decorator
     def post(self, request):
-
         try:
-            # For safety purpose. Using login decorator as well as doing it explicitly..
-            # Don't remove it.
-            if not request.user.is_authenticated:
-                return JsonResponse({'message': 'User not authenticated'})
+            user = self.user
+            from_location = request.data.get('from')
+            to_location = request.data.get('to')
 
-            from_location = request.POST['from']
-            to_location = request.POST['to']
+            if not user:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'No user found',
+                })
 
-            ride_obj = self.get_vehicle(from_location, to_location)
+            if not (from_location or to_location):
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': "Source/Destination cannot be empty",
+                })
 
-            if ride_obj:
-                ride_list = list(ride_obj)
-                return JsonResponse(ride_list, safe=False)
+            ride_obj = BusRoute.get_vehicle(from_location, to_location)
 
-            return JsonResponse({'message': 'No Ride available right now'})
+            if not ride_obj:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'No Ride available right now',
+                })
+
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'buses': list(ride_obj),
+            })
+
+            # ride_list = list(ride_obj)
+            # return JsonResponse(
+            #     ride_list,
+            #     safe=False,
+            # )
 
         except Exception as e:
             import logging
             logger = logging.getLogger(__name__)
             logger.info(e)
-            return JsonResponse({'status': 'false', 'message': e}, status=500)
+            return JsonResponse({
+                'status': HTTP_404_NOT_FOUND,
+                'message': "Server Error.",
+            })
 
     @staticmethod
     def get_vehicle(from_location, to_location):

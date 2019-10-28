@@ -1,12 +1,11 @@
 import datetime
 
-from django.contrib.auth import logout
 from rest_framework import generics
 
 from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
-from django.contrib.auth.decorators import login_required
+
 from django.contrib.auth.hashers import make_password
-from django.core.exceptions import ObjectDoesNotExist
+
 from django.db import transaction
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
@@ -36,12 +35,24 @@ class Register(APIView):
     @method_decorator(transaction.atomic, csrf_exempt)
     def post(self, request):
         try:
-            data = request.POST
-            email = data['email']
-            phone_number = data['phone_number']
-            password = data['password']
-            confirm_password = data['confirm_password']
-            is_customer = data['is_customer']
+            data = request.data.get
+            email = data('email')
+            phone_number = data('phone_number')
+            password = data('password')
+            confirm_password = data('confirm_password')
+            is_customer = data('is_customer')
+
+            if email is None:
+                email = ''
+
+            if phone_number is None:
+                phone_number = ''
+
+            if not is_customer or is_customer == 'False':
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'is_customer field should be true',
+                })
 
             if password != confirm_password:
                 return JsonResponse({
@@ -192,8 +203,8 @@ class IsVerified(APIView):
 
     def post(self, request):
         try:
-            token = request.POST['token']
-            otp = request.POST['otp']
+            token = request.data.get('token')
+            otp = request.data.get('otp')
 
             token_obj = Token.objects.filter(key=token).first()
 
@@ -228,10 +239,12 @@ class UserLogin(APIView):
 
     def post(self, request):
         try:
-            email_or_phone = request.POST['email_or_phone']
-            password = request.POST['password']
+            # print(request)
+            email_or_phone = request.data.get("email_or_phone")
+            password = request.data.get('password')
+            # email_or_phone = request.POST['email_or_phone']
 
-            if password is None:
+            if not password:
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
                     'message': 'Password required.',
@@ -245,10 +258,17 @@ class UserLogin(APIView):
 
             if email_or_phone and password:
                 user = CustomAuthenticationBackend.authenticate(email_or_phone, password)
+
                 if user:
+                    if not user.is_customer:
+                        return JsonResponse({
+                            'status': HTTP_400_BAD_REQUEST,
+                            'message': 'Not a customer',
+                        })
                     token, _ = Token.objects.get_or_create(user=user)
                     return JsonResponse({
                         'status': HTTP_200_OK,
+                        'message': 'Login Successfully',
                         'token': token.key
                     })
 
@@ -311,7 +331,7 @@ class UserResendOtp(UserMixin, generics.GenericAPIView):
             if not email and not phone_number:
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Use not registered.'
+                    'message': 'User not registered.'
                 })
 
             user_otp_obj = UserOtp.objects.filter(user=user).first()
@@ -387,16 +407,15 @@ class UserResendOtp(UserMixin, generics.GenericAPIView):
             })
 
 
-# Work in progress
 class PasswordChange(generics.GenericAPIView):
 
     @login_decorator
     def post(self, request):
         try:
             user = self.user
-            old_password = request.POST['old_password']
-            password = request.POST['password']
-            confirm_password = request.POST['confirm_password']
+            old_password = request.data.get('old_password')
+            password = request.data.get('password')
+            confirm_password = request.data.get('confirm_password')
 
             if not user:
                 return JsonResponse({
@@ -422,7 +441,7 @@ class PasswordChange(generics.GenericAPIView):
                     'message': 'You cannot set old password as new password.',
                 })
 
-            if not user.check_password(old_password) and not user.is_active:
+            if not user.check_password(old_password):
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
                     'message': 'Old Password not matched.',

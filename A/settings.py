@@ -25,7 +25,7 @@ SECRET_KEY = 'u*0dpb92__ipl20f%3z==m82k2e&gq#*n*fc&fidxptbu_p+pq'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
