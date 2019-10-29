@@ -6,6 +6,7 @@ MyUser = get_user_model()
 
 class CustomAuthenticationBackend(object):
 
+    @staticmethod
     def authenticate(email_or_phone=None, password=None):
         try:
             user = MyUser.objects.get(
@@ -15,7 +16,22 @@ class CustomAuthenticationBackend(object):
                 return user
 
         except MyUser.DoesNotExist:
-            # MyUser().set_password(password)
+            return None
+
+
+class CustomUserCheck(object):
+
+    @staticmethod
+    def check_user(email_or_phone):
+        try:
+            user = MyUser.objects.get(
+                Q(email=email_or_phone) | Q(phone_number=email_or_phone)
+            )
+            if user:
+                return user
+            return None
+
+        except MyUser.DoesNotExist:
             return None
 
     # def get_user(self, user_id):

@@ -25,7 +25,7 @@ SECRET_KEY = 'u*0dpb92__ipl20f%3z==m82k2e&gq#*n*fc&fidxptbu_p+pq'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
@@ -117,9 +117,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-    ],
+    # 'DEFAULT_AUTHENTICATION_CLASSES': [
+    #     'rest_framework.authentication.TokenAuthentication',
+    # ],
 }
 
 AUTHENTICATION_BACKENDS = (
@@ -154,3 +154,9 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
 STATIC_URL = '/static/'
 
+# Changes as per business requirements.
+OTP_COUNTER_LIMIT = 3
+# kitni der tk otp valid rhega.
+OTP_VALID_TIME = 120
+# Initial Counter
+OTP_INITIAL_COUNTER = 1

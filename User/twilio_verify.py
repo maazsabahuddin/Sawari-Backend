@@ -20,7 +20,7 @@ def send_otp_phone(phone_number, otp):
             from_=sender_phone_number,
             body=message_body,
             to=phone_number,
-        )
+         )
         return True
 
     except Exception as e:
@@ -98,4 +98,3 @@ def generate_otp():
     for i in range(6):
         otp += digits[math.floor(random.random() * 10)]
     return otp
-

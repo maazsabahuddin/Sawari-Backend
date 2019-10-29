@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import models
 from User.models import Captain, Customer
 
@@ -28,12 +30,13 @@ class Ride(models.Model):
 
 
 class Reservation(models.Model):
+    reservation_number = models.CharField(max_length=20, unique=True)
     customer_id = models.ForeignKey(Customer, on_delete=models.CASCADE)
     ride_id = models.ForeignKey(Ride, on_delete=models.CASCADE)
     reservation_seats = models.IntegerField(blank=False)
     is_confirmed = models.BooleanField(default=False)
-    # reservation_timestamp = models.DateTimeField(auto_now_add=True)
-    # updated_timestamp = models.DateTimeField(blank=True, null=True)
+    created_date = models.DateField(default=datetime.datetime.today)
+    updated_timestamp = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return "{} - {} - {}".format(self.id, self.customer_id.user.email, self.customer_id.user.phone_number)
