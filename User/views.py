@@ -206,6 +206,10 @@ class IsVerified(APIView):
             token = request.data.get('token')
             otp = request.data.get('otp')
 
+          #  token = request.data.get('token')
+          #  otp = request.data.get('otp')
+
+
             token_obj = Token.objects.filter(key=token).first()
 
             if token_obj:
