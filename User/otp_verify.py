@@ -149,3 +149,17 @@ def generate_otp():
         logger.info(e)
         return None
 
+
+def password_reset_key():
+    try:
+        digits = "0123456789"
+        otp = ""
+        for i in range(6):
+            otp += digits[math.floor(random.random() * 10)]
+        return otp
+
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(e)
+        return None
