@@ -160,3 +160,9 @@ OTP_COUNTER_LIMIT = 3
 OTP_VALID_TIME = 120
 # Initial Counter
 OTP_INITIAL_COUNTER = 1
+# Country code
+COUNTRY_CODE_PK = "92"
+# Regex Phone Number
+PHONE_NUMBER_REGEX = r"\+"+COUNTRY_CODE_PK+r"\d{10}"
+# Email REGEX
+EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"

@@ -195,3 +195,26 @@ import math
 # print(uuid.uuid4())
 # print(uuid.uuid1())
 
+# regex
+# import re
+#
+# from A.settings import COUNTRY_CODE_PK
+#
+# txt = "maazsabahuddin@gmail.com"
+# EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
+# if txt:
+#     x = re.search(EMAIL_REGEX, txt)
+#
+#     if x:
+#         print("Correct Email")
+#
+#
+# phonenumber= "+923442713545"
+#
+# regex = r"\+"+COUNTRY_CODE_PK+r"\d{10}"
+# print(regex)
+#
+# if re.search(regex, phonenumber):
+#     print("Valid phone number")
+# else:
+#     print("Invalid phone number")

@@ -1,4 +1,5 @@
 import datetime
+import re
 import uuid
 from rest_framework import generics
 
@@ -17,7 +18,7 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 
 from django_twilio.client import Client
-from A.settings import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_COUNTER
+from A.settings import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_COUNTER, EMAIL_REGEX, PHONE_NUMBER_REGEX
 from .otp_verify import verify_user_otp, generate_otp, send_otp_phone, send_otp_email
 from .models import User, Customer, UserOtp
 from .user_token_authentication import UserMixin
@@ -42,11 +43,23 @@ class Register(APIView):
             confirm_password = data('confirm_password')
             is_customer = data('is_customer')
 
-            if email is None:
-                email = ''
+            # Checking Validation
+            if email:
+                x = re.search(EMAIL_REGEX, email)
+                if not x:
+                    return JsonResponse({
+                        'status': HTTP_400_BAD_REQUEST,
+                        'message': 'Invalid Email',
+                    })
 
-            if phone_number is None:
-                phone_number = ''
+            # Checking Validation
+            if phone_number:
+                phone_number_validation = re.match(PHONE_NUMBER_REGEX, phone_number)
+                if not phone_number_validation:
+                    return JsonResponse({
+                        'status': HTTP_400_BAD_REQUEST,
+                        'message': 'Invalid Phone Number',
+                    })
 
             if not is_customer or is_customer == 'False':
                 return JsonResponse({
@@ -311,15 +324,22 @@ class UserLogout(generics.GenericAPIView):
 
 class UserResendOtp(UserMixin, generics.GenericAPIView):
 
-    @method_decorator(transaction.atomic, login_decorator)
+    @transaction.atomic
     def post(self, request):
         try:
-            user = self.user
+            email_or_phone = request.data.get('email_or_phone')
+            user = CustomUserCheck.check_user(email_or_phone)
+
+            if not email_or_phone:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Email/Phone is required'
+                })
 
             if not user:
                 return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Invalid token'
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'User not found',
                 })
 
             email = user.email
@@ -332,11 +352,6 @@ class UserResendOtp(UserMixin, generics.GenericAPIView):
                 })
 
             user_otp_obj = UserOtp.objects.filter(user=user).first()
-            if not user_otp_obj:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'User not found.',
-                })
 
             with transaction.atomic():
 
@@ -395,12 +410,9 @@ class UserResendOtp(UserMixin, generics.GenericAPIView):
                     })
 
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.info(e)
             return JsonResponse({
                 'status': HTTP_400_BAD_REQUEST,
-                'message': str(e),
+                'message': "Server Error.",
             })
 
 
@@ -464,6 +476,7 @@ class PasswordChange(generics.GenericAPIView):
 
 class PasswordReset(UserMixin, generics.GenericAPIView):
 
+    @transaction.atomic
     def post(self, request):
         try:
             email_or_phone = request.data.get('email_or_phone')
@@ -702,6 +715,15 @@ class ChangePhoneNumber(UserMixin, generics.GenericAPIView):
                     'status': HTTP_400_BAD_REQUEST,
                     'message': "User not found."
                 })
+
+            # Checking Validation
+            if phone_number:
+                phone_number_validation = re.match(PHONE_NUMBER_REGEX, phone_number)
+                if not phone_number_validation:
+                    return JsonResponse({
+                        'status': HTTP_400_BAD_REQUEST,
+                        'message': 'Invalid Phone Number',
+                    })
 
             if not phone_number:
                 return JsonResponse({
