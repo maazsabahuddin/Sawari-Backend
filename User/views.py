@@ -235,14 +235,11 @@ class IsVerified(APIView):
 
 
 class UserLogin(APIView):
-    # permission_classes = (AllowAny,)
 
     def post(self, request):
         try:
-            # print(request)
             email_or_phone = request.data.get("email_or_phone")
             password = request.data.get('password')
-            # email_or_phone = request.POST['email_or_phone']
 
             if not password:
                 return JsonResponse({
@@ -268,8 +265,8 @@ class UserLogin(APIView):
                     token, _ = Token.objects.get_or_create(user=user)
                     return JsonResponse({
                         'status': HTTP_200_OK,
+                        'token': token.key,
                         'message': 'Login Successfully',
-                        'token': token.key
                     })
 
             return JsonResponse({
@@ -465,7 +462,6 @@ class PasswordChange(generics.GenericAPIView):
             })
 
 
-# Work in progress
 class PasswordReset(UserMixin, generics.GenericAPIView):
 
     def post(self, request):
@@ -547,9 +543,8 @@ class PasswordReset(UserMixin, generics.GenericAPIView):
                 'message': str(e),
             })
 
+
 # Sending password uuid with api for verification and saving it to db.
-
-
 class PasswordResetCheck(UserMixin, generics.GenericAPIView):
 
     @method_decorator(transaction.atomic)
@@ -581,7 +576,7 @@ class PasswordResetCheck(UserMixin, generics.GenericAPIView):
                     })
 
                 user_uuid = uuid.uuid4()
-                if not self.save_user_password_uuid(user, user_uuid):
+                if not self.save_user_password_reset_uuid(user, user_uuid):
                     return JsonResponse({
                         'status': HTTP_400_BAD_REQUEST,
                         'message': 'uuid problem.',
@@ -628,7 +623,7 @@ class SetNewPassword(UserMixin, generics.GenericAPIView):
 
             with transaction.atomic():
 
-                if not self.match_user_password_uuid(user, password_reset_id):
+                if not self.match_user_password_reset_uuid(user, password_reset_id):
                     return JsonResponse({
                         'status': HTTP_404_NOT_FOUND,
                         'message': 'No user found',
@@ -692,35 +687,62 @@ class UpdateName(generics.GenericAPIView):
             })
 
 
-class ChangeContactNumber(generics.GenericAPIView):
+# Pending
+class ChangePhoneNumber(UserMixin, generics.GenericAPIView):
 
     @login_decorator
     @transaction.atomic
     def post(self, request):
-        user = self.user
-        phone_number = request.data.get('phone_number')
+        try:
+            user = self.user
+            phone_number = request.data.get('phone_number')
 
-        if not user:
+            if not user:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': "User not found."
+                })
+
+            if not phone_number:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': "Phone Number required."
+                })
+
+            if phone_number == user.phone_number:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'This phone number already set to your account.',
+                })
+
+            user_exist = CustomUserCheck.check_user(phone_number)
+            if user_exist:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': "User with this Phone Number already exists."
+                })
+
+            with transaction.atomic():
+                otp = generate_otp()
+                user_otp_obj = UserOtp.objects.filter(user=user).first()
+                self.user_otp_save(user_otp_obj, otp)
+
+                if not send_otp_phone(phone_number, otp):
+                    return JsonResponse({
+                        'status': HTTP_400_BAD_REQUEST,
+                        'message': 'Invalid Phone Number',
+                    })
+
+                print(otp)
+
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'message': 'OTP has been successfully sent.',
+                })
+
+        except Exception as e:
             return JsonResponse({
                 'status': HTTP_400_BAD_REQUEST,
-                'message': "User not found."
+                'message': 'Server Error.'
             })
-
-        if not phone_number:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': "Phone Number required."
-            })
-
-        user_exist = User.objects.filter(phone_number=phone_number).first()
-        if user_exist:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': "User with this Phone Number already exists."
-            })
-
-        with transaction.atomic():
-            otp = generate_otp()
-            send_otp_phone(phone_number, otp)
-
 

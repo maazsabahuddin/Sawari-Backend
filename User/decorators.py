@@ -15,7 +15,7 @@ def login_decorator(f):
             if not token:
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Token required for verification.',
+                    'message': 'Token required for authentication.',
                 })
 
             user = Token.objects.filter(key=token).first()

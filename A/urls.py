@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from User.views import Register, IsVerified, UserLogin, UserLogout, UserResendOtp, PasswordReset, PasswordResetCheck, \
-    PasswordChange, SetNewPassword
+    PasswordChange, SetNewPassword, ChangePhoneNumber
 from Reservation.views import BusRoute, BookingDetails, BookRide
 
 urlpatterns = [
@@ -42,5 +42,8 @@ urlpatterns = [
 
     # Password change when login.
     path('password_change/', PasswordChange.as_view(), name='password_change'),
+
+    # Change user phone number.
+    path('change/phone/number/', ChangePhoneNumber.as_view(), name='change_phone_number'),
 
 ]

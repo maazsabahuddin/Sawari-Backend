@@ -39,7 +39,7 @@ class UserMixin(object):
         return False
 
     @staticmethod
-    def save_user_password_uuid(user, password_uuid):
+    def save_user_password_reset_uuid(user, password_uuid):
         user_obj = UserOtp.objects.filter(user=user).first()
         if user_obj:
             user_obj.password_reset_id = password_uuid
@@ -48,7 +48,7 @@ class UserMixin(object):
         return False
 
     @staticmethod
-    def match_user_password_uuid(user, password_uuid):
+    def match_user_password_reset_uuid(user, password_uuid):
         user_obj = UserOtp.objects.filter(user=user).first()
         if user_obj and user_obj.password_reset_id == password_uuid:
             return True

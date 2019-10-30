@@ -34,9 +34,3 @@ class CustomUserCheck(object):
         except MyUser.DoesNotExist:
             return None
 
-    # def get_user(self, user_id):
-    #     my_user_model = get_user_model()
-    #     try:
-    #         return my_user_model.objects.get(pk=user_id)
-    #     except my_user_model.DoesNotExist:
-    #         return None
