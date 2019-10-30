@@ -15,7 +15,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from User.views import Register, IsVerified, UserLogin, UserLogout, UserResendOtp, PasswordReset, PasswordResetCheck, PasswordChange
+from User.views import Register, IsVerified, UserLogin, UserLogout, UserResendOtp, PasswordReset, PasswordResetCheck, \
+    PasswordChange, UpdateName, SetNewPassword
 from Reservation.views import BusRoute, BookingDetails, BookRide
 
 urlpatterns = [
@@ -32,7 +33,8 @@ urlpatterns = [
 
     path('password/reset/', PasswordReset.as_view(), name='password_reset'),
     path('confirm/password/reset/', PasswordResetCheck.as_view(), name='confirm_password_reset'),
+    path('new/password/reset/', SetNewPassword.as_view(), name='set_new_password'),
 
     path('password_change/', PasswordChange.as_view(), name='password_change'),
-
+    path('update_name/', UpdateName.as_view(), name='update_name'),
 ]

@@ -144,6 +144,48 @@
 #     print('No')
 
 
-a = 'False'
-if not a:
-    print("WOW")
+# a = 'False'
+# if not a:
+#     print("WOW")
+
+# decorators 1
+# def hello_function(func):
+#
+#     def hello():
+#         print("Hello1")
+#         func()
+#     return hello
+#
+#
+# def function_to_be_used():
+#     print("Hii ! ")
+#
+#
+# obj = hello_function(function_to_be_used)
+# obj()
+
+
+# decorators 2
+import time
+import math
+
+
+def decorator(func):
+
+    def inner_func(*args, **kwargs):
+
+        sum = base_func(*args, **kwargs)
+        return sum
+
+    def base_func(*args, **kwargs):
+        return 2
+
+    return inner_func
+
+
+@decorator
+def a():
+    pass
+
+
+print("Decorator is: ", a())
