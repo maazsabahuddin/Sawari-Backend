@@ -170,22 +170,28 @@ import time
 import math
 
 
-def decorator(func):
+# def decorator(func):
+#
+#     def inner_func(*args, **kwargs):
+#
+#         sum = base_func(*args, **kwargs)
+#         return sum
+#
+#     def base_func(*args, **kwargs):
+#         return 2
+#
+#     return inner_func
+#
+#
+# @decorator
+# def a():
+#     pass
+#
+#
+# print("Decorator is: ", a())
 
-    def inner_func(*args, **kwargs):
 
-        sum = base_func(*args, **kwargs)
-        return sum
+# import uuid
+# print(uuid.uuid4())
+# print(uuid.uuid1())
 
-    def base_func(*args, **kwargs):
-        return 2
-
-    return inner_func
-
-
-@decorator
-def a():
-    pass
-
-
-print("Decorator is: ", a())

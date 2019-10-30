@@ -1,5 +1,5 @@
 import datetime
-
+import uuid
 from rest_framework import generics
 
 from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
@@ -547,8 +547,10 @@ class PasswordReset(UserMixin, generics.GenericAPIView):
                 'message': str(e),
             })
 
+# Sending password uuid with api for verification and saving it to db.
 
-class PasswordResetCheck(generics.GenericAPIView):
+
+class PasswordResetCheck(UserMixin, generics.GenericAPIView):
 
     @method_decorator(transaction.atomic)
     def post(self, request):
@@ -578,12 +580,19 @@ class PasswordResetCheck(generics.GenericAPIView):
                         'message': 'OTP not matched.',
                     })
 
+                user_uuid = uuid.uuid4()
+                if not self.save_user_password_uuid(user, user_uuid):
+                    return JsonResponse({
+                        'status': HTTP_400_BAD_REQUEST,
+                        'message': 'uuid problem.',
+                    })
+
                 user.is_active = True
                 user.save()
 
                 return JsonResponse({
                     'status': HTTP_200_OK,
-                    # 'token'
+                    'password_reset_id': user_uuid,
                     'message': 'OTP Matched',
                 })
 
@@ -594,12 +603,13 @@ class PasswordResetCheck(generics.GenericAPIView):
             })
 
 
-class SetNewPassword(generics.GenericAPIView):
+class SetNewPassword(UserMixin, generics.GenericAPIView):
 
     @transaction.atomic
     def post(self, request):
         try:
             email_or_phone = request.data.get('email_or_phone')
+            password_reset_id = request.data.get('password_reset_id')
             password = request.data.get('password')
             confirm_password = request.data.get('confirm_password')
 
@@ -616,19 +626,20 @@ class SetNewPassword(generics.GenericAPIView):
                     'message': 'Password Fields not matched.',
                 })
 
-            if password == user.password:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'You cannot set old password as new password.',
-                })
-
             with transaction.atomic():
 
-                token = Token.objects.filter(user=user).first()
-                if not token:
+                if not self.match_user_password_uuid(user, password_reset_id):
                     return JsonResponse({
-                        'status': HTTP_200_OK,
-                        'message': 'Token is missing.',
+                        'status': HTTP_404_NOT_FOUND,
+                        'message': 'No user found',
+                    })
+
+                # Moving into UserOtp model then access the field user and then move to Auth user and get the password.
+                # So user.user.password.
+                if password == user.password:
+                    return JsonResponse({
+                        'status': HTTP_400_BAD_REQUEST,
+                        'message': 'You cannot set old password as new password.',
                     })
 
                 user.set_password(password)
@@ -637,7 +648,6 @@ class SetNewPassword(generics.GenericAPIView):
 
                 return JsonResponse({
                     'status': HTTP_200_OK,
-                    'token': token.key,
                     'message': "Password successfully reset.",
                 })
 

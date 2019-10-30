@@ -16,13 +16,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from User.views import Register, IsVerified, UserLogin, UserLogout, UserResendOtp, PasswordReset, PasswordResetCheck, \
-    PasswordChange, UpdateName, SetNewPassword
+    PasswordChange, SetNewPassword
 from Reservation.views import BusRoute, BookingDetails, BookRide
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # Register User.
     path('register/', Register.as_view(), name='user_register_api'),
     path('is_verified/', IsVerified.as_view(), name='user_is_verified'),
+
+    # User login logout API.
     path('login/', UserLogin.as_view(), name='customer_login'),
     path('logout/', UserLogout.as_view(), name='customer_logout'),
 
@@ -31,16 +35,12 @@ urlpatterns = [
     path('reserve_ride/', BookRide.as_view(), name='reserve_a_ride'),
     path('resend_otp/', UserResendOtp.as_view(), name='resend_otp'),
 
+    # Reset your password
     path('password/reset/', PasswordReset.as_view(), name='password_reset'),
     path('confirm/password/reset/', PasswordResetCheck.as_view(), name='confirm_password_reset'),
     path('new/password/reset/', SetNewPassword.as_view(), name='set_new_password'),
 
+    # Password change when login.
     path('password_change/', PasswordChange.as_view(), name='password_change'),
-<<<<<<< HEAD
 
-    # path('password_change/', PasswordChange.as_view(), name='password_change'),
-
-=======
-    path('update_name/', UpdateName.as_view(), name='update_name'),
->>>>>>> 78adbeb569e8389f27f2e49d4d0345f137b3836a
 ]

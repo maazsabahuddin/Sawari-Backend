@@ -2,7 +2,7 @@ from rest_framework.authtoken.models import Token
 import datetime
 
 # Put those methods in mixin which can be used through out..
-from User.models import Customer
+from User.models import Customer, UserOtp
 
 
 class UserMixin(object):
@@ -36,4 +36,20 @@ class UserMixin(object):
             user.save()
             return True
 
+        return False
+
+    @staticmethod
+    def save_user_password_uuid(user, password_uuid):
+        user_obj = UserOtp.objects.filter(user=user).first()
+        if user_obj:
+            user_obj.password_reset_id = password_uuid
+            user_obj.save()
+            return True
+        return False
+
+    @staticmethod
+    def match_user_password_uuid(user, password_uuid):
+        user_obj = UserOtp.objects.filter(user=user).first()
+        if user_obj and user_obj.password_reset_id == password_uuid:
+            return True
         return False

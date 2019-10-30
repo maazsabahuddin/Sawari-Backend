@@ -24,6 +24,7 @@ class UserOtp(models.Model):
     otp_time = models.DateTimeField(null=False, blank=False)
     otp_counter = models.IntegerField(null=False, blank=False, default=0)
     is_verified = models.BooleanField(default=False)
+    password_reset_id = models.CharField(unique=True, null=True, blank=True, max_length=255)
 
     def __str__(self):
         return "{} - {} - {}".format(self.user.email, self.user.phone_number, self.is_verified)
