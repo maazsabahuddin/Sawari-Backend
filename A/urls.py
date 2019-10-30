@@ -35,4 +35,6 @@ urlpatterns = [
 
     path('password_change/', PasswordChange.as_view(), name='password_change'),
 
+    # path('password_change/', PasswordChange.as_view(), name='password_change'),
+
 ]
