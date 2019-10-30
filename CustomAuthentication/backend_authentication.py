@@ -34,3 +34,16 @@ class CustomUserCheck(object):
         except MyUser.DoesNotExist:
             return None
 
+    @staticmethod
+    def check_user_seperately(email, phone):
+        try:
+            user = MyUser.objects.get(
+                Q(email=email) | Q(phone_number=phone)
+            )
+            if user:
+                return user
+            return None
+
+        except MyUser.DoesNotExist:
+            return None
+

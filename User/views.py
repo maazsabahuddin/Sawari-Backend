@@ -327,10 +327,13 @@ class UserResendOtp(UserMixin, generics.GenericAPIView):
     @transaction.atomic
     def post(self, request):
         try:
-            email_or_phone = request.data.get('email_or_phone')
-            user = CustomUserCheck.check_user(email_or_phone)
+            email = request.data.get('email')
+            phone_number = request.data.get('phone_number')
 
-            if not email_or_phone:
+            # Check user Via Email and Phones
+            user = CustomUserCheck.check_user_seperately(email, phone_number)
+
+            if not email and not phone_number:
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
                     'message': 'Email/Phone is required'
@@ -340,15 +343,6 @@ class UserResendOtp(UserMixin, generics.GenericAPIView):
                 return JsonResponse({
                     'status': HTTP_404_NOT_FOUND,
                     'message': 'User not found',
-                })
-
-            email = user.email
-            phone_number = user.phone_number
-
-            if not email and not phone_number:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'User not registered.'
                 })
 
             user_otp_obj = UserOtp.objects.filter(user=user).first()
