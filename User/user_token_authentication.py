@@ -40,10 +40,9 @@ class UserMixin(object):
 
     @staticmethod
     def save_user_password_reset_uuid(user, password_uuid):
-        user_obj = UserOtp.objects.filter(user=user).first()
-        if user_obj:
-            user_obj.password_reset_id = password_uuid
-            user_obj.save()
+        if user:
+            user.password_reset_id = password_uuid
+            user.save()
             return True
         return False
 

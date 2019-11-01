@@ -51,7 +51,6 @@ def send_otp_email(email, otp):
             mail_subject, content, to=[to_email]
         )
         send_email.send()
-        # test_send_mail(send_email, mail_subject, content, from_email, to_email)
         return True
 
     except Exception as e:
@@ -59,34 +58,6 @@ def send_otp_email(email, otp):
         logger = logging.info(__name__)
         logger.info(e)
         return False
-
-
-# def test_send_mail(mail, mail_subject, content, from_email, to_email):
-#     # Use Django send_mail function to construct a message
-#     # Note that you don't have to use this function at all.
-#     # Any other way of sending an email in Django would work just fine.
-#     mail.send_mail(
-#         'Example subject here',
-#         'Here is the message body.',
-#         'from@example.com',
-#         ['to@example.com']
-#     )
-#
-#     # Now you can test delivery and email contents
-#     assert len(mail.outbox) == 1, "Inbox is not empty"
-#     assert mail.outbox[0].subject == mail_subject
-#     assert mail.outbox[0].body == content
-#     assert mail.outbox[0].from_email == from_email
-#     assert mail.outbox[0].to == to_email
-
-
-# def check_email_verification(email, otp):
-#
-#     user = User.objects.filter(email=email).first()
-#     if user.email:
-#         if str(user.email_otp) == otp:
-#             return True
-#     return False
 
 
 local_tz = pytz.timezone(TIME_ZONE)
