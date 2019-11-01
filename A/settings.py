@@ -166,3 +166,8 @@ COUNTRY_CODE_PK = "92"
 PHONE_NUMBER_REGEX = r"\+"+COUNTRY_CODE_PK+r"\d{10}"
 # Email REGEX
 EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
+
+# Email Verification
+EMAIL_VERIFICATION = True
+# Phone Verification
+PHONE_VERIFICATION = True

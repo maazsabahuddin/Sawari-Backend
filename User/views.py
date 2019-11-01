@@ -3,22 +3,20 @@ import re
 import uuid
 from rest_framework import generics
 
-from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
-
 from django.contrib.auth.hashers import make_password
-
 from django.db import transaction
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
+from django_twilio.client import Client
 
 from rest_framework.permissions import AllowAny
 from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 
-from django_twilio.client import Client
-from A.settings import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_COUNTER, EMAIL_REGEX, PHONE_NUMBER_REGEX
+from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
+from A.settings import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_COUNTER, EMAIL_REGEX, PHONE_NUMBER_REGEX, \
+    EMAIL_VERIFICATION, PHONE_VERIFICATION
 from .otp_verify import verify_user_otp, generate_otp, send_otp_phone, send_otp_email
 from .models import User, Customer, UserOtp
 from .user_token_authentication import UserMixin
@@ -87,19 +85,13 @@ class Register(APIView):
             with transaction.atomic():
 
                 otp = generate_otp()
+
                 if email and phone_number:
 
-                    if not send_otp_email(email, otp):
-                        return JsonResponse({
-                            'status': HTTP_400_BAD_REQUEST,
-                            'message': 'Invalid Email',
-                        })
-
-                    if not send_otp_phone(phone_number, otp):
-                        return JsonResponse({
-                            'status': HTTP_400_BAD_REQUEST,
-                            'message': 'Invalid phone number',
-                        })
+                    if EMAIL_VERIFICATION:
+                        send_otp_email(email, otp)
+                    if PHONE_VERIFICATION:
+                        send_otp_phone(phone_number, otp)
 
                     user = User.objects.create(
                         email=email,
@@ -126,17 +118,13 @@ class Register(APIView):
                         'status': HTTP_200_OK,
                         'token': token.key,
                         'message': 'OTP has been successfully sent.',
-                        # 'message_sid': message.sid,
                     })
 
                 if email:
 
                     # Sending OTP Via Email
-                    if not send_otp_email(email, otp):
-                        return JsonResponse({
-                            'status': HTTP_400_BAD_REQUEST,
-                            'message': 'Invalid Email',
-                        })
+                    if EMAIL_VERIFICATION:
+                        send_otp_email(email, otp)
 
                     user = User.objects.create(
                         email=email,
@@ -162,15 +150,15 @@ class Register(APIView):
                     return JsonResponse({
                         'status': HTTP_200_OK,
                         'token': token.key,
+                        'verification': EMAIL_VERIFICATION,
                         'message': 'OTP has been successfully sent.',
                     })
 
                 if phone_number:
-                    if not send_otp_phone(phone_number, otp):
-                        return JsonResponse({
-                            'status': HTTP_400_BAD_REQUEST,
-                            'message': 'Invalid Phone Number',
-                        })
+
+                    # Sending OTP Via Phone
+                    if PHONE_VERIFICATION:
+                        send_otp_phone(phone_number, otp)
 
                     user = User.objects.create(
                         email=None,
@@ -197,6 +185,7 @@ class Register(APIView):
                     return JsonResponse({
                         'status': HTTP_200_OK,
                         'token': token.key,
+                        'verification': PHONE_VERIFICATION,
                         'message': 'OTP has been successfully sent.',
                         # 'otp_phone_sid': message.sid,
                     })
@@ -211,6 +200,7 @@ class Register(APIView):
 
 
 # for contact number as well as for email..
+# isko bhi change krna hay.. token header mae pass huga..
 class IsVerified(APIView):
 
     def post(self, request):
@@ -345,17 +335,12 @@ class ResendOtpRegister(UserMixin, generics.GenericAPIView):
 
                 otp = generate_otp()
                 if user.email and user.phone_number:
-                    if not send_otp_email(user.email, otp):
-                        return JsonResponse({
-                            'status': HTTP_400_BAD_REQUEST,
-                            'message': 'Invalid Email',
-                        })
 
-                    if not send_otp_phone(user.phone_number, otp):
-                        return JsonResponse({
-                            'status': HTTP_400_BAD_REQUEST,
-                            'message': 'Invalid phone number',
-                        })
+                    if EMAIL_VERIFICATION:
+                        send_otp_email(user.email, otp)
+
+                    if PHONE_VERIFICATION:
+                        send_otp_phone(user.phone_number, otp)
 
                     UserMixin.user_otp_save(user_otp_obj, otp)
 
@@ -365,32 +350,29 @@ class ResendOtpRegister(UserMixin, generics.GenericAPIView):
                     })
 
                 if user.email:
-                    if not send_otp_email(user.email, otp):
-                        return JsonResponse({
-                            'status': HTTP_400_BAD_REQUEST,
-                            'message': 'Invalid Email',
-                        })
+
+                    if EMAIL_VERIFICATION:
+                        send_otp_email(user.email, otp)
 
                     UserMixin.user_otp_save(user_otp_obj, otp)
 
                     return JsonResponse({
                         'status': HTTP_200_OK,
+                        'verification': EMAIL_VERIFICATION,
                         'message': 'OTP has been successfully resent.',
                     })
 
                 if user.phone_number:
-                    if not send_otp_phone(user.phone_number, otp):
-                        return JsonResponse({
-                            'status': HTTP_400_BAD_REQUEST,
-                            'message': 'Invalid phone number',
-                        })
+
+                    if PHONE_VERIFICATION:
+                        send_otp_phone(user.phone_number, otp)
 
                     UserMixin.user_otp_save(user_otp_obj, otp)
-
                     print(otp)
 
                     return JsonResponse({
                         'status': HTTP_200_OK,
+                        'verification': PHONE_VERIFICATION,
                         'message': 'OTP has been successfully resent.',
                     })
 
@@ -494,32 +476,26 @@ class PasswordResetResendOtp(UserMixin, generics.GenericAPIView):
 
                 otp = generate_otp()
                 if phone_number:
-                    if not send_otp_phone(phone_number, otp):
+                    if PHONE_VERIFICATION:
+                        send_otp_phone(phone_number, otp)
+
+                        self.user_otp_save(user_otp_obj, otp)
+
                         return JsonResponse({
-                            'status': HTTP_400_BAD_REQUEST,
-                            'message': 'Invalid phone number',
+                            'status': HTTP_200_OK,
+                            'message': 'OTP has been successfully sent.',
                         })
-
-                    self.user_otp_save(user_otp_obj, otp)
-
-                    return JsonResponse({
-                        'status': HTTP_200_OK,
-                        'message': 'OTP has been successfully sent.',
-                    })
 
                 if email:
-                    if not send_otp_email(email, otp):
+                    if EMAIL_VERIFICATION:
+                        send_otp_email(email, otp)
+
+                        self.user_otp_save(user_otp_obj, otp)
+
                         return JsonResponse({
-                            'status': HTTP_400_BAD_REQUEST,
-                            'message': 'Invalid Email',
+                            'status': HTTP_200_OK,
+                            'message': 'OTP has been successfully sent.',
                         })
-
-                    self.user_otp_save(user_otp_obj, otp)
-
-                    return JsonResponse({
-                        'status': HTTP_200_OK,
-                        'message': 'OTP has been successfully sent.',
-                    })
 
         except Exception as e:
             return JsonResponse({
@@ -567,7 +543,7 @@ class PasswordReset(UserMixin, generics.GenericAPIView):
 
                 otp = generate_otp()
                 print(otp)
-                if is_phone_number:
+                if is_phone_number and PHONE_VERIFICATION:
                     if send_otp_phone(email_or_phone, otp):
 
                         password_uuid = uuid.uuid4()
@@ -585,7 +561,7 @@ class PasswordReset(UserMixin, generics.GenericAPIView):
                         'message': 'Invalid phone number',
                     })
 
-                if is_email:
+                if is_email and EMAIL_VERIFICATION:
                     if send_otp_email(email_or_phone, otp):
 
                         password_uuid = uuid.uuid4()
