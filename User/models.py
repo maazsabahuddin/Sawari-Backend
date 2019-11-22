@@ -48,6 +48,28 @@ class Captain(models.Model):
         return "{} - {}".format(self.id, self.user.email)
 
 
+# Issey acha method hay decorator k through krlu.
+
+# class SingletonModel(models.Model):
+#     class Meta:
+#         abstract = True
+#
+#     def save(self, *args, **kwargs):
+#         self.pk = 1
+#         super(SingletonModel, self).save(*args, **kwargs)
+#
+#     def delete(self, *args, **kwargs):
+#         pass
+#
+#     @classmethod
+#     def load(cls):
+#         obj, created = cls.objects.get_or_create(pk=1)
+#         return obj
+#
+#
+# class SiteSettings(SingletonModel):
+#     support = models.EmailField(default='supprot@example.com')
+
 # from django.conf import settings
 # from django.db.models.signals import post_save
 # from django.dispatch import receiver

@@ -76,25 +76,24 @@ def test_send_mail(mail, mail_subject, content, from_email, to_email):
     assert mail.outbox[0].to == to_email
 
 
-def check_email_verification(email, otp):
-
-    user = User.objects.filter(email=email).first()
-    if user.email:
-        if str(user.email_otp) == otp:
-            return True
-    return False
-
-
-def verify_user_otp(user, otp):
-    if user:
-        if user.otp == otp:
-            return True
-    return False
-
-
-def generate_otp():
-    digits = "0123456789"
-    otp = ""
-    for i in range(6):
-        otp += digits[math.floor(random.random() * 10)]
-    return otp
+# def check_email_verification(email, otp):
+#
+#     user = User.objects.filter(email=email).first()
+#     if user.email:
+#         if str(user.email_otp) == otp:
+#             return True
+#     return False
+#
+# def verify_user_otp(user, otp):
+#     if user:
+#         if user.otp == otp:
+#             return True
+#     return False
+#
+#
+# def generate_otp():
+#     digits = "0123456789"
+#     otp = ""
+#     for i in range(6):
+#         otp += digits[math.floor(random.random() * 10)]
+#     return otp

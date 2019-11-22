@@ -218,3 +218,19 @@ import math
 #     print("Valid phone number")
 # else:
 #     print("Invalid phone number")
+
+
+# class Base:
+#
+#     def __init__(self):
+#         self.a = 199
+#
+#
+# class Derive(Base):
+#
+#     def __init__(self):
+#         Base.__init__(self)
+#         print(self.a)
+#
+#
+# z = Derive()

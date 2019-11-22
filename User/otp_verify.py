@@ -15,122 +15,128 @@ auth_token = TWILIO_AUTH_TOKEN
 client = Client(account_sid, auth_token)
 
 
-def send_otp_phone(phone_number, otp):
-    try:
-        message_body = 'Dear Instant Bus user, your OTP code is: ' + str(otp)
-        sender_phone_number = '+12068097984'
+class UserOTPMixin(object):
 
-        message = client.messages.create(
-            from_=sender_phone_number,
-            body=message_body,
-            to=phone_number,
-        )
-        return True
+    @staticmethod
+    def send_otp_phone(phone_number, otp):
+        try:
+            message_body = 'Dear Instant Bus user, your OTP code is: ' + str(otp)
+            sender_phone_number = '+12068097984'
 
-    except Exception as e:
-        import logging
-        logger = logging.info(__name__)
-        logger.info(e)
-        return False
+            client.messages.create(
+                from_=sender_phone_number,
+                body=message_body,
+                to=phone_number,
+            )
+            return True
 
-
-def send_otp_email(email, otp):
-    try:
-        from_email = EMAIL_HOST_USER
-        mail_subject = 'Activate your account.'
-        message = {
-            'Email': email,
-            'OTP': otp,
-            # 'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-            # 'token': account_activation_token.make_token(user),
-        }
-        content = {"%s: %s" % (key, value) for (key, value) in message.items()}
-        content = "\n".join(content)
-        to_email = email
-        send_email = EmailMessage(
-            mail_subject, content, to=[to_email]
-        )
-        send_email.send()
-        return True
-
-    except Exception as e:
-        import logging
-        logger = logging.info(__name__)
-        logger.info(e)
-        return False
-
-
-local_tz = pytz.timezone(TIME_ZONE)
-
-
-# db sey time utc format mae ata hay..
-# yeh method usko local time mae convert krdega..
-def utc_to_local(utc_dt):
-    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(local_tz)
-    return local_tz.normalize(local_dt)
-
-
-def verify_user_otp(user, otp, time_now):
-
-    try:
-        otp_user_obj = UserOtp.objects.filter(user=user).first()
-        if not otp_user_obj:
+        except Exception as e:
+            import logging
+            logger = logging.info(__name__)
+            logger.info(e)
             return False
 
-        # adding current timezone to local time.
-        time_now_format = local_tz.localize(time_now)
+    @staticmethod
+    def send_otp_email(email, otp):
+        try:
+            from_email = EMAIL_HOST_USER
+            mail_subject = 'Activate your account.'
+            message = {
+                'Email': email,
+                'OTP': otp,
+                # 'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                # 'token': account_activation_token.make_token(user),
+            }
+            content = {"%s: %s" % (key, value) for (key, value) in message.items()}
+            content = "\n".join(content)
+            to_email = email
+            send_email = EmailMessage(
+                mail_subject, content, to=[to_email]
+            )
+            send_email.send()
+            return True
 
-        # fetch db time
-        otp_send_time = otp_user_obj.otp_time
+        except Exception as e:
+            import logging
+            logger = logging.info(__name__)
+            logger.info(e)
+            return False
 
-        # adding seconds to db time..s
-        otp_end_time = otp_send_time + datetime.timedelta(0, OTP_VALID_TIME)
+    local_tz = pytz.timezone(TIME_ZONE)
 
-        # convert db time utc to local time format
-        otp_end_time_local = utc_to_local(otp_end_time)
+    # db sey time utc format mae ata hay..
+    # yeh method usko local time mae convert krdega..
+    @classmethod
+    def utc_to_local(cls, utc_dt):
+        local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(cls.local_tz)
+        return cls.local_tz.normalize(local_dt)
 
-        if otp_user_obj.otp_counter < OTP_COUNTER_LIMIT:
-            if time_now_format < otp_end_time_local:
-                if otp_user_obj.otp == otp:
-                    otp_user_obj.otp_counter = 0
-                    otp_user_obj.is_verified = True
-                    otp_user_obj.save()
-                    return True
+    @classmethod
+    def verify_user_otp(cls, user, otp, time_now):
 
-        return False
+        try:
+            otp_user_obj = UserOtp.objects.filter(user=user).first()
+            if not otp_user_obj:
+                return False
 
-    except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(e)
-        return None
+            # adding current timezone to local time.
+            time_now_format = cls.local_tz.localize(time_now)
 
+            # fetch db time
+            otp_send_time = otp_user_obj.otp_time
 
-def generate_otp():
-    try:
-        digits = "0123456789"
-        otp = ""
-        for i in range(6):
-            otp += digits[math.floor(random.random() * 10)]
-        return otp
+            # adding seconds to db time..s
+            otp_end_time = otp_send_time + datetime.timedelta(0, OTP_VALID_TIME)
 
-    except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(e)
-        return None
+            # convert db time utc to local time format
+            otp_end_time_local = cls.utc_to_local(otp_end_time)
 
+            if otp_user_obj.otp_counter > OTP_COUNTER_LIMIT:
+                return False
 
-def password_reset_key():
-    try:
-        digits = "0123456789"
-        otp = ""
-        for i in range(6):
-            otp += digits[math.floor(random.random() * 10)]
-        return otp
+            if time_now_format > otp_end_time_local:
+                return False
 
-    except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(e)
-        return None
+            if otp_user_obj.otp == otp:
+                otp_user_obj.otp_counter = 0
+                otp_user_obj.is_verified = True
+                otp_user_obj.save()
+                return True
+
+            return False
+
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(e)
+            return None
+
+    @staticmethod
+    def generate_otp():
+        try:
+            digits = "0123456789"
+            otp = ""
+            for i in range(6):
+                otp += digits[math.floor(random.random() * 10)]
+            return otp
+
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(e)
+            return None
+
+    # @staticmethod
+    # def password_reset_key():
+    #     try:
+    #         digits = "0123456789"
+    #         otp = ""
+    #         for i in range(6):
+    #             otp += digits[math.floor(random.random() * 10)]
+    #         return otp
+    #
+    #     except Exception as e:
+    #         import logging
+    #         logger = logging.getLogger(__name__)
+    #         logger.info(e)
+    #         return None
