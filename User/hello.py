@@ -144,6 +144,93 @@
 #     print('No')
 
 
-a = 'False'
-if not a:
-    print("WOW")
+# a = 'False'
+# if not a:
+#     print("WOW")
+
+# decorators 1
+# def hello_function(func):
+#
+#     def hello():
+#         print("Hello1")
+#         func()
+#     return hello
+#
+#
+# def function_to_be_used():
+#     print("Hii ! ")
+#
+#
+# obj = hello_function(function_to_be_used)
+# obj()
+
+
+# decorators 2
+import time
+import math
+
+
+# def decorator(func):
+#
+#     def inner_func(*args, **kwargs):
+#
+#         sum = base_func(*args, **kwargs)
+#         return sum
+#
+#     def base_func(*args, **kwargs):
+#         return 2
+#
+#     return inner_func
+#
+#
+# @decorator
+# def a():
+#     pass
+#
+#
+# print("Decorator is: ", a())
+
+
+# import uuid
+# print(uuid.uuid4())
+# print(uuid.uuid1())
+
+# regex
+# import re
+#
+# from A.settings import COUNTRY_CODE_PK
+#
+# txt = "maazsabahuddin@gmail.com"
+# EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
+# if txt:
+#     x = re.search(EMAIL_REGEX, txt)
+#
+#     if x:
+#         print("Correct Email")
+#
+#
+# phonenumber= "+923442713545"
+#
+# regex = r"\+"+COUNTRY_CODE_PK+r"\d{10}"
+# print(regex)
+#
+# if re.search(regex, phonenumber):
+#     print("Valid phone number")
+# else:
+#     print("Invalid phone number")
+
+
+# class Base:
+#
+#     def __init__(self):
+#         self.a = 199
+#
+#
+# class Derive(Base):
+#
+#     def __init__(self):
+#         Base.__init__(self)
+#         print(self.a)
+#
+#
+# z = Derive()
