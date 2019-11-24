@@ -7,7 +7,6 @@ from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.http import JsonResponse
-from django.utils.decorators import method_decorator
 from django_twilio.client import Client
 from rest_framework import generics
 
