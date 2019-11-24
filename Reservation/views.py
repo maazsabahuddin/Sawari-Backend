@@ -14,14 +14,14 @@ from .models import Reservation, Ride
 from .reservation_pattern import ReservationNumber
 
 
-# No such need pf login decorator because we're using Token authentication method. if there's a user it will be
+# No such need of login decorator because we're using Token authentication method. if there's a user it will be
 # logged in via token and if no token will be there means no user. it will return invalid token.
 class BusRoute(generics.GenericAPIView):
 
     @login_decorator
-    def post(self, request):
+    def post(self, request, data=None):
         try:
-            user = self.user
+            user = data['user']
             from_location = request.data.get('from')
             to_location = request.data.get('to')
 
