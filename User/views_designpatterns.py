@@ -332,7 +332,8 @@ class Register(RegisterCase, UserMixinMethods):
             logger = logging.getLogger(__name__)
             logger.info(e)
             return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e),
             })
 
 
