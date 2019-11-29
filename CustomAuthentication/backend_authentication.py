@@ -14,11 +14,14 @@ class CustomAuthenticationBackend(object):
             user = User.objects.filter(
                  Q(email=email_or_phone) | Q(phone_number=email_or_phone)
             ).first()
-            if user.check_password(password):
-                return user
+
+            if user:
+                if user.check_password(password):
+                    return user
+            return None
 
         except MyUser.DoesNotExist:
-            return None
+            return False
 
 
 class CustomUserCheck(object):
