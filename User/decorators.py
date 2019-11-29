@@ -225,13 +225,12 @@ def logout_decorator(f):
                     'message': 'Invalid Token.',
                 })
 
-            user = CustomUserCheck.check_user_seperately(user_token.user.email, user_token.user.phone_number)
             return f(args[0], request, user=user_token)
 
         except Exception as e:
             return JsonResponse({
                 'status': HTTP_400_BAD_REQUEST,
-                'message': 'Server problem' + str(e),
+                'message': 'Server problem ' + str(e),
             })
 
     return decorated_function

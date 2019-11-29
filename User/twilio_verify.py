@@ -1,7 +1,7 @@
 import math
 import random
 
-from A.settings import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, EMAIL_HOST_USER
+from A.settings import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, EMAIL_HOST_USER, SENDER_PHONE_NUMBER
 from django_twilio.client import Client
 from .models import User
 from django.core.mail import EmailMessage
@@ -14,7 +14,7 @@ client = Client(account_sid, auth_token)
 def send_otp_phone(phone_number, otp):
     try:
         message_body = 'Dear Instant Bus user, your OTP code is: ' + str(otp)
-        sender_phone_number = '+12068097984'
+        sender_phone_number = SENDER_PHONE_NUMBER
 
         message = client.messages.create(
             from_=sender_phone_number,
@@ -23,10 +23,7 @@ def send_otp_phone(phone_number, otp):
          )
         return True
 
-    except Exception as e:
-        import logging
-        logger = logging.info(__name__)
-        logger.info(e)
+    except TypeError:
         return False
 
 

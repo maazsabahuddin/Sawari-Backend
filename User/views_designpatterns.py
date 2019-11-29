@@ -4,7 +4,6 @@ import uuid
 from abc import abstractmethod
 
 from django.contrib.auth.hashers import make_password
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.http import JsonResponse
 from django_twilio.client import Client

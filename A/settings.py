@@ -155,6 +155,9 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
 STATIC_URL = '/static/'
 
+# TWILIO TRIAL SENDER PHONE NUMBER
+SENDER_PHONE_NUMBER = '+12068097984'
+
 # Changes as per business requirements.
 OTP_COUNTER_LIMIT = 3
 

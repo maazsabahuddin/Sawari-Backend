@@ -6,7 +6,7 @@ from rest_framework import generics
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
 from rest_framework.views import APIView
 
-from A.settings import FIXED_FARE, KILOMETER_FARE, FIXED_FARE_PRICE
+from A.settings import FIXED_FARE, KILOMETER_FARE, FIXED_FARE_PRICE, SENDER_PHONE_NUMBER
 from Payment.models import Pricing, PaymentMethod
 # from Payment.views import PaymentMixin
 from Reservation.decorator_reservation import reserve_ride_decorator, confirm_ride
@@ -202,6 +202,33 @@ class RideBook(generics.GenericAPIView):
 class ConfirmRide(RideBook, generics.GenericAPIView):
 
     @staticmethod
+    def ride_confirm_message(*args, **kwargs):
+        try:
+            first_name = kwargs.get('first_name')
+            phone_number = kwargs.get('phone_number')
+            res_no = kwargs.get('res_no')
+            vehicle_no_plate = kwargs.get('vehicle_no_plate')
+            pick_up_point = kwargs.get('pick_up_point')
+
+            sawaari_message = "\nRIDE WITH SAWAARI\n"
+            message_body = sawaari_message + 'Hi {}, your ride is confirmed.\nReservation Number - {}\nVehicle - {}\n' \
+                                             'Pick-up-point - {} '.format(first_name, res_no, vehicle_no_plate,
+                                                                          pick_up_point,)
+            sender_phone_number = SENDER_PHONE_NUMBER
+
+            from User.twilio_verify import client
+
+            client.messages.create(
+                from_=sender_phone_number,
+                body=message_body,
+                to=phone_number,
+            )
+            return True
+
+        except TypeError:
+            return False
+
+    @staticmethod
     @transaction.atomic
     def update_ride(vehicle_no_plate, seats_booked: int):
         try:
@@ -217,11 +244,12 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
         except TypeError:
             return False
 
-    # @transaction.atomic
+    @transaction.atomic
     @login_decorator
     @confirm_ride
     def post(self, request, **kwargs):
         try:
+            customer = kwargs.get('customer_obj')
             reservation_number_obj = kwargs.get('reservation_number')
 
             with transaction.atomic():
@@ -238,6 +266,11 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                     })
 
                 user_ride_obj = UserRideDetail.objects.filter(reservation_id=reservation_number_obj.id).first()
+                ConfirmRide.ride_confirm_message(phone_number=customer.user.phone_number,
+                                                 res_no=reservation_number_obj.reservation_number,
+                                                 vehicle_no_plate=vehicle_obj.vehicle_no_plate,
+                                                 pick_up_point=user_ride_obj.pick_up_point,
+                                                 first_name=customer.user.first_name,)
 
                 return JsonResponse({
                     'status': HTTP_200_OK,

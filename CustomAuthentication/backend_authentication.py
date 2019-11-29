@@ -43,7 +43,7 @@ class CustomUserCheck(object):
     def check_user_seperately(email, phone):
         try:
             user = User.objects.filter(
-                Q(email=email) | Q(phone_number=phone)
+                Q(email=email) & Q(phone_number=phone)
             ).first()
             if user:
                 return user
