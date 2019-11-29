@@ -30,6 +30,12 @@ def login_decorator(f):
 
             user = CustomUserCheck.check_user_seperately(user_token.user.email, user_token.user.phone_number)
 
+            if not user.is_active:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'User not authenticated. Please verify first.',
+                })
+
             data = {'user': user}
             return f(args[0], request, data)
 

@@ -9,13 +9,14 @@ from Reservation.models import Reservation, Ride
 # Create your models here.
 class UserRideDetail(models.Model):
     ride_id = models.ForeignKey(Ride, on_delete=models.CASCADE)
-    reservation_id = models.ForeignKey(Reservation, on_delete=models.CASCADE) # Must be many2manyfield do check that
+    reservation_id = models.ForeignKey(Reservation, on_delete=models.CASCADE)  # Must be many2manyfield do check that
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
-    kilometer = models.FloatField(blank=False)
-    price_per_km = models.FloatField(blank=False, null=False, max_length=5)
+    kilometer = models.FloatField(blank=True, null=True)
+    price_per_km = models.FloatField(blank=True, null=True, max_length=5)
     payment_method_id = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE, blank=True, null=True)
     payment_status = models.BooleanField(default=False)
-    total_payment = models.IntegerField(blank=False)
+    fare = models.IntegerField(blank=False)
+    fixed_fare = models.BooleanField(default=False)
     pick_up_point = models.CharField(blank=True, max_length=256)
     drop_up_point = models.CharField(blank=True, max_length=256)
     ride_date = models.DateField(default=datetime.datetime.today)

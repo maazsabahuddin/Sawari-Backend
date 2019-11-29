@@ -157,18 +157,32 @@ STATIC_URL = '/static/'
 
 # Changes as per business requirements.
 OTP_COUNTER_LIMIT = 3
+
 # kitni der tk otp valid rhega.
 OTP_VALID_TIME = 120
+
 # Initial Counter
 OTP_INITIAL_COUNTER = 1
+
 # Country code
 COUNTRY_CODE_PK = "92"
+
 # Regex Phone Number
 PHONE_NUMBER_REGEX = r"\+"+COUNTRY_CODE_PK+r"\d{10}"
+
 # Email REGEX
 EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
 
 # Email Verification
 EMAIL_VERIFICATION = True
+
 # Phone Verification
 PHONE_VERIFICATION = True
+
+FIXED_FARE_PRICE = 50
+KILOMETER_FARE = False
+FIXED_FARE = True
+
+# Payment through Foree, Easypaisa and more.
+ONLINE_PAYMENT = True
+ONLINE_PAYMENT_FEE = False

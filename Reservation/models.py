@@ -5,13 +5,13 @@ from User.models import Captain, Customer
 
 
 class Vehicle(models.Model):
-    vehicle_no_plate = models.CharField(blank=False, max_length=10)
+    vehicle_no_plate = models.CharField(blank=False, null=False, max_length=10, unique=True)
     driver_ids = models.ManyToManyField(Captain, related_name='drivers', blank=True)
     owner = models.ForeignKey(Captain, on_delete=models.CASCADE)
     brand = models.CharField(blank=True, max_length=20)
     max_seats = models.IntegerField(blank=False)
-    from_loc = models.CharField(max_length=255, default="K")
-    to_loc = models.CharField(max_length=255, default="L")
+    from_loc = models.CharField(max_length=255)
+    to_loc = models.CharField(max_length=255)
 
     def __str__(self):
         return "Vehicle {} - {}".format(self.id, self.vehicle_no_plate)

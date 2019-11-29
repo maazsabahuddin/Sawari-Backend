@@ -6,8 +6,6 @@ class User(AbstractUser):
     username = models.CharField(blank=True, null=True, max_length=60)
     phone_number = models.CharField(unique=True, max_length=15, null=True, blank=True)
     email = models.EmailField(unique=True, null=True, blank=True)
-    # is_verified = models.BooleanField(default=False)
-    # otp = models.CharField(default=None, max_length=8, null=True, blank=True)
     is_customer = models.BooleanField(default=False)
     is_captain = models.BooleanField(default=False)
 

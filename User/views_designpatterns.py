@@ -397,12 +397,6 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
                     'message': 'Is customer field is false.',
                 })
 
-            if not user.is_active:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'User not authenticated. Please verify first.',
-                })
-
             token, _ = Token.objects.get_or_create(user=user)
             return JsonResponse({
                 'status': HTTP_200_OK,
