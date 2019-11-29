@@ -21,7 +21,7 @@ class CustomAuthenticationBackend(object):
             return None
 
         except MyUser.DoesNotExist:
-            return False
+            return None
 
 
 class CustomUserCheck(object):

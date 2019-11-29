@@ -202,3 +202,36 @@ def register(f):
         return f(args[0], request, context)
 
     return register_decorator
+
+
+def logout_decorator(f):
+
+    @wraps(f)
+    def decorated_function(*args):
+        try:
+            request = args[1]
+            token = request.headers.get('authorization')
+
+            if not token:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Token required for authentication.',
+                })
+
+            user_token = Token.objects.filter(key=token).first()
+            if not user_token:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Invalid Token.',
+                })
+
+            user = CustomUserCheck.check_user_seperately(user_token.user.email, user_token.user.phone_number)
+            return f(args[0], request, user=user_token)
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'Server problem' + str(e),
+            })
+
+    return decorated_function
