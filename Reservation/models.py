@@ -22,7 +22,7 @@ class Ride(models.Model):
     vehicle_id = models.ForeignKey(to='Vehicle', on_delete=models.CASCADE, related_name='driver_vehicle')
     start_time = models.DateTimeField(blank=True, null=True)
     end_time = models.DateTimeField(blank=True, null=True)
-    route = models.CharField(blank=False, max_length=256)
+    route = models.CharField(blank=True, max_length=256)
     seats_left = models.IntegerField(blank=False, null=False)
 
     def __str__(self):

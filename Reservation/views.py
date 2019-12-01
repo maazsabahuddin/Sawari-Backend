@@ -210,7 +210,7 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
             vehicle_no_plate = kwargs.get('vehicle_no_plate')
             pick_up_point = kwargs.get('pick_up_point')
 
-            sawaari_message = "\nRIDE WITH SAWAARI\n"
+            sawaari_message = "\ngRIDE WITH SAWAARI\n"
             message_body = sawaari_message + 'Hi {}, your ride is confirmed.\nReservation Number - {}\nVehicle - {}\n' \
                                              'Pick-up-point - {} '.format(first_name, res_no, vehicle_no_plate,
                                                                           pick_up_point,)

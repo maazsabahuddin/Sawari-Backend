@@ -399,6 +399,13 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
                 })
 
             token, _ = Token.objects.get_or_create(user=user)
+            if not user.is_active:
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'token': token.key,
+                    'message': 'User not authenticated. Please verify first.',
+                })
+
             return JsonResponse({
                 'status': HTTP_200_OK,
                 'token': token.key,
