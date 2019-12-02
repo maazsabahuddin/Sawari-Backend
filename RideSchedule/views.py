@@ -98,7 +98,7 @@ class Route(generics.GenericAPIView):
             start_lat_lon_ = {'lat': float(start_lat), 'lon': float(start_lon)}
             start_lat_lon_ = {'lat': float(stop_lat), 'lon': float(stop_lon)}
 
-
+            ride_obj = Ride.objects.filter(is_active)
 
 
         except Exception as e:

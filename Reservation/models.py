@@ -24,6 +24,7 @@ class Ride(models.Model):
     start_time = models.DateTimeField(blank=True, null=True)
     end_time = models.DateTimeField(blank=True, null=True)
     seats_left = models.IntegerField(blank=False, null=False)
+    is_complete = models.BooleanField(default=False)
 
     def __str__(self):
         return "Ride {} - {}".format(self.id, self.vehicle_id.vehicle_no_plate)
