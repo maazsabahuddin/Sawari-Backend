@@ -6,30 +6,20 @@ from django.shortcuts import render
 from rest_framework import generics
 from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_200_OK, HTTP_400_BAD_REQUEST
 
-from Reservation.models import Ride
+from A.settings import DISTANCE_KILOMETRE_LIMIT
+from Reservation.models import Ride, Stop, Route
 from User.decorators import login_decorator
 
 
 from math import cos, asin, sqrt
 
 
-def distance(lat1, lon1, lat2, lon2):
+# It returns the result in Kilometer.
+# Distance between two points.
+def distance_formula(lat1, lon1, lat2, lon2):
     p = 0.017453292519943295
     a = 0.5 - cos((lat2-lat1)*p)/2 + cos(lat1*p)*cos(lat2*p) * (1-cos((lon2-lon1)*p)) / 2
     return 12742 * asin(sqrt(a))
-
-
-def closest(data, v):
-    return min(data, key=lambda p: distance(v['lat'], v['lon'], p['lat'], p['lon']))
-
-
-tempDataList = [{'lat': 39.7612992, 'lon': -86.1519681},
-                {'lat': 39.762241,  'lon': -86.158436 },
-                {'lat': 39.7622292, 'lon': -86.1578917}, ]
-
-
-v = {'lat': 39.7622290, 'lon': -86.1519750}
-# print(closest(tempDataList, v))
 
 
 class VehicleRoute(generics.GenericAPIView):
@@ -85,25 +75,65 @@ class VehicleRoute(generics.GenericAPIView):
             return False
 
 
-class Route(generics.GenericAPIView):
+class BusRoute(generics.GenericAPIView):
 
     @login_decorator
-    def post(self, request, **kwargs):
+    def post(self, request, data=None):
         try:
             start_lat = request.data.get('start_lat')
             start_lon = request.data.get('start_lon')
             stop_lat = request.data.get('stop_lat')
             stop_lon = request.data.get('stop_lon')
 
+            stop_ = []
+            ride = []
+
             start_lat_lon_ = {'lat': float(start_lat), 'lon': float(start_lon)}
-            start_lat_lon_ = {'lat': float(stop_lat), 'lon': float(stop_lon)}
+            stop_lat_lon_ = {'lat': float(stop_lat), 'lon': float(stop_lon)}
 
-            ride_obj = Ride.objects.filter(is_active)
+            ride_obj = Ride.objects.filter(is_complete=False)
 
+            for ride_obj in ride_obj:
+                route_obj = Route.objects.filter(ride_id=ride_obj.id)
+
+                for route_obj in route_obj:
+                    stops_obj = Stop.objects.filter(route_ids=route_obj.id)
+
+                    for i in range(len(stops_obj)):
+                        stop_.append({
+                            'lat': stops_obj[i].latitude,
+                            'lon': stops_obj[i].longitude,
+                            'stop_name': stops_obj[i].name,
+                        })
+
+                        start_distance = distance_formula(stops_obj[i].latitude, stops_obj[i].longitude,
+                                                          start_lat_lon_['lat'], start_lat_lon_['lon'])
+                        stop_[i].update({'start_distance': start_distance})
+
+                        stop_distance = distance_formula(stops_obj[i].latitude, stops_obj[i].longitude,
+                                                         stop_lat_lon_['lat'], stop_lat_lon_['lon'])
+                        stop_[i].update({'stop_distance': stop_distance})
+
+                    for i in range(len(stop_)):
+                        if stop_[i]['start_distance'] < DISTANCE_KILOMETRE_LIMIT and \
+                                stop_[i]['stop_distance'] < DISTANCE_KILOMETRE_LIMIT:
+
+                            ride.append(ride_obj)
+                            break
+            print(ride)
+
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'message': 'Ok',
+                'vehicle_no_plate': ride[0].vehicle_id.vehicle_no_plate,
+                'seats_left': ride[0].seats_left,
+                'pick_up_point': '',
+                'drop_up_point': '',
+            })
 
         except Exception as e:
             return JsonResponse({
-                'status': HTTP_200_OK,
+                'status': HTTP_400_BAD_REQUEST,
                 'message': str(e),
             })
 
@@ -158,3 +188,7 @@ class Route(generics.GenericAPIView):
     #             'status': HTTP_400_BAD_REQUEST,
     #             'message': str(e),
     #         })
+
+
+
+

@@ -189,3 +189,5 @@ FIXED_FARE = True
 # Payment through Foree, Easypaisa and more.
 ONLINE_PAYMENT = True
 ONLINE_PAYMENT_FEE = False
+
+DISTANCE_KILOMETRE_LIMIT = 2.0

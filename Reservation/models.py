@@ -58,7 +58,8 @@ class Reservation(models.Model):
 class Stop(models.Model):
     route_ids = models.ManyToManyField(Route, related_name='route_stops')
     name = models.CharField(blank=False, max_length=256)
-    lat_long = models.CharField(blank=False, max_length=100)
+    latitude = models.FloatField(blank=False, max_length=100)
+    longitude = models.FloatField(blank=False, max_length=100)
 
     def __str__(self):
-        return "{} - {}".format(self.name, self.lat_long)
+        return "{} - {} - {}".format(self.name, self.latitude, self.longitude)
