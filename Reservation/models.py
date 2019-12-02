@@ -17,26 +17,28 @@ class Vehicle(models.Model):
         return "Vehicle {} - {}".format(self.id, self.vehicle_no_plate)
 
 
-class Route(models.Model):
-    start_lat_long = models.CharField(blank=False, max_length=100)
-    start_name = models.CharField(blank=False, max_length=50)
-    stop_lat_long = models.CharField(blank=False, max_length=100)
-    stop_name = models.CharField(blank=False, max_length=50)
-
-    def __str__(self):
-        return "{} - {}".format(self.start_name, self.stop_name)
-
-
 class Ride(models.Model):
+
     driver_ids = models.ManyToManyField(Captain)
     vehicle_id = models.ForeignKey(to='Vehicle', on_delete=models.CASCADE, related_name='driver_vehicle')
     start_time = models.DateTimeField(blank=True, null=True)
     end_time = models.DateTimeField(blank=True, null=True)
-    route_id = models.ManyToManyField(Route, related_name='ride_route')
     seats_left = models.IntegerField(blank=False, null=False)
 
     def __str__(self):
         return "Ride {} - {}".format(self.id, self.vehicle_id.vehicle_no_plate)
+
+
+class Route(models.Model):
+    # A ride is a lap.
+    # A ride can have only one route and a route can have multiple rides.
+    # route_id = models.ManyToManyField(Route, related_name='route_ride')
+    ride_id = models.ForeignKey(Ride, related_name='ride_route', on_delete=models.CASCADE)
+    start_name = models.CharField(blank=False, max_length=50)
+    stop_name = models.CharField(blank=False, max_length=50)
+
+    def __str__(self):
+        return "Ride {} - {} - {}".format(self.ride_id.id, self.start_name, self.stop_name)
 
 
 class Reservation(models.Model):
@@ -53,9 +55,9 @@ class Reservation(models.Model):
 
 
 class Stop(models.Model):
-    name = models.CharField(blank=False, max_length=50)
+    route_ids = models.ManyToManyField(Route, related_name='route_stops')
+    name = models.CharField(blank=False, max_length=256)
     lat_long = models.CharField(blank=False, max_length=100)
-    route_id = models.ManyToManyField(Route, related_name='route_stops')
 
     def __str__(self):
-        return "{} - {} - {}".format(self.name, self.lat_long, self.route_id)
+        return "{} - {}".format(self.name, self.lat_long)

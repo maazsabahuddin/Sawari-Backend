@@ -88,50 +88,73 @@ class VehicleRoute(generics.GenericAPIView):
 class Route(generics.GenericAPIView):
 
     @login_decorator
-    def post(self, request, data=None):
-
+    def post(self, request, **kwargs):
         try:
-            lat = request.data.get('lat')
-            lon = request.data.get('lon')
-            lat_float = float(lat)
-            lon_float = float(lon)
-            lat_lon_dict = {'lat': lat_float, 'lon': lon_float}
+            start_lat = request.data.get('start_lat')
+            start_lon = request.data.get('start_lon')
+            stop_lat = request.data.get('stop_lat')
+            stop_lon = request.data.get('stop_lon')
 
-            lat_long_bus = []
-            k = []
-            final_list_dict = []
+            start_lat_lon_ = {'lat': float(start_lat), 'lon': float(start_lon)}
+            start_lat_lon_ = {'lat': float(stop_lat), 'lon': float(stop_lon)}
 
-            bus_route_obj = Ride.objects.filter()
 
-            for i in range(len(bus_route_obj)):
-                lat_long_bus.append(bus_route_obj[i].route)
 
-            print(lat_long_bus)
-            a = str(lat_long_bus[0]).split(',')
-            print(a)
-
-            for i in range(len(a)):
-                h = a[i]
-                j = h.split(':')
-
-                for z in range(len(j)):
-                    k.append(float(j[z]))
-
-            print(k)
-
-            for i in range(len(k)):
-                x = {'lat': k[i], 'lon': k[i]+1}
-                final_list_dict.append(x)
-                i += 1
-
-            print(final_list_dict)
-
-            closest_point = closest(final_list_dict, lat_lon_dict)
-            print(closest_point)
-
-            return JsonResponse({
-                'status': HTTP_200_OK,
-            })
 
         except Exception as e:
-            print(e)
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'message': str(e),
+            })
+
+    # @login_decorator
+    # def post(self, request, data=None):
+    #
+    #     try:
+    #         lat = request.data.get('lat')
+    #         lon = request.data.get('lon')
+    #         lat_float = float(lat)
+    #         lon_float = float(lon)
+    #         lat_lon_dict = {'lat': lat_float, 'lon': lon_float}
+    #
+    #         lat_long_bus = []
+    #         k = []
+    #         final_list_dict = []
+    #
+    #         bus_route_obj = Ride.objects.filter()
+    #
+    #         for i in range(len(bus_route_obj)):
+    #             lat_long_bus.append(bus_route_obj[i].route)
+    #
+    #         print(lat_long_bus)
+    #         a = str(lat_long_bus[0]).split(',')
+    #         print(a)
+    #
+    #         for i in range(len(a)):
+    #             h = a[i]
+    #             j = h.split(':')
+    #
+    #             for z in range(len(j)):
+    #                 k.append(float(j[z]))
+    #
+    #         print(k)
+    #
+    #         for i in range(len(k)):
+    #             x = {'lat': k[i], 'lon': k[i]+1}
+    #             final_list_dict.append(x)
+    #             i += 1
+    #
+    #         print(final_list_dict)
+    #
+    #         closest_point = closest(final_list_dict, lat_lon_dict)
+    #         print(closest_point)
+    #
+    #         return JsonResponse({
+    #             'status': HTTP_200_OK,
+    #         })
+    #
+    #     except Exception as e:
+    #         return JsonResponse({
+    #             'status': HTTP_400_BAD_REQUEST,
+    #             'message': str(e),
+    #         })
