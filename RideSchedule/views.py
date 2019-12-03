@@ -85,50 +85,38 @@ class BusRoute(generics.GenericAPIView):
             stop_lat = request.data.get('stop_lat')
             stop_lon = request.data.get('stop_lon')
 
-            stop_ = []
-            ride = []
+            # stop_ = []
+            ride = {}
 
             start_lat_lon_ = {'lat': float(start_lat), 'lon': float(start_lon)}
             stop_lat_lon_ = {'lat': float(stop_lat), 'lon': float(stop_lon)}
 
             ride_obj = Ride.objects.filter(is_complete=False)
+            if not ride_obj:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'No Ride Available.',
+                })
 
-            for ride_obj in ride_obj:
-                route_obj = Route.objects.filter(ride_id=ride_obj.id)
+            for rides in ride_obj:
+                ride.update(BusRoute.return_stops_of_a_ride(ride_obj=rides,
+                                                            start_latitude=start_lat_lon_['lat'],
+                                                            start_longitude=start_lat_lon_['lon'],
+                                                            stop_latitude=stop_lat_lon_['lat'],
+                                                            stop_longitude=stop_lat_lon_['lon'],))
 
-                for route_obj in route_obj:
-                    stops_obj = Stop.objects.filter(route_ids=route_obj.id)
-
-                    for i in range(len(stops_obj)):
-                        stop_.append({
-                            'lat': stops_obj[i].latitude,
-                            'lon': stops_obj[i].longitude,
-                            'stop_name': stops_obj[i].name,
-                        })
-
-                        start_distance = distance_formula(stops_obj[i].latitude, stops_obj[i].longitude,
-                                                          start_lat_lon_['lat'], start_lat_lon_['lon'])
-                        stop_[i].update({'start_distance': start_distance})
-
-                        stop_distance = distance_formula(stops_obj[i].latitude, stops_obj[i].longitude,
-                                                         stop_lat_lon_['lat'], stop_lat_lon_['lon'])
-                        stop_[i].update({'stop_distance': stop_distance})
-
-                    for i in range(len(stop_)):
-                        if stop_[i]['start_distance'] < DISTANCE_KILOMETRE_LIMIT and \
-                                stop_[i]['stop_distance'] < DISTANCE_KILOMETRE_LIMIT:
-
-                            ride.append(ride_obj)
-                            break
             print(ride)
+            for key in ride.keys():
+                print(key.vehicle_id.vehicle_no_plate)
+                print(key.seats_left)
 
             return JsonResponse({
                 'status': HTTP_200_OK,
                 'message': 'Ok',
-                'vehicle_no_plate': ride[0].vehicle_id.vehicle_no_plate,
-                'seats_left': ride[0].seats_left,
-                'pick_up_point': '',
-                'drop_up_point': '',
+                # 'vehicle_no_plate': ride[Key].vehicle_id.vehicle_no_plate,
+                # 'seats_left': ride[0].seats_left,
+                # 'pick_up_point': '',
+                # 'drop_up_point': '',
             })
 
         except Exception as e:
@@ -137,58 +125,58 @@ class BusRoute(generics.GenericAPIView):
                 'message': str(e),
             })
 
-    # @login_decorator
-    # def post(self, request, data=None):
-    #
-    #     try:
-    #         lat = request.data.get('lat')
-    #         lon = request.data.get('lon')
-    #         lat_float = float(lat)
-    #         lon_float = float(lon)
-    #         lat_lon_dict = {'lat': lat_float, 'lon': lon_float}
-    #
-    #         lat_long_bus = []
-    #         k = []
-    #         final_list_dict = []
-    #
-    #         bus_route_obj = Ride.objects.filter()
-    #
-    #         for i in range(len(bus_route_obj)):
-    #             lat_long_bus.append(bus_route_obj[i].route)
-    #
-    #         print(lat_long_bus)
-    #         a = str(lat_long_bus[0]).split(',')
-    #         print(a)
-    #
-    #         for i in range(len(a)):
-    #             h = a[i]
-    #             j = h.split(':')
-    #
-    #             for z in range(len(j)):
-    #                 k.append(float(j[z]))
-    #
-    #         print(k)
-    #
-    #         for i in range(len(k)):
-    #             x = {'lat': k[i], 'lon': k[i]+1}
-    #             final_list_dict.append(x)
-    #             i += 1
-    #
-    #         print(final_list_dict)
-    #
-    #         closest_point = closest(final_list_dict, lat_lon_dict)
-    #         print(closest_point)
-    #
-    #         return JsonResponse({
-    #             'status': HTTP_200_OK,
-    #         })
-    #
-    #     except Exception as e:
-    #         return JsonResponse({
-    #             'status': HTTP_400_BAD_REQUEST,
-    #             'message': str(e),
-    #         })
+    @staticmethod
+    def return_stops_of_a_ride(**kwargs):
+        try:
+            start_latitude = kwargs.get('start_latitude')
+            start_longitude = kwargs.get('start_longitude')
+            stop_latitude = kwargs.get('stop_latitude')
+            stop_longitude = kwargs.get('stop_longitude')
 
+            ride_obj = kwargs.get('ride_obj')
+            nearest_user_stops = []
+            ride_stops = {}
 
+            if not ride_obj:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'No Ride Available.',
+                })
 
+            route_obj = Route.objects.filter(ride_id=ride_obj.id).first()
+            stops_obj = Stop.objects.filter(route_ids=route_obj.id)
+
+            for i in range(len(stops_obj)):
+                nearest_user_stops.append({
+                    'lat': stops_obj[i].latitude,
+                    'lon': stops_obj[i].longitude,
+                    'stop_name': stops_obj[i].name,
+                    'start_distance': 0.0,
+                    'stop_distance': 0.0,
+                })
+
+                start_distance = distance_formula(stops_obj[i].latitude, stops_obj[i].longitude,
+                                                  start_latitude, start_longitude)
+                nearest_user_stops[i].update({'start_distance': start_distance})
+
+                stop_distance = distance_formula(stops_obj[i].latitude, stops_obj[i].longitude,
+                                                 stop_latitude, stop_longitude)
+                nearest_user_stops[i].update({'stop_distance': stop_distance})
+
+            print(nearest_user_stops)
+
+            for stops in range(0, len(nearest_user_stops)):
+                if nearest_user_stops[stops]['start_distance'] < DISTANCE_KILOMETRE_LIMIT and \
+                        nearest_user_stops[stops]['stop_distance'] < DISTANCE_KILOMETRE_LIMIT:
+
+                    if ride_stops.get(ride_obj):
+                        ride_stops.get(ride_obj).append(nearest_user_stops[stops]['stop_name'])
+                    else:
+                        ride_stops.update({ride_obj: [nearest_user_stops[stops]['stop_name']]})
+
+            return ride_stops
+
+        except Exception as e:
+            print(str(e))
+            return False
 
