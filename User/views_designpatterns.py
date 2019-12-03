@@ -419,7 +419,6 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
             })
 
 
-# Fixed
 class UserLogout(APIView):
 
     @logout_decorator
@@ -587,6 +586,12 @@ class PasswordResetCheck(generics.GenericAPIView):
             user_uuid = data['user']
             otp = request.data.get('otp')
 
+            if not email_or_phone:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'Email/Phone required.',
+                })
+
             if not otp:
                 return JsonResponse({
                     'status': HTTP_404_NOT_FOUND,
@@ -636,6 +641,12 @@ class SetNewPassword(generics.GenericAPIView):
             email_or_phone = request.data.get('email_or_phone')
             password = request.data.get('pin1')
             confirm_password = request.data.get('pin2')
+
+            if not (email_or_phone or password or confirm_password):
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'All fields are required.',
+                })
 
             user = CustomUserCheck.check_user(email_or_phone)
             if not user:
@@ -739,6 +750,11 @@ class UpdateName(generics.GenericAPIView):
             first_name = request.data.get('first_name')
             last_name = request.data.get('last_name')
 
+            if not first_name:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'First Name is required.',
+                })
             with transaction.atomic():
                 user.first_name = first_name
                 user.last_name = last_name
