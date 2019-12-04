@@ -85,8 +85,7 @@ class BusRoute(generics.GenericAPIView):
             stop_lat = request.data.get('stop_lat')
             stop_lon = request.data.get('stop_lon')
 
-            # stop_ = []
-            ride = []
+            available_rides = []
 
             start_lat_lon_ = {'lat': float(start_lat), 'lon': float(start_lon)}
             stop_lat_lon_ = {'lat': float(stop_lat), 'lon': float(stop_lon)}
@@ -99,24 +98,22 @@ class BusRoute(generics.GenericAPIView):
                 })
 
             for rides in ride_obj:
-                ride.append(BusRoute.return_stops_of_a_ride(ride_obj=rides,
-                                                            start_latitude=start_lat_lon_['lat'],
-                                                            start_longitude=start_lat_lon_['lon'],
-                                                            stop_latitude=stop_lat_lon_['lat'],
-                                                            stop_longitude=stop_lat_lon_['lon'],))
+                ride = BusRoute.return_stops_of_a_ride(ride_obj=rides,
+                                                       start_latitude=start_lat_lon_['lat'],
+                                                       start_longitude=start_lat_lon_['lon'],
+                                                       stop_latitude=stop_lat_lon_['lat'],
+                                                       stop_longitude=stop_lat_lon_['lon'],)
 
-            print(ride)
-            # for key in ride.keys():
-            #     print(key.vehicle_id.vehicle_no_plate)
-            #     print(key.seats_left)
+                for i in range(len(ride)):
+                    pick_ul = ride[i].get('pick-up-location')
+                    drop_ul = ride[i].get('drop-up-location')
+                    if pick_ul and drop_ul:
+                        available_rides.append(ride)
 
             return JsonResponse({
                 'status': HTTP_200_OK,
                 'message': 'Ok',
-                # 'vehicle_no_plate': ride[Key].vehicle_id.vehicle_no_plate,
-                # 'seats_left': ride[0].seats_left,
-                # 'pick_up_point': '',
-                # 'drop_up_point': '',
+                'rides': available_rides,
             })
 
         except Exception as e:
@@ -164,20 +161,29 @@ class BusRoute(generics.GenericAPIView):
                                                  stop_latitude, stop_longitude)
                 nearest_user_stops[i].update({'stop_distance': stop_distance})
 
-            # print(nearest_user_stops)
+            for stops in range(len(nearest_user_stops)):
+                if nearest_user_stops[stops]['start_distance'] < DISTANCE_KILOMETRE_LIMIT:
 
-            for stops in range(0, len(nearest_user_stops)):
-                if nearest_user_stops[stops]['start_distance'] < DISTANCE_KILOMETRE_LIMIT and \
-                        nearest_user_stops[stops]['stop_distance'] < DISTANCE_KILOMETRE_LIMIT:
-
-                    stop = rides[0].get('stop_name')
+                    stop = rides[0].get('pick-up-location')
                     if stop:
                         stop.append(nearest_user_stops[stops]['stop_name'])
                     else:
                         rides[0].update({
                             'vehicle_no_plate': ride_obj.vehicle_id.vehicle_no_plate,
                             'seats_left': ride_obj.seats_left,
-                            'stop_name': [nearest_user_stops[stops]['stop_name']],
+                            'pick-up-location': [nearest_user_stops[stops]['stop_name']],
+                        })
+
+                if nearest_user_stops[stops]['stop_distance'] < DISTANCE_KILOMETRE_LIMIT:
+
+                    stop = rides[0].get('drop-up-location')
+                    if stop:
+                        stop.append(nearest_user_stops[stops]['stop_name'])
+                    else:
+                        rides[0].update({
+                            'vehicle_no_plate': ride_obj.vehicle_id.vehicle_no_plate,
+                            'seats_left': ride_obj.seats_left,
+                            'drop-up-location': [nearest_user_stops[stops]['stop_name']],
                         })
 
             return rides
