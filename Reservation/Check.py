@@ -22,6 +22,7 @@
 # c.update({'a': 10})
 # print(c)
 
+"""
 i = 1
 b = 2
 z = {
@@ -38,6 +39,7 @@ else:
     z.update({1: [1]})
 
 print(z)
+"""
 
 # for key in z.keys():
 #     print(key)
@@ -57,3 +59,26 @@ print(z)
 #
 # obj = A()
 # print(obj)
+
+
+a = [
+    {'vehicle_no_plate': 4.5, 'seats': 3},
+    {'vehicle_no_plate': 465, 'seats': 30, 'stops': ['A', 'B', 'C', 'D']},
+]
+stops = a[0].get('stops')
+if stops:
+    stops.append('maaz')
+else:
+    a[0].update({'stops': ['hii']})
+# srafay@foree.co
+print(a[0])
+
+# for ride in range(len(a)):
+#     for key, values in a[ride].items():
+#         if key == 'vehicle_no_plate' and values == 4.5:
+#             stops = a[ride].get('stops')
+#             print(stops)
+#             break
+
+# print(a)
+
