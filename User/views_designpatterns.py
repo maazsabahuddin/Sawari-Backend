@@ -582,15 +582,8 @@ class PasswordResetCheck(generics.GenericAPIView):
     @transaction.atomic
     def post(self, request, data=None):
         try:
-            email_or_phone = request.data.get('email_or_phone')
-            user_uuid = data['user']
+            user_otp = data['user']
             otp = request.data.get('otp')
-
-            if not email_or_phone:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'Email/Phone required.',
-                })
 
             if not otp:
                 return JsonResponse({
@@ -598,23 +591,9 @@ class PasswordResetCheck(generics.GenericAPIView):
                     'message': 'OTP required.',
                 })
 
-            if not user_uuid.user.email == email_or_phone and not user_uuid.user.phone_number == email_or_phone:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'User not valid.'
-                })
-
-            user = CustomUserCheck.check_user(email_or_phone)
-
-            if not user:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'No user found.',
-                })
-
             with transaction.atomic():
 
-                if IsVerified.verify_otp(user, otp):
+                if IsVerified.verify_otp(user_otp.user, otp):
                     return JsonResponse({
                         'status': HTTP_200_OK,
                         'message': 'Verified',
@@ -638,21 +617,14 @@ class SetNewPassword(generics.GenericAPIView):
     @transaction.atomic
     def post(self, request, data=None):
         try:
-            email_or_phone = request.data.get('email_or_phone')
+            user_otp = data['user']
             password = request.data.get('pin1')
             confirm_password = request.data.get('pin2')
 
-            if not (email_or_phone or password or confirm_password):
+            if not (password or confirm_password):
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
-                    'message': 'All fields are required.',
-                })
-
-            user = CustomUserCheck.check_user(email_or_phone)
-            if not user:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'No user found',
+                    'message': 'Password field required.',
                 })
 
             if password != confirm_password:
@@ -665,15 +637,15 @@ class SetNewPassword(generics.GenericAPIView):
 
                 # Moving into UserOtp model then access the field user and then move to Auth user and get the password.
                 # So user.user.password.
-                if password == user.password:
+                if password == user_otp.user.password:
                     return JsonResponse({
                         'status': HTTP_400_BAD_REQUEST,
                         'message': 'You cannot set old password as new password.',
                     })
 
-                user.set_password(password)
-                user.is_active = True
-                user.save()
+                user_otp.user.set_password(password)
+                user_otp.user.is_active = True
+                user_otp.user.save()
 
                 return JsonResponse({
                     'status': HTTP_200_OK,
@@ -693,38 +665,15 @@ class PasswordResetResendOtp(generics.GenericAPIView, UserOTPMixin):
     @transaction.atomic
     def post(self, request, data=None):
         try:
-            email_or_phone = request.data.get('email_or_phone')
+            user_otp = data['user']
 
-            if not email_or_phone:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Email/Phone is required'
-                })
-
-            phone_number = re.match(PHONE_NUMBER_REGEX, email_or_phone)
-            email = re.search(EMAIL_REGEX, email_or_phone)
-            if not phone_number and not email:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Invalid Email/Phone',
-                })
-
-            # Check user Via Email and Phones
-            user = CustomUserCheck.check_user(email_or_phone)
-            if not user:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'Invalid Email/Phone.',
-                })
-
-            user_otp_obj = UserOtp.objects.filter(user=user).first()
             with transaction.atomic():
 
                 otp = UserOTPMixin.generate_otp()
                 # FACTORY PATTERN it delegates the decision to the get_serializer method and
                 # return the object of concrete/implementation method
-                serializer = ResendOtpRegister.get_method_object(user.email, user.phone_number)
-                return serializer(user_otp_obj, otp, email=user.email, phone_number=user.phone_number)
+                serializer = ResendOtpRegister.get_method_object(user_otp.user.email, user_otp.user.phone_number)
+                return serializer(user_otp, otp, email=user_otp.user.email, phone_number=user_otp.user.phone_number)
 
         except Exception as e:
             return JsonResponse({

@@ -1,8 +1,10 @@
+import re
 from functools import wraps
 from django.http import JsonResponse
 from rest_framework.authtoken.models import Token
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
+from A.settings import PHONE_NUMBER_REGEX, EMAIL_REGEX
 from CustomAuthentication.backend_authentication import CustomUserCheck
 from User.models import UserOtp
 
@@ -55,20 +57,50 @@ def password_reset_decorator(f):
         try:
             request = args[1]
             password_uuid = request.GET.get('password_uuid')
+            email_or_phone = request.data.get('email_or_phone')
+
+            if not email_or_phone:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Email/Phone is required'
+                })
+
+            phone_number = re.match(PHONE_NUMBER_REGEX, email_or_phone)
+            email = re.search(EMAIL_REGEX, email_or_phone)
+            if not phone_number and not email:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Invalid Email/Phone',
+                })
 
             if not password_uuid:
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
                     'message': 'No access.',
                 })
-            user = UserOtp.objects.filter(password_reset_id=password_uuid).first()
-            if not user:
+
+            user_otp = UserOtp.objects.filter(password_reset_id=password_uuid).first()
+            if not user_otp:
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
                     'message': 'Invalid uuid.',
                 })
 
-            data = {'user': user}
+            # Check user Via Email and Phones
+            user = CustomUserCheck.check_user(email_or_phone)
+            if not user:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'Invalid Email/Phone.',
+                })
+
+            if user != user_otp.user:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'User not matched.',
+                })
+
+            data = {'user': user_otp}
             return f(args[0], request, data)
 
         except Exception as e:
