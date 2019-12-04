@@ -170,6 +170,12 @@ def register(f):
         confirm_password = data('confirm_password')
         is_customer = data('is_customer')
 
+        if not password and not confirm_password:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'Password Field required.',
+            })
+
         # Checking Validation
         if email:
             from User.views_designpatterns import UserMixinMethods
@@ -234,3 +240,37 @@ def logout_decorator(f):
             })
 
     return decorated_function
+
+
+def resend_otp(f):
+
+    def resend_otp_function(*args):
+        try:
+            request = args[1]
+            token = request.headers.get('authorization')
+
+            if not token:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Token required for authentication.',
+                })
+
+            user_token = Token.objects.filter(key=token).first()
+            if not user_token:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Invalid Token.',
+                })
+
+            user = CustomUserCheck.check_user_seperately(user_token.user.email, user_token.user.phone_number)
+
+            data = {'user': user}
+            return f(args[0], request, data)
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'Server problem' + str(e),
+            })
+
+    return resend_otp_function

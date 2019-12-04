@@ -18,7 +18,7 @@ from A.settings import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_COUNTE
     EMAIL_VERIFICATION, PHONE_VERIFICATION
 from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
 from User.decorators import login_credentials, otp_verify, login_decorator, register, password_reset_decorator, \
-    logout_decorator
+    logout_decorator, resend_otp
 from .models import User, Customer, UserOtp
 from User.context_processors import singleton
 from User.otp_verify import UserOTPMixin
@@ -186,7 +186,7 @@ class ResendOtpRegister(UserMixinMethods, generics.GenericAPIView):
         except Exception as e:
             print(str(e))
 
-    @login_decorator
+    @resend_otp
     @transaction.atomic
     def post(self, request, context=None):
         try:
