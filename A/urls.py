@@ -19,7 +19,7 @@ from django.urls import path
 #     PasswordChange, SetNewPassword, ChangePhoneNumber
 from Reservation.views import RideBook, ConfirmRide
 from User.views_designpatterns import RegisterCase, IsVerified, UserLogin, UserLogout, ResendOtpRegister, \
-    PasswordReset, PasswordResetCheck, SetNewPassword, PasswordResetResendOtp
+    PasswordReset, PasswordResetCheck, SetNewPassword, PasswordResetResendOtp, PasswordChange
 from RideSchedule.views import VehicleRoute, BusRoute
 
 # from Reservation.views import BusRoute, BookingDetails, BookRide
@@ -48,8 +48,8 @@ urlpatterns = [
     path('new/password/reset/', SetNewPassword.as_view(), name='set_new_password'),
 
     # Password change when login.
-    # path('password_change/', PasswordChange.as_view(), name='password_change'),
-    #
+    path('password/change/', PasswordChange.as_view(), name='password_change'),
+
     # # Change user phone number.
     # path('change/phone/number/', ChangePhoneNumber.as_view(), name='change_phone_number'),
 

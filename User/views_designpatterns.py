@@ -214,7 +214,7 @@ class ResendOtpRegister(UserMixinMethods, generics.GenericAPIView):
             })
 
 
-@singleton
+# @singleton
 class Register(RegisterCase, UserMixinMethods):
 
     permission_classes = (AllowAny,)
@@ -788,3 +788,62 @@ class ChangePhoneNumber(generics.GenericAPIView, UserOTPMixin):
                 'status': HTTP_400_BAD_REQUEST,
                 'message': 'Server Error.'
             })
+
+
+class PasswordChange(generics.GenericAPIView):
+
+    @login_decorator
+    def post(self, request, data=None):
+        try:
+            user = data['user']
+            previous_pin = request.data.get('previous_pin')
+            new_pin = request.data.get('new_pin')
+            confirm_new_pin = request.data.get('confirm_new_pin')
+
+            if not user:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'No user found',
+                })
+
+            if not (previous_pin and new_pin and confirm_new_pin):
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Previous pin / new pin and confirm pin are required.',
+                })
+
+            if new_pin != confirm_new_pin:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Password Fields not matched.',
+                })
+
+            if new_pin == previous_pin:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'You cannot set old pin as new pin.',
+                })
+
+            if not user.check_password(previous_pin):
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Previous Pin not matched.',
+                })
+
+            user.set_password(new_pin)
+            user.save()
+
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'message': 'Password has been changed.',
+            })
+
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(e)
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e),
+            })
+
