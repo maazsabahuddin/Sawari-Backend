@@ -104,15 +104,13 @@ class BusRoute(generics.GenericAPIView):
                                                        stop_latitude=stop_lat_lon_['lat'],
                                                        stop_longitude=stop_lat_lon_['lon'],)
 
-                for i in range(len(ride)):
-                    pick_ul = ride[i].get('pick-up-location')
-                    drop_ul = ride[i].get('drop-up-location')
-                    if pick_ul and drop_ul:
-                        available_rides.append(ride)
+                pick_ul = ride.get('pick-up-location')
+                drop_ul = ride.get('drop-up-location')
+                if pick_ul and drop_ul:
+                    available_rides.append(ride)
 
             return JsonResponse({
                 'status': HTTP_200_OK,
-                'message': 'Ok',
                 'rides': available_rides,
             })
 
@@ -132,8 +130,7 @@ class BusRoute(generics.GenericAPIView):
 
             ride_obj = kwargs.get('ride_obj')
             nearest_user_stops = []
-            rides = [{}]
-            # ride_stops = {}
+            ride = {}
 
             if not ride_obj:
                 return JsonResponse({
@@ -164,11 +161,11 @@ class BusRoute(generics.GenericAPIView):
             for stops in range(len(nearest_user_stops)):
                 if nearest_user_stops[stops]['start_distance'] < DISTANCE_KILOMETRE_LIMIT:
 
-                    stop = rides[0].get('pick-up-location')
+                    stop = ride.get('pick-up-location')
                     if stop:
                         stop.append(nearest_user_stops[stops]['stop_name'])
                     else:
-                        rides[0].update({
+                        ride.update({
                             'vehicle_no_plate': ride_obj.vehicle_id.vehicle_no_plate,
                             'seats_left': ride_obj.seats_left,
                             'pick-up-location': [nearest_user_stops[stops]['stop_name']],
@@ -176,17 +173,17 @@ class BusRoute(generics.GenericAPIView):
 
                 if nearest_user_stops[stops]['stop_distance'] < DISTANCE_KILOMETRE_LIMIT:
 
-                    stop = rides[0].get('drop-up-location')
+                    stop = ride.get('drop-up-location')
                     if stop:
                         stop.append(nearest_user_stops[stops]['stop_name'])
                     else:
-                        rides[0].update({
+                        ride.update({
                             'vehicle_no_plate': ride_obj.vehicle_id.vehicle_no_plate,
                             'seats_left': ride_obj.seats_left,
                             'drop-up-location': [nearest_user_stops[stops]['stop_name']],
                         })
 
-            return rides
+            return ride
 
         except Exception as e:
             print(str(e))
