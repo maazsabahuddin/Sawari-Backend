@@ -863,3 +863,29 @@ class PasswordChange(generics.GenericAPIView):
                 'message': str(e),
             })
 
+
+class UserDetails(generics.GenericAPIView):
+
+    @login_decorator
+    def get(self, request, data=None):
+        try:
+            user = data['user']
+            if not user:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'messgae': 'User not found.',
+                })
+
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'phone_number': user.phone_number,
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e),
+            })

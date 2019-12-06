@@ -249,3 +249,7 @@
 # Foo.foo()
 #
 #
+
+email = 'maazsabahuddin@gmail.com'
+first_name = email.split('@')
+print(first_name[0])
