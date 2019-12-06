@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from rest_framework import generics
 from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_200_OK, HTTP_400_BAD_REQUEST
 
-from A.settings import DISTANCE_KILOMETRE_LIMIT
+from A.settings import DISTANCE_KILOMETRE_LIMIT, GOOGLE_API_KEY
 from Reservation.models import Ride, Stop, Route
 from User.decorators import login_decorator
 
@@ -74,6 +74,12 @@ class VehicleRoute(generics.GenericAPIView):
 
 
 class BusRoute(generics.GenericAPIView):
+
+    @staticmethod
+    def catch_distance_time(start_lat, start_lon, stop_lat, stop_lon):
+        map_data = 'https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins={},{}&' \
+              'destinations={},{}&key={}'.format(start_lat, start_lon, stop_lat, stop_lon, GOOGLE_API_KEY)
+        return map_data
 
     @login_decorator
     def post(self, request, data=None):

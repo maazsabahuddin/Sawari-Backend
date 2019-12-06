@@ -52,6 +52,7 @@ INSTALLED_APPS = [
 # New wali test credentials
 TWILIO_ACCOUNT_SID = 'ACc2d21586f29d9728eb8be6b7f7cbab17'
 TWILIO_AUTH_TOKEN = '6b978d120ab33f30ce16ee4e275df2f9'
+GOOGLE_API_KEY = 'AIzaSyCxh6jiboDAWzR7c_373KDStrtj2W4Sgg4'
 
 AUTH_USER_MODEL = "User.User"
 

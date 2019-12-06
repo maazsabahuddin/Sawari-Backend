@@ -39,7 +39,7 @@ urlpatterns = [
     path('logout/', UserLogout.as_view(), name='customer_logout'),
 
     path('bus/route/', BusRoute.as_view(), name='bus_route'),
-    path('display_buses/', VehicleRoute.as_view(), name='bus_route'),
+    # path('display_buses/', VehicleRoute.as_view(), name='bus_route'),
     path('book_ride/', RideBook.as_view(), name='reserve_a_ride'),
     path('confirm_ride/', ConfirmRide.as_view(), name='reserve_ride'),
 
@@ -60,7 +60,7 @@ urlpatterns = [
     path('update/name/', UpdateName.as_view(), name='update_name'),
 
     # Return User Details
-    path('my_rides/', UserRides.as_view(), name='my_rides'),
+    path('user_rides/', UserRides.as_view(), name='user_rides'),
     path('my_details/', UserDetails.as_view(), name='user_details'),
 
 ]
