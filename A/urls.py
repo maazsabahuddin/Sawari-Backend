@@ -19,7 +19,8 @@ from django.urls import path
 #     PasswordChange, SetNewPassword, ChangePhoneNumber
 from Reservation.views import RideBook, ConfirmRide
 from User.views_designpatterns import RegisterCase, IsVerified, UserLogin, UserLogout, ResendOtpRegister, \
-    PasswordReset, PasswordResetCheck, SetNewPassword, PasswordResetResendOtp, PasswordChange
+    PasswordReset, PasswordResetCheck, SetNewPassword, PasswordResetResendOtp, PasswordChange, ChangePhoneNumber, \
+    ChangePhoneNumberOtpMatch, UpdateName
 from RideSchedule.views import VehicleRoute, BusRoute
 
 # from Reservation.views import BusRoute, BookingDetails, BookRide
@@ -37,6 +38,7 @@ urlpatterns = [
     path('login/', UserLogin.as_view(), name='customer_login'),
     path('logout/', UserLogout.as_view(), name='customer_logout'),
 
+    path('bus/route/', BusRoute.as_view(), name='bus_route'),
     path('display_buses/', VehicleRoute.as_view(), name='bus_route'),
     path('book_ride/', RideBook.as_view(), name='reserve_a_ride'),
     path('confirm_ride/', ConfirmRide.as_view(), name='reserve_ride'),
@@ -50,8 +52,11 @@ urlpatterns = [
     # Password change when login.
     path('password/change/', PasswordChange.as_view(), name='password_change'),
 
-    # # Change user phone number.
-    # path('change/phone/number/', ChangePhoneNumber.as_view(), name='change_phone_number'),
+    # Update user phone number.
+    path('change/phonenumber/', ChangePhoneNumber.as_view(), name='change_phone_number'),
+    path('verify/phonenumber/', ChangePhoneNumberOtpMatch.as_view(), name='change_phone_number_verify'),
 
-    path('bus/route/', BusRoute.as_view(), name='bus_route'),
+    # Update Name.
+    path('update/name/', UpdateName.as_view(), name='update_name'),
+
 ]

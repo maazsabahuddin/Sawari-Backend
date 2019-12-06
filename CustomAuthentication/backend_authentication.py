@@ -40,7 +40,7 @@ class CustomUserCheck(object):
             return None
 
     @staticmethod
-    def check_user_seperately(email, phone):
+    def check_user_separately(email, phone):
         try:
             user = User.objects.filter(
                 Q(email=email) & Q(phone_number=phone)

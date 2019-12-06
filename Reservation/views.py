@@ -49,9 +49,9 @@ class RideBook(generics.GenericAPIView):
     @staticmethod
     def get_ride_obj(vehicle_no_plate):
         try:
-            vehicle_obj = Ride.objects.filter(vehicle_id__vehicle_no_plate=vehicle_no_plate).first()
-            if vehicle_obj:
-                return vehicle_obj
+            ride_obj = Ride.objects.filter(vehicle_id__vehicle_no_plate=vehicle_no_plate).first()
+            if ride_obj:
+                return ride_obj
 
             return JsonResponse({
                 'status': HTTP_400_BAD_REQUEST,
@@ -158,7 +158,7 @@ class RideBook(generics.GenericAPIView):
             if not ride_obj:
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
-                    'message': 'No Vehicle found'
+                    'message': 'No Ride Available.'
                 })
 
             payment_method_obj = PaymentMethod.objects.filter(payment_method=payment_method).first()

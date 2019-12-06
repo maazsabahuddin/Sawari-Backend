@@ -18,7 +18,7 @@ from A.settings import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_COUNTE
     EMAIL_VERIFICATION, PHONE_VERIFICATION
 from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
 from User.decorators import login_credentials, otp_verify, login_decorator, register, password_reset_decorator, \
-    logout_decorator, resend_otp
+    logout_decorator, resend_otp, phone_number_decorator
 from .models import User, Customer, UserOtp
 from User.context_processors import singleton
 from User.otp_verify import UserOTPMixin
@@ -170,6 +170,12 @@ class ResendOtpRegister(UserMixinMethods, generics.GenericAPIView):
     def phone_resend_otp(user_otp_obj, otp, **kwargs):
         try:
             phone_number = kwargs.get('phone_number')
+
+            if not phone_number:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'Phone number not found.',
+                })
 
             if PHONE_VERIFICATION:
                 UserOTPMixin.send_otp_phone(phone_number, otp)
@@ -356,6 +362,12 @@ class IsVerified(generics.GenericAPIView, UserOTPMixin):
         try:
             user = context['user']
             otp = context['otp']
+
+            if user.is_active:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Already Verified',
+                })
 
             if self.verify_otp(user, otp):
                 return JsonResponse({
@@ -686,10 +698,9 @@ class UpdateName(generics.GenericAPIView):
 
     @transaction.atomic
     @login_decorator
-    def post(self, request, **kwargs):
+    def post(self, request, data=None):
         try:
-
-            user = kwargs.get('user')
+            user = data['user']
             if not user:
                 return JsonResponse({
                     'status': HTTP_404_NOT_FOUND,
@@ -704,6 +715,7 @@ class UpdateName(generics.GenericAPIView):
                     'status': HTTP_400_BAD_REQUEST,
                     'message': 'First Name is required.',
                 })
+
             with transaction.atomic():
                 user.first_name = first_name
                 user.last_name = last_name
@@ -711,7 +723,7 @@ class UpdateName(generics.GenericAPIView):
 
                 return JsonResponse({
                     'status': HTTP_200_OK,
-                    'message': "Name Updated.",
+                    'message': "Your name successfully updated.",
                 })
 
         except Exception as e:
@@ -726,10 +738,11 @@ class ChangePhoneNumber(generics.GenericAPIView, UserOTPMixin):
 
     @transaction.atomic
     @login_decorator
+    @phone_number_decorator
     def post(self, request, **kwargs):
         try:
             user = kwargs.get('user')
-            phone_number = request.data.get('phone_number')
+            phone_number = kwargs.get('phonenumber')
 
             if not user:
                 return JsonResponse({
@@ -737,47 +750,17 @@ class ChangePhoneNumber(generics.GenericAPIView, UserOTPMixin):
                     'message': "User not found."
                 })
 
-            if not phone_number:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': "Phone Number required."
-                })
-
-            # Checking Validation
-            if phone_number:
-                phone_number_validation = re.match(PHONE_NUMBER_REGEX, phone_number)
-                if not phone_number_validation:
-                    return JsonResponse({
-                        'status': HTTP_400_BAD_REQUEST,
-                        'message': 'Invalid Phone Number',
-                    })
-
-            if phone_number == user.phone_number:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'This phone number already set to your account.',
-                })
-
-            user_exist = CustomUserCheck.check_user(phone_number)
-            if user_exist:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': "User with this Phone Number already exists."
-                })
-
             with transaction.atomic():
-                otp = self.generate_otp()
+                otp = UserOTPMixin.generate_otp()
                 user_otp_obj = UserOtp.objects.filter(user=user).first()
-                self.user_otp_save(user_otp_obj, otp)
-
-                if not self.send_otp_phone(phone_number, otp):
+                if not user_otp_obj:
                     return JsonResponse({
                         'status': HTTP_400_BAD_REQUEST,
-                        'message': 'Invalid Phone Number',
+                        'message': "User not found."
                     })
+                ResendOtpRegister.phone_resend_otp(user_otp_obj, otp, phone_number=phone_number)
 
                 print(otp)
-
                 return JsonResponse({
                     'status': HTTP_200_OK,
                     'message': 'OTP has been successfully sent.',
@@ -786,8 +769,41 @@ class ChangePhoneNumber(generics.GenericAPIView, UserOTPMixin):
         except Exception as e:
             return JsonResponse({
                 'status': HTTP_400_BAD_REQUEST,
-                'message': 'Server Error.'
+                'message': 'Server Error.' + str(e),
             })
+
+
+class ChangePhoneNumberOtpMatch(generics.GenericAPIView):
+
+    @transaction.atomic
+    @otp_verify
+    def post(self, request, data=None):
+
+        user = data['user']
+        otp = data['otp']
+        phone_number = request.data.get('phone_number')
+
+        if not phone_number:
+            return JsonResponse({
+                'status': HTTP_404_NOT_FOUND,
+                'message': 'Phone number required',
+            })
+
+        verified = IsVerified.verify_otp(user, otp)
+
+        if not verified:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'OTP not matched.',
+            })
+
+        user.phone_number = phone_number
+        user.save()
+
+        return JsonResponse({
+            'status': HTTP_400_BAD_REQUEST,
+            'message': 'Phone Number successfully changed.',
+        })
 
 
 class PasswordChange(generics.GenericAPIView):

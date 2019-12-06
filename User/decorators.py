@@ -7,6 +7,7 @@ from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 from A.settings import PHONE_NUMBER_REGEX, EMAIL_REGEX
 from CustomAuthentication.backend_authentication import CustomUserCheck
 from User.models import UserOtp
+# from User.views_designpatterns import UserMixinMethods
 
 
 def login_decorator(f):
@@ -30,7 +31,7 @@ def login_decorator(f):
                     'message': 'Invalid Token.',
                 })
 
-            user = CustomUserCheck.check_user_seperately(user_token.user.email, user_token.user.phone_number)
+            user = CustomUserCheck.check_user_separately(user_token.user.email, user_token.user.phone_number)
 
             if not user.is_active:
                 return JsonResponse({
@@ -172,12 +173,6 @@ def otp_verify(f):
                     'message': 'Invalid Token.',
                 })
 
-            if token_user.user.is_active:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Already Verified',
-                })
-
             context = {'user': token_user.user, 'otp': otp}
             return f(args[0], request, context)
 
@@ -294,7 +289,7 @@ def resend_otp(f):
                     'message': 'Invalid Token.',
                 })
 
-            user = CustomUserCheck.check_user_seperately(user_token.user.email, user_token.user.phone_number)
+            user = CustomUserCheck.check_user_separately(user_token.user.email, user_token.user.phone_number)
 
             data = {'user': user}
             return f(args[0], request, data)
@@ -306,3 +301,44 @@ def resend_otp(f):
             })
 
     return resend_otp_function
+
+
+def phone_number_decorator(f):
+
+    def phone_number_function(*args):
+        try:
+            request = args[1]
+            user = args[2]['user']
+            phone_number = request.data.get('phonenumber')
+
+            if not phone_number:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': "Phone Number required."
+                })
+
+            from User.views_designpatterns import UserMixinMethods
+            UserMixinMethods.validate_phone(phone_number)
+
+            if phone_number == user.phone_number:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'This phone number already set to your account.',
+                })
+
+            user_exist = CustomUserCheck.check_user(phone_number)
+            if user_exist:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': "User with this Phone Number already exists."
+                })
+
+            return f(args[0], request, user=user, phonenumber=phone_number)
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'Server problem' + str(e),
+            })
+
+    return phone_number_function
