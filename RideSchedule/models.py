@@ -10,7 +10,7 @@ from Reservation.models import Reservation, Ride
 class UserRideDetail(models.Model):
     ride_id = models.ForeignKey(Ride, on_delete=models.CASCADE)
     reservation_id = models.ForeignKey(Reservation, on_delete=models.CASCADE)  # Must be many2manyfield do check that
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    admin_id = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     kilometer = models.FloatField(blank=True, null=True)
     price_per_km = models.FloatField(blank=True, null=True, max_length=5)
     payment_method_id = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE, blank=True, null=True)

@@ -13,6 +13,7 @@ from Reservation.decorator_reservation import reserve_ride_decorator, confirm_ri
 from RideSchedule.models import UserRideDetail
 from User.context_processors import singleton
 from User.decorators import login_decorator
+from User.models import Customer
 from .models import Reservation, Ride, Vehicle
 from .reservation_pattern import ReservationNumber
 
@@ -289,3 +290,69 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                 'status': HTTP_404_NOT_FOUND,
                 'message': str(e),
             })
+
+
+class UserRides(generics.GenericAPIView):
+
+    @login_decorator
+    def get(self, request, data=None):
+        try:
+            user = data['user']
+            if not user:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'User not found.',
+                })
+
+            customer = Customer.objects.filter(user=user).first()
+            if not customer:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'Customer not found.',
+                })
+
+            user_reservations = Reservation.objects.filter(customer_id=customer.id)
+            if not user_reservations:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'No Trips.',
+                })
+
+            user_rides = []
+            for reservations in user_reservations:
+                ride_details = UserRideDetail.objects.filter(reservation_id=reservations.id).first()
+                user_rides.append(UserRides.rides(ride=ride_details, reservation=reservations))
+
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'reservations': user_rides,
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'message': str(e),
+            })
+
+    @staticmethod
+    def rides(**kwargs):
+        ride = kwargs.get('ride')
+        user_reservation = kwargs.get('reservation')
+
+        if not ride:
+            return JsonResponse({
+                'status': HTTP_404_NOT_FOUND,
+                'message': 'No Rides.',
+            })
+
+        ride_details = {
+            'reservation_no': user_reservation.reservation_number,
+            'pick_up_point': ride.pick_up_point,
+            'drop_up_point': ride.drop_up_point,
+            'seats': user_reservation.reservation_seats,
+            'ride_date': ride.ride_date,
+        }
+
+        return ride_details
+
+
