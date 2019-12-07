@@ -4,8 +4,8 @@ from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
     username = models.CharField(blank=True, null=True, max_length=60)
-    phone_number = models.CharField(unique=True, max_length=15, null=True, blank=True)
-    email = models.EmailField(unique=True, null=True, blank=True)
+    phone_number = models.CharField(default=None, unique=True, max_length=15, null=True, blank=True)
+    email = models.EmailField(default=None, unique=True, null=True, blank=True)
     is_customer = models.BooleanField(default=False)
     is_captain = models.BooleanField(default=False)
 
