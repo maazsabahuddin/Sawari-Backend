@@ -10,6 +10,7 @@ from User.decorators import login_decorator
 
 
 from math import cos, asin, sqrt
+import requests
 
 
 # It returns the result in Kilometer.
@@ -77,9 +78,26 @@ class BusRoute(generics.GenericAPIView):
 
     @staticmethod
     def catch_distance_time(start_lat, start_lon, stop_lat, stop_lon):
-        map_data = 'https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins={},{}&' \
-              'destinations={},{}&key={}'.format(start_lat, start_lon, stop_lat, stop_lon, GOOGLE_API_KEY)
-        return map_data
+
+        distance_matrix_api_url = 'https://maps.googleapis.com/maps/api/distancematrix/json?'
+
+        map_data = requests.get(distance_matrix_api_url + 'origins={},{}'.format(start_lat, start_lon) +
+                                '&destinations={},{}'.format(stop_lat, stop_lon) +
+                                '&key={}'.format(GOOGLE_API_KEY))
+
+        a = map_data.json()
+        elements = a['rows'][0].get('elements')
+        _list_distance = elements[0].get('distance')
+        _list_duration = elements[0].get('duration')
+
+        distance = _list_distance['text']
+        duration = _list_duration['text']
+
+        float_distance = distance.split(' ')
+
+        duration_and_distance = {'distance': float(float_distance[0]), 'duration': duration}
+
+        return duration_and_distance
 
     @login_decorator
     def post(self, request, data=None):
@@ -109,7 +127,7 @@ class BusRoute(generics.GenericAPIView):
                                                        stop_longitude=stop_lat_lon_['lon'],)
 
                 pick_ul = ride.get('pick-up-location')
-                drop_ul = ride.get('drop-up-location')
+                drop_ul = ride.get('drop-off-location')
                 if pick_ul and drop_ul:
                     available_rides.append(ride)
 
@@ -154,37 +172,55 @@ class BusRoute(generics.GenericAPIView):
                     'stop_distance': 0.0,
                 })
 
-                start_distance = distance_formula(stops_obj[i].latitude, stops_obj[i].longitude,
-                                                  start_latitude, start_longitude)
-                nearest_user_stops[i].update({'start_distance': start_distance})
+                start_d = BusRoute.catch_distance_time(stops_obj[i].latitude, stops_obj[i].longitude,
+                                                       start_latitude, start_longitude)
+                nearest_user_stops[i].update({
+                    'start_distance': start_d['distance'],
+                    'start_duration': start_d['duration'],
+                })
 
-                stop_distance = distance_formula(stops_obj[i].latitude, stops_obj[i].longitude,
-                                                 stop_latitude, stop_longitude)
-                nearest_user_stops[i].update({'stop_distance': stop_distance})
+                stop_d = BusRoute.catch_distance_time(stops_obj[i].latitude, stops_obj[i].longitude,
+                                                      stop_latitude, stop_longitude)
+                nearest_user_stops[i].update({
+                    'stop_distance': stop_d['distance'],
+                    'stop_duration': stop_d['duration'],
+                })
 
             for stops in range(len(nearest_user_stops)):
                 if nearest_user_stops[stops]['start_distance'] < DISTANCE_KILOMETRE_LIMIT:
 
                     stop = ride.get('pick-up-location')
                     if stop:
-                        stop.append(nearest_user_stops[stops]['stop_name'])
+                        stop.append({
+                            'name': nearest_user_stops[stops]['stop_name'],
+                            'time': nearest_user_stops[stops]['start_duration'],
+                        })
                     else:
                         ride.update({
                             'vehicle_no_plate': ride_obj.vehicle_id.vehicle_no_plate,
                             'seats_left': ride_obj.seats_left,
-                            'pick-up-location': [nearest_user_stops[stops]['stop_name']],
+                            'pick-up-location': [{
+                                'name': nearest_user_stops[stops]['stop_name'],
+                                'time': nearest_user_stops[stops]['start_duration'],
+                            }]
                         })
 
                 if nearest_user_stops[stops]['stop_distance'] < DISTANCE_KILOMETRE_LIMIT:
 
-                    stop = ride.get('drop-up-location')
+                    stop = ride.get('drop-off-location')
                     if stop:
-                        stop.append(nearest_user_stops[stops]['stop_name'])
+                        stop.append({
+                                'name': nearest_user_stops[stops]['stop_name'],
+                                'time': nearest_user_stops[stops]['stop_duration'],
+                            })
                     else:
                         ride.update({
                             'vehicle_no_plate': ride_obj.vehicle_id.vehicle_no_plate,
                             'seats_left': ride_obj.seats_left,
-                            'drop-up-location': [nearest_user_stops[stops]['stop_name']],
+                            'drop-off-location': [{
+                                'name': nearest_user_stops[stops]['stop_name'],
+                                'time': nearest_user_stops[stops]['stop_duration'],
+                            }],
                         })
 
             return ride

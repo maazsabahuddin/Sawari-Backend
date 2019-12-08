@@ -82,3 +82,22 @@ print(a[0])
 
 # print(a)
 
+a = {
+    'pick-up-location': {'a': 1, 'b': 2},
+}
+
+x = a.get('pick-up-location')
+if x:
+    x.update()
+
+print(a)
+
+
+ggg = {
+    'pick-up-location': {
+        'Jauhar Chorangi': '2 mins',
+        'Jauhar more': '5 mins',
+    }
+}
+
+zz = ggg.get('pick-up-location')
