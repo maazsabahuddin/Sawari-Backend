@@ -876,22 +876,18 @@ class UserDetails(generics.GenericAPIView):
                     'messgae': 'User not found.',
                 })
 
-            if user.email is None:
-                email = ""
-            else:
-                email = user.email
+            if not user.email:
+                user.email = ""
 
-            if user.phone_number is None:
-                phone_number = ""
-            else:
-                phone_number = user.phone_number
+            if not user.phone_number:
+                user.phone_number = ""
 
             return JsonResponse({
                 'status': HTTP_200_OK,
-                'email': email,
+                'email': user.email,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
-                'phone_number': phone_number,
+                'phone_number': user.phone_number,
             })
 
         except Exception as e:
