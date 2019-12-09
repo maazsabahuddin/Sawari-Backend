@@ -13,6 +13,9 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+import googlemaps as googlemaps
+import pytz
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -52,7 +55,10 @@ INSTALLED_APPS = [
 # New wali test credentials
 TWILIO_ACCOUNT_SID = 'ACc2d21586f29d9728eb8be6b7f7cbab17'
 TWILIO_AUTH_TOKEN = '6b978d120ab33f30ce16ee4e275df2f9'
+
+# Google Maps Api Key.
 GOOGLE_API_KEY = 'AIzaSyCxh6jiboDAWzR7c_373KDStrtj2W4Sgg4'
+gmaps = googlemaps.Client(key=GOOGLE_API_KEY)
 
 AUTH_USER_MODEL = "User.User"
 
@@ -135,6 +141,7 @@ AUTHENTICATION_BACKENDS = (
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'Asia/Karachi'
+local_tz = pytz.timezone(TIME_ZONE)
 
 USE_I18N = True
 
@@ -191,4 +198,4 @@ FIXED_FARE = True
 ONLINE_PAYMENT = True
 ONLINE_PAYMENT_FEE = False
 
-DISTANCE_KILOMETRE_LIMIT = 2.0
+DISTANCE_KILOMETRE_LIMIT = 3.0

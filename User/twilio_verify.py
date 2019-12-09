@@ -13,7 +13,7 @@ client = Client(account_sid, auth_token)
 
 def send_otp_phone(phone_number, otp):
     try:
-        message_body = 'Dear Instant Bus user, your OTP code is: ' + str(otp)
+        message_body = 'Dear Sawari User, your OTP code is: ' + str(otp)
         sender_phone_number = SENDER_PHONE_NUMBER
 
         message = client.messages.create(

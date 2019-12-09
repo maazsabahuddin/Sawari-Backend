@@ -5,7 +5,7 @@ import random
 
 import pytz
 
-from A.settings import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, EMAIL_HOST_USER, TIME_ZONE, OTP_COUNTER_LIMIT, OTP_VALID_TIME
+from A.settings import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, EMAIL_HOST_USER, local_tz, OTP_COUNTER_LIMIT, OTP_VALID_TIME
 from django_twilio.client import Client
 from .models import User, UserOtp
 from django.core.mail import EmailMessage
@@ -62,14 +62,14 @@ class UserOTPMixin(object):
             logger.info(e)
             return False
 
-    local_tz = pytz.timezone(TIME_ZONE)
+    # local_tz = pytz.timezone(TIME_ZONE)
 
     # db sey time utc format mae ata hay..
     # yeh method usko local time mae convert krdega..
     @classmethod
     def utc_to_local(cls, utc_dt):
-        local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(cls.local_tz)
-        return cls.local_tz.normalize(local_dt)
+        local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(local_tz)
+        return local_tz.normalize(local_dt)
 
     @classmethod
     def verify_user_otp(cls, user, otp, time_now):
@@ -80,7 +80,7 @@ class UserOTPMixin(object):
                 return False
 
             # adding current timezone to local time.
-            time_now_format = cls.local_tz.localize(time_now)
+            time_now_format = local_tz.localize(time_now)
 
             # fetch db time
             otp_send_time = otp_user_obj.otp_time
