@@ -30,18 +30,6 @@ class Ride(models.Model):
         return "Ride {} - {}".format(self.id, self.vehicle_id.vehicle_no_plate)
 
 
-class Route(models.Model):
-    # A ride is a lap.
-    # A ride can have only one route and a route can have multiple rides.
-    # route_id = models.ManyToManyField(Route, related_name='route_ride')
-    ride_id = models.ForeignKey(Ride, related_name='ride_route', on_delete=models.CASCADE)
-    start_name = models.CharField(blank=False, max_length=50)
-    stop_name = models.CharField(blank=False, max_length=50)
-
-    def __str__(self):
-        return "Ride {} - {} - {}".format(self.ride_id.id, self.start_name, self.stop_name)
-
-
 class Reservation(models.Model):
     reservation_number = models.CharField(max_length=20, unique=True)
     customer_id = models.ForeignKey(Customer, on_delete=models.CASCADE)
@@ -56,10 +44,22 @@ class Reservation(models.Model):
 
 
 class Stop(models.Model):
-    route_ids = models.ManyToManyField(Route, related_name='route_stops')
     name = models.CharField(blank=False, max_length=256)
     latitude = models.FloatField(blank=False, max_length=100)
     longitude = models.FloatField(blank=False, max_length=100)
 
     def __str__(self):
-        return "{} - {} - {}".format(self.name, self.latitude, self.longitude)
+        return "{} - {} - Latitude {}, Longitude {}".format(self.id, self.name, self.latitude, self.longitude)
+
+
+class Route(models.Model):
+    # A ride is a lap.
+    # A ride can have only one route and a route can have multiple rides.
+    # route_id = models.ManyToManyField(Route, related_name='route_ride')
+    ride_id = models.ForeignKey(Ride, related_name='ride_route', on_delete=models.CASCADE)
+    stop_ids = models.ManyToManyField(Stop, related_name='route_stops')
+    start_name = models.CharField(blank=False, max_length=50)
+    stop_name = models.CharField(blank=False, max_length=50)
+
+    def __str__(self):
+        return "{} - Ride {} - {} - {}".format(self.id, self.ride_id.id, self.start_name, self.stop_name)

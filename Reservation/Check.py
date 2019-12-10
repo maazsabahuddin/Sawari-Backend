@@ -160,6 +160,7 @@ dist = mpu.haversine_distance((lat1, lon1), (lat2, lon2))
 print(dist)
 """
 
+"""
 from geopy.distance import geodesic
 
 
@@ -169,23 +170,24 @@ dist = (24.921906, 67.136459)
 print(geodesic(origin, dist).meters)  # 23576.805481751613
 print(geodesic(origin, dist).kilometers)  # 23.576805481751613
 print(geodesic(origin, dist).miles)
+"""
 
-
+"""
 import numpy as np
 
 
 def Haversine(lat1,lon1,lat2,lon2, **kwarg):
-    """
-    This uses the ‘haversine’ formula to calculate the great-circle distance between two points – that is,
-    the shortest distance over the earth’s surface – giving an ‘as-the-crow-flies’ distance between the points
-    (ignoring any hills they fly over, of course!).
-    Haversine
-    formula:    a = sin²(Δφ/2) + cos φ1 ⋅ cos φ2 ⋅ sin²(Δλ/2)
-    c = 2 ⋅ atan2( √a, √(1−a) )
-    d = R ⋅ c
-    where   φ is latitude, λ is longitude, R is earth’s radius (mean radius = 6,371km);
-    note that angles need to be in radians to pass to trig functions!
-    """
+    
+    # This uses the ‘haversine’ formula to calculate the great-circle distance between two points – that is,
+    # the shortest distance over the earth’s surface – giving an ‘as-the-crow-flies’ distance between the points
+    # (ignoring any hills they fly over, of course!).
+    # Haversine
+    # formula:    a = sin²(Δφ/2) + cos φ1 ⋅ cos φ2 ⋅ sin²(Δλ/2)
+    # c = 2 ⋅ atan2( √a, √(1−a) )
+    # d = R ⋅ c
+    # where   φ is latitude, λ is longitude, R is earth’s radius (mean radius = 6,371km);
+    # note that angles need to be in radians to pass to trig functions!
+    
     R = 6371.0088
     lat1,lon1,lat2,lon2 = map(np.radians, [lat1,lon1,lat2,lon2])
 
@@ -198,3 +200,8 @@ def Haversine(lat1,lon1,lat2,lon2, **kwarg):
 
 
 print(Haversine(24.923179, 67.137853, 24.921906, 67.136459))
+
+"""
+a = [1, 2, 3]
+for i in range(1, len(a)+1):
+    print(i)

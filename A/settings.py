@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-import googlemaps as googlemaps
+from googlemaps import Client
 import pytz
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -58,7 +58,7 @@ TWILIO_AUTH_TOKEN = '6b978d120ab33f30ce16ee4e275df2f9'
 
 # Google Maps Api Key.
 GOOGLE_API_KEY = 'AIzaSyCxh6jiboDAWzR7c_373KDStrtj2W4Sgg4'
-gmaps = googlemaps.Client(key=GOOGLE_API_KEY)
+gmaps = Client(key=GOOGLE_API_KEY)
 
 AUTH_USER_MODEL = "User.User"
 
@@ -198,4 +198,7 @@ FIXED_FARE = True
 ONLINE_PAYMENT = True
 ONLINE_PAYMENT_FEE = False
 
-DISTANCE_KILOMETRE_LIMIT = 3.0
+DISTANCE_KILOMETRE_LIMIT = 2.0
+
+# Each stop wait time in minutes.
+STOP_WAIT_TIME = 1
