@@ -101,7 +101,7 @@ class BusRoute(generics.GenericAPIView):
             return False
 
     @staticmethod
-    def distance(**kwargs):
+    def distance_and_duration(**kwargs):
         try:
             pick_up_lat_lon = kwargs.get('pick_up_lat_lon')
             drop_off_lat_lon = kwargs.get('drop_off_lat_lon')
@@ -113,14 +113,15 @@ class BusRoute(generics.GenericAPIView):
                     (stop.latitude, stop.longitude)
                 )
 
-            pick_up_result = gmaps.distance_matrix(stops, pick_up_lat_lon, mode='driving')
-            drop_off_result = gmaps.distance_matrix(stops, drop_off_lat_lon, mode='driving')
+            pick_up_result = gmaps.distance_matrix(stops, pick_up_lat_lon, mode='walking')
+            drop_off_result = gmaps.distance_matrix(stops, drop_off_lat_lon, mode='walking')
 
             stop_details = []
 
             if len(pick_up_result) == len(drop_off_result):
                 for i in range(len(pick_up_result['rows'])):
                     stop_details.append({
+                        'stop_id': stops_obj[i].id,
                         'stop_name': stops_obj[i].name,
                         'lat_long': stops[i],
                         'pick-up-location-distance':
@@ -255,9 +256,9 @@ class BusRoute(generics.GenericAPIView):
             route_obj = Route.objects.filter(ride_id=ride_obj.id).first()
             # stops_obj = Stop.objects.filter(route_ids=route_obj.id)
 
-            nearest_user_stops = BusRoute.distance(stops_obj=route_obj.stop_ids.get_queryset(),
-                                                   pick_up_lat_lon=(start_latitude, start_longitude),
-                                                   drop_off_lat_lon=(stop_latitude, stop_longitude),)
+            nearest_user_stops = BusRoute.distance_and_duration(stops_obj=route_obj.stop_ids.get_queryset(),
+                                                                pick_up_lat_lon=(start_latitude, start_longitude),
+                                                                drop_off_lat_lon=(stop_latitude, stop_longitude),)
 
             stops_duration = BusRoute.stop_to_stop_distance(stops_obj=route_obj.stop_ids.get_queryset(),)
 
@@ -267,8 +268,10 @@ class BusRoute(generics.GenericAPIView):
                     stop = ride.get('pick-up-location')
                     if stop:
                         stop.append({
-                            'name': nearest_user_stops[stops]['stop_name'],
+                            'stop_id': nearest_user_stops[stops]['stop_id'],
+                            'stop_name': nearest_user_stops[stops]['stop_name'],
                             'duration': nearest_user_stops[stops]['pick-up-location-duration'],
+                            'distance': str(nearest_user_stops[stops]['pick-up-location-distance']) + " Km",
                             'arrival_time': BusRoute.ride_arrival_time(
                                 ride_obj=ride_obj,
                                 stop_name=nearest_user_stops[stops]['stop_name'],
@@ -279,8 +282,10 @@ class BusRoute(generics.GenericAPIView):
                             'vehicle_no_plate': ride_obj.vehicle_id.vehicle_no_plate,
                             'seats_left': ride_obj.seats_left,
                             'pick-up-location': [{
-                                'name': nearest_user_stops[stops]['stop_name'],
+                                'stop_id': nearest_user_stops[stops]['stop_id'],
+                                'stop_name': nearest_user_stops[stops]['stop_name'],
                                 'duration': nearest_user_stops[stops]['pick-up-location-duration'],
+                                'distance': str(nearest_user_stops[stops]['pick-up-location-distance']) + " Km",
                                 'arrival_time': BusRoute.ride_arrival_time(
                                     ride_obj=ride_obj,
                                     stop_name=nearest_user_stops[stops]['stop_name'],
@@ -293,8 +298,10 @@ class BusRoute(generics.GenericAPIView):
                     stop = ride.get('drop-off-location')
                     if stop:
                         stop.append({
-                                'name': nearest_user_stops[stops]['stop_name'],
+                                'stop_id': nearest_user_stops[stops]['stop_id'],
+                                'stop_name': nearest_user_stops[stops]['stop_name'],
                                 'duration': nearest_user_stops[stops]['drop-off-location-duration'],
+                                'distance': str(nearest_user_stops[stops]['drop-off-location-distance']) + " Km",
                                 'departure_time': BusRoute.ride_arrival_time(
                                     ride_obj=ride_obj,
                                     stop_name=nearest_user_stops[stops]['stop_name'],
@@ -305,8 +312,10 @@ class BusRoute(generics.GenericAPIView):
                             'vehicle_no_plate': ride_obj.vehicle_id.vehicle_no_plate,
                             'seats_left': ride_obj.seats_left,
                             'drop-off-location': [{
-                                'name': nearest_user_stops[stops]['stop_name'],
+                                'stop_id': nearest_user_stops[stops]['stop_id'],
+                                'stop_name': nearest_user_stops[stops]['stop_name'],
                                 'duration': nearest_user_stops[stops]['drop-off-location-duration'],
+                                'distance': str(nearest_user_stops[stops]['drop-off-location-distance']) + " Km",
                                 'departure_time': BusRoute.ride_arrival_time(
                                     ride_obj=ride_obj,
                                     stop_name=nearest_user_stops[stops]['stop_name'],

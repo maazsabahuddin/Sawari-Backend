@@ -200,5 +200,6 @@ ONLINE_PAYMENT_FEE = False
 
 DISTANCE_KILOMETRE_LIMIT = 2.0
 
+
 # Each stop wait time in minutes.
 STOP_WAIT_TIME = 1
