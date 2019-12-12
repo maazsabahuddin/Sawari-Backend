@@ -191,15 +191,15 @@ EMAIL_VERIFICATION = True
 PHONE_VERIFICATION = True
 
 FIXED_FARE_PRICE = 50
-KILOMETER_FARE = False
-FIXED_FARE = True
+KILOMETER_FARE_PRICE = 8.8
+KILOMETER_FARE = True
+FIXED_FARE = False
 
 # Payment through Foree, Easypaisa and more.
 ONLINE_PAYMENT = True
 ONLINE_PAYMENT_FEE = False
 
 DISTANCE_KILOMETRE_LIMIT = 2.0
-
 
 # Each stop wait time in minutes.
 STOP_WAIT_TIME = 1

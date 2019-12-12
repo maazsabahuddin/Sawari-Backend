@@ -1,10 +1,10 @@
 from tokenize import Token
 
 from django.http import JsonResponse
-from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from Payment.models import PaymentMethod
-from Reservation.models import Reservation
+from Reservation.models import Reservation, Route, Ride, Vehicle
 from User.models import Customer
 
 
@@ -16,12 +16,12 @@ def reserve_ride_decorator(f):
             user = args[2]['user']
             vehicle_no_plate = request.data.get('vehicle_no_plate')
             req_seats = request.data.get('req_seats')
-            pick_up_point = request.data.get('pick_up_point')
-            drop_up_point = request.data.get('drop_up_point')
+            pick_up_point_stop_id = request.data.get('pick_up_point_stop_id')
+            drop_up_point_stop_id = request.data.get('drop_up_point_stop_id')
             kilometer = request.data.get('kilometer')
             payment_method = request.data.get('payment_method')
 
-            if not (vehicle_no_plate or req_seats or pick_up_point or drop_up_point or kilometer):
+            if not (vehicle_no_plate or req_seats or pick_up_point_stop_id or drop_up_point_stop_id or kilometer):
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
                     'message': 'Value Missing.',
@@ -34,9 +34,37 @@ def reserve_ride_decorator(f):
                     'message': 'is_customer field is false.'
                 })
 
+            vehicle_obj = Vehicle.objects.filter(vehicle_no_plate=vehicle_no_plate).first()
+            ride_obj = Ride.objects.filter(vehicle_id=vehicle_obj.id).first()
+
+            if not ride_obj:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'No ride available right now.',
+                })
+
+            route_obj = Route.objects.filter(ride_id=ride_obj.id).first()
+            stops_obj = route_obj.stop_ids.get_queryset()
+
+            pick_up_point = ''
+            drop_off_point = ''
+
+            for stop in stops_obj:
+                if stop.id == int(pick_up_point_stop_id):
+                    pick_up_point = stop.name
+
+                elif stop.id == int(drop_up_point_stop_id):
+                    drop_off_point = stop.name
+
+            if not (pick_up_point or drop_off_point):
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'No such stops exist in this ride.',
+                })
+
             return f(args[0], request, user=user, customer=customer, vehicle_no_plate=vehicle_no_plate,
-                     req_seats=req_seats, pick_up_point=pick_up_point, drop_up_point=drop_up_point, kilometer=kilometer,
-                     payment_method=payment_method)
+                     req_seats=req_seats, pick_up_point=pick_up_point, drop_up_point=drop_off_point,
+                     kilometer=kilometer, payment_method=payment_method)
 
         except Exception as e:
             return JsonResponse({

@@ -13,7 +13,7 @@ class ReservationNumber:
         try:
             reservation_obj = Reservation.objects.latest('id')
             if not reservation_obj:
-                return None
+                return "RES-000001-{}{}".format(str(today.month), str(today.year))
 
             # Get the reservation id from the model.
             last_reservation_no = reservation_obj.reservation_number
@@ -31,7 +31,7 @@ class ReservationNumber:
             new_reservation_no_string = ReservationNumber.reservation_no_string(fill_reservation_no)
             return new_reservation_no_string
 
-        except Exception as e:
+        except TypeError:
             return False
 
     @staticmethod

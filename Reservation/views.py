@@ -6,7 +6,7 @@ from rest_framework import generics
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
 from rest_framework.views import APIView
 
-from A.settings import FIXED_FARE, KILOMETER_FARE, FIXED_FARE_PRICE, SENDER_PHONE_NUMBER
+from A.settings import FIXED_FARE, KILOMETER_FARE, FIXED_FARE_PRICE, SENDER_PHONE_NUMBER, KILOMETER_FARE_PRICE
 from Payment.models import Pricing, PaymentMethod
 # from Payment.views import PaymentMixin
 from Reservation.decorator_reservation import reserve_ride_decorator, confirm_ride
@@ -14,7 +14,7 @@ from RideSchedule.models import UserRideDetail
 from User.context_processors import singleton
 from User.decorators import login_decorator
 from User.models import Customer
-from .models import Reservation, Ride, Vehicle
+from .models import Reservation, Ride, Vehicle, Route
 from .reservation_pattern import ReservationNumber
 
 
@@ -29,7 +29,6 @@ def fare_object(fixed_fare, kilometer_fare):
         return False
 
 
-# @singleton
 class RideBook(generics.GenericAPIView):
 
     @staticmethod
@@ -39,10 +38,7 @@ class RideBook(generics.GenericAPIView):
             if price_obj:
                 return int(price_obj.price_per_km)
 
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Server Error'
-            })
+            return KILOMETER_FARE_PRICE
 
         except TypeError:
             return False
@@ -62,20 +58,21 @@ class RideBook(generics.GenericAPIView):
         except TypeError:
             return False
 
-    def fare_kilometer(self, **kwargs):
+    @staticmethod
+    def fare_kilometer(**kwargs):
         try:
             total_seats = kwargs.get('req_seats')
             kilometer = kwargs.get('kilometer')
 
-            fare_per_person = self.kilometer_price() * kilometer
+            fare_per_person = RideBook.kilometer_price() * int(kilometer)
             total_fare = fare_per_person * int(total_seats)
             return round(total_fare)
 
         except TypeError:
             return False
 
-    @classmethod
-    def fare_fixed(cls, **kwargs):
+    @staticmethod
+    def fare_fixed(**kwargs):
         try:
             total_seats = kwargs.get('req_seats')
             return FIXED_FARE_PRICE * int(total_seats)
@@ -93,6 +90,7 @@ class RideBook(generics.GenericAPIView):
             drop_up_point = kwargs.get('drop_up_point')
             kilometer = kwargs.get('kilometer')
             fare = kwargs.get('fare')
+            vehicle_no_plate = kwargs.get('vehicle_no_plate')
             payment_method_obj = kwargs.get('payment_method')
             fare_per_km = RideBook.kilometer_price()
 
@@ -130,12 +128,28 @@ class RideBook(generics.GenericAPIView):
                 )
                 user_ride.save()
 
+                if KILOMETER_FARE:
+                    return JsonResponse({
+                        'status': HTTP_200_OK,
+                        'reservation_number': reservation.reservation_number,
+                        'Vehicle': vehicle_no_plate,
+                        'Fare': user_ride.fare,
+                        'price_per_km': user_ride.price_per_km,
+                        'kilometer': user_ride.kilometer,
+                        'Pick-up point': user_ride.pick_up_point,
+                        'Drop-up point': user_ride.drop_up_point,
+                        'message': 'Ride booked, but not confirmed.',
+                    })
+
                 return JsonResponse({
                     'status': HTTP_200_OK,
                     'reservation_number': reservation.reservation_number,
+                    'Vehicle': vehicle_no_plate,
+                    'Fare': user_ride.fare,
+                    'Pick-up point': user_ride.pick_up_point,
+                    'Drop-up point': user_ride.drop_up_point,
                     'message': 'Ride booked, but not confirmed.',
                 })
-
         except Exception as e:
             return JsonResponse({
                 'status': HTTP_400_BAD_REQUEST,
@@ -182,13 +196,14 @@ class RideBook(generics.GenericAPIView):
                     'message': 'Not enough seats in the bus'
                 })
 
-            fare_object_price = fare_object(FIXED_FARE, KILOMETER_FARE)
-            total_fare = fare_object_price(req_seats=req_seats, kilometer=kilometer)
+            with transaction.atomic():
+                fare_object_price = fare_object(FIXED_FARE, KILOMETER_FARE)
+                total_fare = fare_object_price(req_seats=req_seats, kilometer=kilometer)
 
-            return RideBook.reserve_ride(user=user, customer=customer, vehicle_no_plate=vehicle_no_plate,
-                                         req_seats=req_seats, pick_up_point=pick_up_point, ride_obj=ride_obj,
-                                         drop_up_point=drop_up_point, kilometer=kilometer, fare=total_fare,
-                                         payment_method=payment_method_obj)
+                return RideBook.reserve_ride(user=user, customer=customer, vehicle_no_plate=vehicle_no_plate,
+                                             req_seats=req_seats, pick_up_point=pick_up_point,
+                                             ride_obj=ride_obj, drop_up_point=drop_up_point,
+                                             kilometer=kilometer, fare=total_fare, payment_method=payment_method_obj)
 
         except Exception as e:
             return JsonResponse({
@@ -211,7 +226,7 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
             vehicle_no_plate = kwargs.get('vehicle_no_plate')
             pick_up_point = kwargs.get('pick_up_point')
 
-            sawaari_message = "\ngRIDE WITH SAWAARI\n"
+            sawaari_message = "\nRIDE WITH SAWAARI\n"
             message_body = sawaari_message + 'Hi {}, your ride is confirmed.\nReservation Number - {}\nVehicle - {}\n' \
                                              'Pick-up-point - {} '.format(first_name, res_no, vehicle_no_plate,
                                                                           pick_up_point,)
