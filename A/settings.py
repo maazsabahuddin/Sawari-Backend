@@ -179,7 +179,7 @@ OTP_INITIAL_COUNTER = 1
 COUNTRY_CODE_PK = "92"
 
 # Regex Phone Number
-PHONE_NUMBER_REGEX = r"\+"+COUNTRY_CODE_PK+r"\d{10}"
+PHONE_NUMBER_REGEX = r"\+" + COUNTRY_CODE_PK + r"3\d{9}"
 
 # Email REGEX
 EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"

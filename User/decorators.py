@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from rest_framework.authtoken.models import Token
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-from A.settings import PHONE_NUMBER_REGEX, EMAIL_REGEX
+from A.settings import PHONE_NUMBER_REGEX, EMAIL_REGEX, COUNTRY_CODE_PK
 from CustomAuthentication.backend_authentication import CustomUserCheck
 from User.models import UserOtp
 # from User.views_designpatterns import UserMixinMethods
@@ -222,6 +222,9 @@ def register(f):
 
         # Checking Validation
         if phone_number:
+            if phone_number[0] == "0":
+                phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
+
             from User.views_designpatterns import UserMixinMethods
             if not UserMixinMethods.validate_phone(phone_number):
                 return JsonResponse({

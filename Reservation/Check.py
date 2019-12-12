@@ -202,6 +202,9 @@ def Haversine(lat1,lon1,lat2,lon2, **kwarg):
 print(Haversine(24.923179, 67.137853, 24.921906, 67.136459))
 
 """
-a = [1, 2, 3]
-for i in range(1, len(a)+1):
-    print(i)
+# a = [1, 2, 3]
+# for i in range(1, len(a)+1):
+#     print(i)
+
+a = "Maaz"
+print(a[1:])
