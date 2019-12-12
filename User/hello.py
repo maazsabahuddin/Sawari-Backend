@@ -267,35 +267,40 @@ from A.settings import GOOGLE_API_KEY
 # print(distance_formula(24.907026, 67.112126, 24.821317, 67.034179))
 
 
-import requests, json
-
-
-def catch_distance_time(start_lat, start_lon, stop_lat, stop_lon):
-
-    distance_matrix_api_url = 'https://maps.googleapis.com/maps/api/distancematrix/json?'
-
-    map_data = requests.get(distance_matrix_api_url + 'origins={},{}'.format(start_lat, start_lon) +
-                            '&destinations={},{}'.format(stop_lat, stop_lon) +
-                            '&key={}'.format(GOOGLE_API_KEY))
-
-    a = map_data.json()
-    elements = a['rows'][0].get('elements')
-    _list_distance = elements[0].get('distance')
-    _list_duration = elements[0].get('duration')
-
-    distance = _list_distance['text']
-    duration = _list_duration['text']
-
-    duration_and_distance = {'distance': distance, 'duration': duration}
-
-    return duration_and_distance
-
-
-print(catch_distance_time(24.907026, 67.112126, 24.821317, 67.034179))
-
+# import requests, json
+# 
+# 
+# def catch_distance_time(start_lat, start_lon, stop_lat, stop_lon):
+# 
+#     distance_matrix_api_url = 'https://maps.googleapis.com/maps/api/distancematrix/json?'
+# 
+#     map_data = requests.get(distance_matrix_api_url + 'origins={},{}'.format(start_lat, start_lon) +
+#                             '&destinations={},{}'.format(stop_lat, stop_lon) +
+#                             '&key={}'.format(GOOGLE_API_KEY))
+# 
+#     a = map_data.json()
+#     elements = a['rows'][0].get('elements')
+#     _list_distance = elements[0].get('distance')
+#     _list_duration = elements[0].get('duration')
+# 
+#     distance = _list_distance['text']
+#     duration = _list_duration['text']
+# 
+#     duration_and_distance = {'distance': distance, 'duration': duration}
+# 
+#     return duration_and_distance
+# 
+# 
+# print(catch_distance_time(24.907026, 67.112126, 24.821317, 67.034179))
+# 
 
 # z = [
 #     {'element': [1, 2, 3, 5]},
 # ]
 #
 # print(z[0].get('element'))
+
+name = "maazsabahuddin@gmail.com"
+
+a = name.split('@')[0]
+print(a)

@@ -46,19 +46,15 @@ class UserMixinMethods(object):
     def validate_email(email):
         email_validation = re.search(EMAIL_REGEX, email)
         if not email_validation:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Invalid Email',
-            })
+            return False
+        return True
 
     @staticmethod
     def validate_phone(phone_number):
         phone_number_validation = re.match(PHONE_NUMBER_REGEX, phone_number)
         if not phone_number_validation:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Invalid Phone Number',
-            })
+            return False
+        return True
 
     @staticmethod
     def user_otp_save(user, otp):
@@ -269,14 +265,21 @@ class Register(RegisterCase, UserMixinMethods):
         except Exception as e:
             print(str(e))
 
-    @register
     @transaction.atomic
+    @register
     def post(self, request, context=None):
         try:
             email = context['email']
             phone_number = context['phone_number']
             password = context['password']
             is_customer = context['is_customer']
+            first_name = context['first_name']
+
+            if not phone_number:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Phone number required.',
+                })
 
             user_email = User.objects.filter(email=email).first()
             user_phone_no = User.objects.filter(phone_number=phone_number).first()
@@ -302,10 +305,9 @@ class Register(RegisterCase, UserMixinMethods):
 
                 if not email:
                     email = None
-                if not phone_number:
-                    phone_number = None
 
                 user = User.objects.create(
+                    first_name=first_name,
                     email=email,
                     phone_number=phone_number,
                     password=make_password(password),
@@ -590,8 +592,8 @@ class PasswordReset(generics.GenericAPIView, UserOTPMixin):
 
 class PasswordResetCheck(generics.GenericAPIView):
 
-    @password_reset_decorator
     @transaction.atomic
+    @password_reset_decorator
     def post(self, request, data=None):
         try:
             user_otp = data['user']

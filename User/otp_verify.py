@@ -30,22 +30,17 @@ class UserOTPMixin(object):
             )
             return True
 
-        except Exception as e:
-            import logging
-            logger = logging.info(__name__)
-            logger.info(e)
+        except Exception:
             return False
 
     @staticmethod
     def send_otp_email(email, otp):
         try:
             from_email = EMAIL_HOST_USER
-            mail_subject = 'Activate your account.'
+            mail_subject = 'Verify your account.'
             message = {
                 'Email': email,
                 'OTP': otp,
-                # 'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                # 'token': account_activation_token.make_token(user),
             }
             content = {"%s: %s" % (key, value) for (key, value) in message.items()}
             content = "\n".join(content)
@@ -57,9 +52,6 @@ class UserOTPMixin(object):
             return True
 
         except Exception as e:
-            import logging
-            logger = logging.info(__name__)
-            logger.info(e)
             return False
 
     # local_tz = pytz.timezone(TIME_ZONE)

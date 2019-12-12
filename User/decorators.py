@@ -197,6 +197,12 @@ def register(f):
         confirm_password = data('confirm_password')
         is_customer = data('is_customer')
 
+        if not phone_number:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'Phone number is required.',
+            })
+
         if not password and not confirm_password:
             return JsonResponse({
                 'status': HTTP_400_BAD_REQUEST,
@@ -204,14 +210,24 @@ def register(f):
             })
 
         # Checking Validation
+        first_name = ''
         if email:
             from User.views_designpatterns import UserMixinMethods
-            UserMixinMethods.validate_email(email)
+            if not UserMixinMethods.validate_email(email):
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Invalid Email.',
+                })
+            first_name = email.split('@')[0]
 
         # Checking Validation
         if phone_number:
             from User.views_designpatterns import UserMixinMethods
-            UserMixinMethods.validate_phone(phone_number)
+            if not UserMixinMethods.validate_phone(phone_number):
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Invalid Phone Number',
+                })
 
         if is_customer == 'False':
             return JsonResponse({
@@ -231,7 +247,13 @@ def register(f):
                 'message': 'Email/Phone is required'
             })
 
-        context = {'email': email, 'phone_number': phone_number, 'password': password, 'is_customer': is_customer}
+        context = {
+            'email': email,
+            'phone_number': phone_number,
+            'password': password,
+            'is_customer': is_customer,
+            'first_name': first_name,
+        }
         return f(args[0], request, context)
 
     return register_decorator
