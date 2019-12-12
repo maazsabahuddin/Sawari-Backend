@@ -18,7 +18,7 @@ class UserRideDetail(models.Model):
     fare = models.IntegerField(blank=False)
     fixed_fare = models.BooleanField(default=False)
     pick_up_point = models.CharField(blank=True, max_length=256)
-    drop_up_point = models.CharField(blank=True, max_length=256)
+    drop_off_point = models.CharField(blank=True, max_length=256)
     ride_date = models.DateField(default=datetime.datetime.today)
 
     def __str__(self):

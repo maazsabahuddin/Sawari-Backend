@@ -6,7 +6,7 @@ from rest_framework import generics
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
 from rest_framework.views import APIView
 
-from A.settings import FIXED_FARE, KILOMETER_FARE, FIXED_FARE_PRICE, SENDER_PHONE_NUMBER, KILOMETER_FARE_PRICE
+from A.settings import FIXED_FARE, KILOMETER_FARE, SENDER_PHONE_NUMBER
 from Payment.models import Pricing, PaymentMethod
 # from Payment.views import PaymentMixin
 from Reservation.decorator_reservation import reserve_ride_decorator, confirm_ride
@@ -32,13 +32,14 @@ def fare_object(fixed_fare, kilometer_fare):
 class RideBook(generics.GenericAPIView):
 
     @staticmethod
-    def kilometer_price():
+    def db_price():
         try:
             price_obj = Pricing.objects.filter().first()
             if price_obj:
-                return int(price_obj.price_per_km)
-
-            return KILOMETER_FARE_PRICE
+                if KILOMETER_FARE:
+                    return int(price_obj.price_per_km)
+                if FIXED_FARE:
+                    return int(price_obj.fixed_fare)
 
         except TypeError:
             return False
@@ -64,7 +65,7 @@ class RideBook(generics.GenericAPIView):
             total_seats = kwargs.get('req_seats')
             kilometer = kwargs.get('kilometer')
 
-            fare_per_person = RideBook.kilometer_price() * int(kilometer)
+            fare_per_person = RideBook.db_price() * int(kilometer)
             total_fare = fare_per_person * int(total_seats)
             return round(total_fare)
 
@@ -75,7 +76,8 @@ class RideBook(generics.GenericAPIView):
     def fare_fixed(**kwargs):
         try:
             total_seats = kwargs.get('req_seats')
-            return FIXED_FARE_PRICE * int(total_seats)
+            return RideBook.db_price() * int(total_seats)
+
         except TypeError:
             return False
 
@@ -87,12 +89,12 @@ class RideBook(generics.GenericAPIView):
             ride_obj = kwargs.get('ride_obj')
             req_seats = kwargs.get('req_seats')
             pick_up_point = kwargs.get('pick_up_point')
-            drop_up_point = kwargs.get('drop_up_point')
+            drop_off_point = kwargs.get('drop_off_point')
             kilometer = kwargs.get('kilometer')
             fare = kwargs.get('fare')
             vehicle_no_plate = kwargs.get('vehicle_no_plate')
             payment_method_obj = kwargs.get('payment_method')
-            fare_per_km = RideBook.kilometer_price()
+            fare_per_km = RideBook.db_price()
 
             with transaction.atomic():
 
@@ -124,7 +126,7 @@ class RideBook(generics.GenericAPIView):
                     fare=fare,
                     fixed_fare=FIXED_FARE,
                     pick_up_point=pick_up_point,
-                    drop_up_point=drop_up_point,
+                    drop_off_point=drop_off_point,
                 )
                 user_ride.save()
 
@@ -137,7 +139,7 @@ class RideBook(generics.GenericAPIView):
                         'price_per_km': user_ride.price_per_km,
                         'kilometer': user_ride.kilometer,
                         'Pick-up point': user_ride.pick_up_point,
-                        'Drop-up point': user_ride.drop_up_point,
+                        'Drop-up point': user_ride.drop_off_point,
                         'message': 'Ride booked, but not confirmed.',
                     })
 
@@ -202,7 +204,7 @@ class RideBook(generics.GenericAPIView):
 
                 return RideBook.reserve_ride(user=user, customer=customer, vehicle_no_plate=vehicle_no_plate,
                                              req_seats=req_seats, pick_up_point=pick_up_point,
-                                             ride_obj=ride_obj, drop_up_point=drop_up_point,
+                                             ride_obj=ride_obj, drop_off_point=drop_up_point,
                                              kilometer=kilometer, fare=total_fare, payment_method=payment_method_obj)
 
         except Exception as e:
@@ -218,18 +220,21 @@ class RideBook(generics.GenericAPIView):
 class ConfirmRide(RideBook, generics.GenericAPIView):
 
     @staticmethod
-    def ride_confirm_message(*args, **kwargs):
+    def ride_confirm_message(**kwargs):
         try:
             first_name = kwargs.get('first_name')
             phone_number = kwargs.get('phone_number')
             res_no = kwargs.get('res_no')
             vehicle_no_plate = kwargs.get('vehicle_no_plate')
             pick_up_point = kwargs.get('pick_up_point')
+            drop_off_point = kwargs.get('drop_off_point')
 
             sawaari_message = "\nRIDE WITH SAWAARI\n"
             message_body = sawaari_message + 'Hi {}, your ride is confirmed.\nReservation Number - {}\nVehicle - {}\n' \
-                                             'Pick-up-point - {} '.format(first_name, res_no, vehicle_no_plate,
-                                                                          pick_up_point,)
+                                             'Pick-up-point - {}\nDrop-off-point: {}'.format(first_name, res_no,
+                                                                                             vehicle_no_plate,
+                                                                                             pick_up_point,
+                                                                                             drop_off_point)
             sender_phone_number = SENDER_PHONE_NUMBER
 
             from User.twilio_verify import client
@@ -286,6 +291,7 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                                                  res_no=reservation_number_obj.reservation_number,
                                                  vehicle_no_plate=vehicle_obj.vehicle_no_plate,
                                                  pick_up_point=user_ride_obj.pick_up_point,
+                                                 drop_off_point=user_ride_obj.drop_off_point,
                                                  first_name=customer.user.first_name,)
 
                 return JsonResponse({
@@ -296,8 +302,8 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                     'price_per_km': user_ride_obj.price_per_km,
                     'kilometer': user_ride_obj.kilometer,
                     'Pick-up point': user_ride_obj.pick_up_point,
-                    'Drop-up point': user_ride_obj.drop_up_point,
-                    'message': 'Your seats are booked.'
+                    'Drop-up point': user_ride_obj.drop_off_point,
+                    'message': 'Your ride is confirmed.'
                 })
 
         except Exception as e:
