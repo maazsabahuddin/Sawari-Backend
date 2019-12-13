@@ -163,6 +163,7 @@ class ResendOtpRegister(UserMixinMethods, generics.GenericAPIView):
             print(str(e))
 
     @staticmethod
+    @transaction.atomic
     def phone_resend_otp(user_otp_obj, otp, **kwargs):
         try:
             phone_number = kwargs.get('phone_number')
@@ -173,17 +174,21 @@ class ResendOtpRegister(UserMixinMethods, generics.GenericAPIView):
                     'message': 'Phone number not found.',
                 })
 
-            if PHONE_VERIFICATION:
-                UserOTPMixin.send_otp_phone(phone_number, otp)
+            with transaction.atomic():
+                if PHONE_VERIFICATION:
+                    if not UserOTPMixin.send_otp_phone(phone_number, otp):
+                        return JsonResponse({
+                            'status': HTTP_404_NOT_FOUND,
+                            'message': 'OTP not sent.',
+                        })
 
-            UserMixinMethods.user_otp_save(user_otp_obj, otp)
-            print(otp)
+                UserMixinMethods.user_otp_save(user_otp_obj, otp)
+                print(otp)
 
-            return JsonResponse({
-                'status': HTTP_200_OK,
-                # 'verification': PHONE_VERIFICATION,
-                'message': 'OTP has been successfully resent.',
-            })
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'message': 'OTP has been successfully resent.',
+                })
 
         except Exception as e:
             print(str(e))
@@ -230,7 +235,11 @@ class Register(RegisterCase, UserMixinMethods):
                 UserOTPMixin.send_otp_email(email, otp)
 
             if PHONE_VERIFICATION:
-                UserOTPMixin.send_otp_phone(phone_number, otp)
+                if not UserOTPMixin.send_otp_phone(phone_number, otp):
+                    return JsonResponse({
+                        'status': HTTP_404_NOT_FOUND,
+                        'message': 'OTP not sent.',
+                    })
                 return True
             return False
 
@@ -257,7 +266,11 @@ class Register(RegisterCase, UserMixinMethods):
 
             # Sending OTP Via Phone
             if PHONE_VERIFICATION:
-                UserOTPMixin.send_otp_phone(phone_number, otp)
+                if not UserOTPMixin.send_otp_phone(phone_number, otp):
+                    return JsonResponse({
+                        'status': HTTP_404_NOT_FOUND,
+                        'message': 'OTP not sent.',
+                    })
                 return True
 
             return False
@@ -875,7 +888,7 @@ class UserDetails(generics.GenericAPIView):
             if not user:
                 return JsonResponse({
                     'status': HTTP_404_NOT_FOUND,
-                    'messgae': 'User not found.',
+                    'message': 'User not found.',
                 })
 
             if not user.email:

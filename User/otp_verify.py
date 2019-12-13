@@ -5,7 +5,8 @@ import random
 
 import pytz
 
-from A.settings import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, EMAIL_HOST_USER, local_tz, OTP_COUNTER_LIMIT, OTP_VALID_TIME
+from A.settings import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, EMAIL_HOST_USER, local_tz, OTP_COUNTER_LIMIT, \
+    OTP_VALID_TIME, SENDER_PHONE_NUMBER
 from django_twilio.client import Client
 from .models import User, UserOtp
 from django.core.mail import EmailMessage
@@ -21,7 +22,7 @@ class UserOTPMixin(object):
     def send_otp_phone(phone_number, otp):
         try:
             message_body = 'Dear Sawaari user, your OTP code is: ' + str(otp)
-            sender_phone_number = '+12068097984'
+            sender_phone_number = SENDER_PHONE_NUMBER
 
             client.messages.create(
                 from_=sender_phone_number,
@@ -113,9 +114,6 @@ class UserOTPMixin(object):
             return otp
 
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.info(e)
             return None
 
     # @staticmethod

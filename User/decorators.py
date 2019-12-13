@@ -133,6 +133,10 @@ def login_credentials(f):
                     'status': HTTP_400_BAD_REQUEST,
                     'message': 'Email/Phone required.',
                 })
+
+            if email_or_phone[0] == "0":
+                email_or_phone = "+" + COUNTRY_CODE_PK + email_or_phone[1:]
+
             context = {'email_or_phone': email_or_phone, 'password': password}
             return f(args[0], request, context)
 
