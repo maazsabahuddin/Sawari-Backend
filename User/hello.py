@@ -249,6 +249,7 @@
 # Foo.foo()
 #
 #
+
 from cmath import sqrt, asin, cos
 
 from A.settings import GOOGLE_API_KEY
@@ -299,8 +300,17 @@ from A.settings import GOOGLE_API_KEY
 # ]
 #
 # print(z[0].get('element'))
+"""
 
 name = "maazsabahuddin@gmail.com"
 
 a = name.split('@')[0]
 print(a)
+
+"""
+
+import datetime
+
+time_now = datetime.datetime.today()
+print(time_now.date())
+print(time_now.time())

@@ -209,7 +209,8 @@ class RideBook(generics.GenericAPIView):
                 return RideBook.reserve_ride(user=user, customer=customer, vehicle_no_plate=vehicle_no_plate,
                                              req_seats=req_seats, pick_up_point=pick_up_point,
                                              ride_obj=ride_obj, drop_off_point=drop_up_point,
-                                             kilometer=kilometer, fare_per_person=fare_per_person, payment_method=payment_method_obj)
+                                             kilometer=kilometer, fare_per_person=fare_per_person,
+                                             payment_method=payment_method_obj)
 
         except Exception as e:
             return JsonResponse({

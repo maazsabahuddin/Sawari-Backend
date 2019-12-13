@@ -2,6 +2,7 @@ import datetime
 
 import pytz
 from django.http import JsonResponse
+from django.utils import timezone
 
 # Create your views here.
 from rest_framework import generics
@@ -214,16 +215,21 @@ class BusRoute(generics.GenericAPIView):
                 })
 
             for rides in ride_obj:
-                ride = BusRoute.return_stops_of_a_ride(ride_obj=rides,
-                                                       start_latitude=start_lat_lon_['lat'],
-                                                       start_longitude=start_lat_lon_['lon'],
-                                                       stop_latitude=stop_lat_lon_['lat'],
-                                                       stop_longitude=stop_lat_lon_['lon'],)
+                datetime_now = BusRoute.utc_to_local(timezone.now())
+                datetime_db = BusRoute.utc_to_local(rides.start_time)
 
-                pick_ul = ride.get('pick-up-location')
-                drop_ul = ride.get('drop-off-location')
-                if pick_ul and drop_ul:
-                    available_rides.append(ride)
+                if datetime_now < datetime_db:
+                    ride = BusRoute.return_stops_of_a_ride(ride_obj=rides,
+                                                           ride_date=datetime_db.date(),
+                                                           start_latitude=start_lat_lon_['lat'],
+                                                           start_longitude=start_lat_lon_['lon'],
+                                                           stop_latitude=stop_lat_lon_['lat'],
+                                                           stop_longitude=stop_lat_lon_['lon'], )
+
+                    pick_ul = ride.get('pick-up-location')
+                    drop_ul = ride.get('drop-off-location')
+                    if pick_ul and drop_ul:
+                        available_rides.append(ride)
 
             return JsonResponse({
                 'status': HTTP_200_OK,
@@ -244,6 +250,7 @@ class BusRoute(generics.GenericAPIView):
             stop_latitude = kwargs.get('stop_latitude')
             stop_longitude = kwargs.get('stop_longitude')
             ride_obj = kwargs.get('ride_obj')
+            ride_date = kwargs.get('ride_date')
 
             ride = {}
 
@@ -275,7 +282,8 @@ class BusRoute(generics.GenericAPIView):
                             'arrival_time': BusRoute.ride_arrival_time(
                                 ride_obj=ride_obj,
                                 stop_name=nearest_user_stops[stops]['stop_name'],
-                                stops_duration=stops_duration, )
+                                stops_duration=stops_duration, ),
+                            'date': ride_date,
                         })
                     else:
                         ride.update({
@@ -289,7 +297,8 @@ class BusRoute(generics.GenericAPIView):
                                 'arrival_time': BusRoute.ride_arrival_time(
                                     ride_obj=ride_obj,
                                     stop_name=nearest_user_stops[stops]['stop_name'],
-                                    stops_duration=stops_duration,)
+                                    stops_duration=stops_duration,),
+                                'date': ride_date,
                             }]
                         })
 
@@ -305,7 +314,8 @@ class BusRoute(generics.GenericAPIView):
                                 'departure_time': BusRoute.ride_arrival_time(
                                     ride_obj=ride_obj,
                                     stop_name=nearest_user_stops[stops]['stop_name'],
-                                    stops_duration=stops_duration, )
+                                    stops_duration=stops_duration, ),
+                                'date': ride_date,
                             })
                     else:
                         ride.update({
@@ -319,7 +329,8 @@ class BusRoute(generics.GenericAPIView):
                                 'departure_time': BusRoute.ride_arrival_time(
                                     ride_obj=ride_obj,
                                     stop_name=nearest_user_stops[stops]['stop_name'],
-                                    stops_duration=stops_duration, )
+                                    stops_duration=stops_duration, ),
+                                'date': ride_date,
                             }],
                         })
 
