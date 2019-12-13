@@ -226,6 +226,7 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
 
     @staticmethod
     def ride_confirm_message(**kwargs):
+        global phone_number
         try:
             first_name = kwargs.get('first_name')
             phone_number = kwargs.get('phone_number')
@@ -251,8 +252,12 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
             )
             return True
 
-        except TypeError:
-            return False
+        except Exception as e:
+            print(str(e))
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': "Please verify {} on your twilio trial account.".format(phone_number),
+            })
 
     @staticmethod
     @transaction.atomic
@@ -267,7 +272,8 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                     return True
                 return False
 
-        except TypeError:
+        except Exception as e:
+            print(str(e))
             return False
 
     @transaction.atomic

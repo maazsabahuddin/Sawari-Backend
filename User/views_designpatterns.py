@@ -748,7 +748,6 @@ class UpdateName(generics.GenericAPIView):
             })
 
 
-# Pending
 class ChangePhoneNumber(generics.GenericAPIView, UserOTPMixin):
 
     @transaction.atomic
