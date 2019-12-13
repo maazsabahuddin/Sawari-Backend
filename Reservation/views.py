@@ -37,9 +37,9 @@ class RideBook(generics.GenericAPIView):
             price_obj = Pricing.objects.filter().first()
             if price_obj:
                 if KILOMETER_FARE:
-                    return int(price_obj.price_per_km)
+                    return float(price_obj.price_per_km)
                 if FIXED_FARE:
-                    return int(price_obj.fixed_fare)
+                    return float(price_obj.fixed_fare)
 
         except TypeError:
             return False
@@ -65,9 +65,9 @@ class RideBook(generics.GenericAPIView):
             total_seats = kwargs.get('req_seats')
             kilometer = kwargs.get('kilometer')
 
-            fare_per_person = RideBook.db_price() * int(kilometer)
-            total_fare = fare_per_person * int(total_seats)
-            return round(total_fare)
+            fare_per_person = RideBook.db_price() * float(kilometer)
+            # total_fare = fare_per_person * float(total_seats)
+            return float(round(fare_per_person))
 
         except TypeError:
             return False
@@ -76,7 +76,9 @@ class RideBook(generics.GenericAPIView):
     def fare_fixed(**kwargs):
         try:
             total_seats = kwargs.get('req_seats')
-            return RideBook.db_price() * int(total_seats)
+            fare_per_person = RideBook.db_price()
+            # total_fare = RideBook.db_price() * int(total_seats)
+            return float(round(fare_per_person))
 
         except TypeError:
             return False
@@ -91,13 +93,14 @@ class RideBook(generics.GenericAPIView):
             pick_up_point = kwargs.get('pick_up_point')
             drop_off_point = kwargs.get('drop_off_point')
             kilometer = kwargs.get('kilometer')
-            fare = kwargs.get('fare')
+            fare_per_person = kwargs.get('fare_per_person')
             vehicle_no_plate = kwargs.get('vehicle_no_plate')
             payment_method_obj = kwargs.get('payment_method')
             fare_per_km = RideBook.db_price()
 
             with transaction.atomic():
 
+                total_fare = fare_per_person * int(req_seats)
                 reservation_number = ReservationNumber.generate_new_reservation_number()
 
                 if not reservation_number:
@@ -123,7 +126,7 @@ class RideBook(generics.GenericAPIView):
                     price_per_km=fare_per_km,
                     payment_method_id=payment_method_obj,
                     payment_status=False,
-                    fare=fare,
+                    fare=total_fare,
                     fixed_fare=FIXED_FARE,
                     pick_up_point=pick_up_point,
                     drop_off_point=drop_off_point,
@@ -134,12 +137,13 @@ class RideBook(generics.GenericAPIView):
                     return JsonResponse({
                         'status': HTTP_200_OK,
                         'reservation_number': reservation.reservation_number,
-                        'Vehicle': vehicle_no_plate,
-                        'Fare': user_ride.fare,
+                        'vehicle': vehicle_no_plate,
+                        'fare_per_person': str(fare_per_person) + " x " + req_seats,
+                        'fare': str(user_ride.fare),
                         'price_per_km': user_ride.price_per_km,
                         'kilometer': user_ride.kilometer,
-                        'Pick-up point': user_ride.pick_up_point,
-                        'Drop-up point': user_ride.drop_off_point,
+                        'pick-up-point': user_ride.pick_up_point,
+                        'drop-off-point': user_ride.drop_off_point,
                         'message': 'Ride booked, but not confirmed.',
                     })
 
@@ -147,7 +151,7 @@ class RideBook(generics.GenericAPIView):
                     'status': HTTP_200_OK,
                     'reservation_number': reservation.reservation_number,
                     'Vehicle': vehicle_no_plate,
-                    'Fare': user_ride.fare,
+                    'Fare': user_ride.fare + "x" + req_seats,
                     'Pick-up point': user_ride.pick_up_point,
                     'Drop-up point': user_ride.drop_up_point,
                     'message': 'Ride booked, but not confirmed.',
@@ -200,12 +204,12 @@ class RideBook(generics.GenericAPIView):
 
             with transaction.atomic():
                 fare_object_price = fare_object(FIXED_FARE, KILOMETER_FARE)
-                total_fare = fare_object_price(req_seats=req_seats, kilometer=kilometer)
+                fare_per_person = fare_object_price(req_seats=req_seats, kilometer=kilometer)
 
                 return RideBook.reserve_ride(user=user, customer=customer, vehicle_no_plate=vehicle_no_plate,
                                              req_seats=req_seats, pick_up_point=pick_up_point,
                                              ride_obj=ride_obj, drop_off_point=drop_up_point,
-                                             kilometer=kilometer, fare=total_fare, payment_method=payment_method_obj)
+                                             kilometer=kilometer, fare_per_person=fare_per_person, payment_method=payment_method_obj)
 
         except Exception as e:
             return JsonResponse({
@@ -296,13 +300,14 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
 
                 return JsonResponse({
                     'status': HTTP_200_OK,
-                    'Reservation Number': reservation_number_obj.reservation_number,
-                    'Vehicle': vehicle_obj.vehicle_no_plate,
-                    'Fare': user_ride_obj.fare,
+                    'reservation Number': reservation_number_obj.reservation_number,
+                    'vehicle': vehicle_obj.vehicle_no_plate,
+                    'fare_per_person': float(user_ride_obj.fare) / int(reservation_number_obj.reservation_seats),
+                    'fare': float(user_ride_obj.fare),
                     'price_per_km': user_ride_obj.price_per_km,
                     'kilometer': user_ride_obj.kilometer,
-                    'Pick-up point': user_ride_obj.pick_up_point,
-                    'Drop-up point': user_ride_obj.drop_off_point,
+                    'pick-up-point': user_ride_obj.pick_up_point,
+                    'drop-off-point': user_ride_obj.drop_off_point,
                     'message': 'Your ride is confirmed.'
                 })
 

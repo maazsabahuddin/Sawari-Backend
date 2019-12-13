@@ -35,7 +35,7 @@ def reserve_ride_decorator(f):
                 })
 
             vehicle_obj = Vehicle.objects.filter(vehicle_no_plate=vehicle_no_plate).first()
-            ride_obj = Ride.objects.filter(vehicle_id=vehicle_obj.id).first()
+            ride_obj = Ride.objects.filter(vehicle_id=vehicle_obj.id, is_complete=False).first()
 
             if not ride_obj:
                 return JsonResponse({
