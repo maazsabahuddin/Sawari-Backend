@@ -52,9 +52,15 @@ INSTALLED_APPS = [
     'django_twilio',
 ]
 
-# New wali test credentials
-TWILIO_ACCOUNT_SID = 'ACc2d21586f29d9728eb8be6b7f7cbab17'
-TWILIO_AUTH_TOKEN = '6b978d120ab33f30ce16ee4e275df2f9'
+# Maaz Twilio account credentials
+SENDER_PHONE_NUMBER = '+12015080329'
+TWILIO_ACCOUNT_SID = 'AC9ba1aaf65554a3f2b85d59f00ae4ad0a'
+TWILIO_AUTH_TOKEN = '33545ed3be08f4d14a4a21cdb56d4050'
+
+# Sohaib Twilio account credentials
+# TWILIO_ACCOUNT_SID = 'ACc2d21586f29d9728eb8be6b7f7cbab17'
+# TWILIO_AUTH_TOKEN = '6b978d120ab33f30ce16ee4e275df2f9'
+# SENDER_PHONE_NUMBER = '+12068097984'
 
 # Google Maps Api Key.
 GOOGLE_API_KEY = 'AIzaSyCxh6jiboDAWzR7c_373KDStrtj2W4Sgg4'
@@ -162,9 +168,6 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
-
-# TWILIO TRIAL SENDER PHONE NUMBER
-SENDER_PHONE_NUMBER = '+12068097984'
 
 # Changes as per business requirements.
 OTP_COUNTER_LIMIT = 3
