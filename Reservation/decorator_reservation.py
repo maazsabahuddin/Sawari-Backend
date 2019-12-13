@@ -121,3 +121,51 @@ def confirm_ride(f):
             })
 
     return confirm_ride_decorator
+
+
+def cancel_ride(f):
+
+    def cancel_ride_decorator(*args):
+        try:
+            request = args[1]
+            user = args[2]['user']
+            reservation_number = request.data.get('reservation_number')
+
+            reservation_number_obj = Reservation.objects.filter(reservation_number=reservation_number).first()
+            if not reservation_number_obj:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Invalid reservation number.',
+                })
+
+            if not reservation_number_obj.is_confirmed:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Ride already cancelled.',
+                })
+
+            customer = Customer.objects.filter(id=reservation_number_obj.customer_id.id).first()
+
+            if not user == customer.user:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'False user.',
+                })
+
+            customer_obj = Customer.objects.filter(user=user).first()
+            if not customer_obj:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'is_customer field is false.'
+                })
+
+            return f(args[0], request, user=user, customer_obj=customer, reservation_number=reservation_number_obj)
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e),
+            })
+
+    return cancel_ride_decorator
+

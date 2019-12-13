@@ -18,7 +18,6 @@ class Vehicle(models.Model):
 
 
 class Ride(models.Model):
-
     driver_ids = models.ManyToManyField(Captain)
     vehicle_id = models.ForeignKey(to='Vehicle', on_delete=models.CASCADE, related_name='driver_vehicle')
     start_time = models.DateTimeField(blank=True, null=True)

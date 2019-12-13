@@ -2,7 +2,7 @@ import re
 from functools import wraps
 from django.http import JsonResponse
 from rest_framework.authtoken.models import Token
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_401_UNAUTHORIZED
 
 from A.settings import PHONE_NUMBER_REGEX, EMAIL_REGEX, COUNTRY_CODE_PK
 from CustomAuthentication.backend_authentication import CustomUserCheck
@@ -27,7 +27,7 @@ def login_decorator(f):
             user_token = Token.objects.filter(key=token).first()
             if not user_token:
                 return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
+                    'status': HTTP_401_UNAUTHORIZED,
                     'message': 'Invalid Token.',
                 })
 
@@ -35,7 +35,7 @@ def login_decorator(f):
 
             if not user.is_active:
                 return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
+                    'status': HTTP_401_UNAUTHORIZED,
                     'message': 'User not authenticated. Please verify first.',
                 })
 

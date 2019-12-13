@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from A.settings import FIXED_FARE, KILOMETER_FARE, SENDER_PHONE_NUMBER
 from Payment.models import Pricing, PaymentMethod
 # from Payment.views import PaymentMixin
-from Reservation.decorator_reservation import reserve_ride_decorator, confirm_ride
+from Reservation.decorator_reservation import reserve_ride_decorator, confirm_ride, cancel_ride
 from RideSchedule.models import UserRideDetail
 from User.context_processors import singleton
 from User.decorators import login_decorator
@@ -219,9 +219,6 @@ class RideBook(generics.GenericAPIView):
             })
 
 
-# work on it..
-# @singleton
-# Didn't check it yet.
 class ConfirmRide(RideBook, generics.GenericAPIView):
 
     @staticmethod
@@ -389,3 +386,33 @@ class UserRides(generics.GenericAPIView):
         return ride_details
 
 
+class CancelRide(generics.GenericAPIView):
+
+    @transaction.atomic
+    @login_decorator
+    @cancel_ride
+    def post(self, request, **kwargs):
+        try:
+            customer = kwargs.get('customer_obj')
+            reservation_number_obj = kwargs.get('reservation_number')
+
+            with transaction.atomic():
+                user_reservation_seats = reservation_number_obj.reservation_seats
+                user_ride_detail_obj = UserRideDetail.objects.filter(reservation_id=reservation_number_obj.id).first()
+                ride_obj = Ride.objects.filter(id=user_ride_detail_obj.ride_id.id, is_complete=False).first()
+
+                user_ride_detail_obj.seats_left = ride_obj.seats_left + int(user_reservation_seats)
+                reservation_number_obj.is_confirmed = False
+                user_ride_detail_obj.save()
+                reservation_number_obj.save()
+
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'message': 'Ride cancelled.',
+                })
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e),
+            })

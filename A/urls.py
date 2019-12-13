@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path
 # from User.views import ResendOtpRegister, PasswordReset, PasswordResetCheck, \
 #     PasswordChange, SetNewPassword, ChangePhoneNumber
-from Reservation.views import RideBook, ConfirmRide, UserRides
+from Reservation.views import RideBook, ConfirmRide, UserRides, CancelRide
 from User.views_designpatterns import RegisterCase, IsVerified, UserLogin, UserLogout, ResendOtpRegister, \
     PasswordReset, PasswordResetCheck, SetNewPassword, PasswordResetResendOtp, PasswordChange, ChangePhoneNumber, \
     ChangePhoneNumberOtpMatch, UpdateName, UserDetails
@@ -42,6 +42,7 @@ urlpatterns = [
     # path('display_buses/', VehicleRoute.as_view(), name='bus_route'),
     path('book_ride/', RideBook.as_view(), name='reserve_a_ride'),
     path('confirm_ride/', ConfirmRide.as_view(), name='reserve_ride'),
+    path('cancel_ride/', CancelRide.as_view(), name='cancel_ride'),
 
     # # Reset your password
     path('password/reset/', PasswordReset.as_view(), name='password_reset'),
