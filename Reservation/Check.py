@@ -61,6 +61,7 @@ print(z)
 # print(obj)
 from cmath import asin, sqrt, cos
 
+
 """
 
 a = [
@@ -208,3 +209,5 @@ print(Haversine(24.923179, 67.137853, 24.921906, 67.136459))
 
 a = "Maaz"
 print(a[1:])
+import datetime
+print(datetime.datetime.today())

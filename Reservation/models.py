@@ -39,7 +39,8 @@ class Reservation(models.Model):
     updated_timestamp = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
-        return "{} - {} - {}".format(self.id, self.customer_id.user.email, self.customer_id.user.phone_number)
+        return "{} - {} - {}".format(self.reservation_number, self.customer_id.user.email,
+                                     self.customer_id.user.phone_number)
 
 
 class Stop(models.Model):

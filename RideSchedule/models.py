@@ -8,6 +8,13 @@ from Reservation.models import Reservation, Ride
 
 # Create your models here.
 class UserRideDetail(models.Model):
+    COLOR_CHOICES = (
+        ('complete', 'COMPLETE'),
+        ('incomplete', 'INCOMPLETE'),
+        ('cancelled', 'CANCELLED'),
+        ('pending', 'PENDING'),
+        ('active', 'ACTIVE'),
+    )
     ride_id = models.ForeignKey(Ride, on_delete=models.CASCADE)
     reservation_id = models.ForeignKey(Reservation, on_delete=models.CASCADE)  # Must be many2manyfield do check that
     admin_id = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
@@ -19,7 +26,8 @@ class UserRideDetail(models.Model):
     fixed_fare = models.BooleanField(default=False)
     pick_up_point = models.CharField(blank=True, max_length=256)
     drop_off_point = models.CharField(blank=True, max_length=256)
-    ride_date = models.DateField(default=datetime.datetime.today)
+    ride_status = models.CharField(max_length=10, choices=COLOR_CHOICES, default='pending')
+    ride_date = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return "{} - {}".format(self.reservation_id, self.ride_id)

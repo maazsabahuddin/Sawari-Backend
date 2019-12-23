@@ -1,7 +1,7 @@
 from datetime import date
 from django.db import transaction
 from django.http import JsonResponse
-from django.utils.decorators import method_decorator
+from django.utils import timezone
 from rest_framework import generics
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
 from rest_framework.views import APIView
@@ -11,6 +11,7 @@ from Payment.models import Pricing, PaymentMethod
 # from Payment.views import PaymentMixin
 from Reservation.decorator_reservation import reserve_ride_decorator, confirm_ride, cancel_ride
 from RideSchedule.models import UserRideDetail
+from RideSchedule.views import BusRoute
 from User.context_processors import singleton
 from User.decorators import login_decorator
 from User.models import Customer
@@ -45,16 +46,18 @@ class RideBook(generics.GenericAPIView):
             return False
 
     @staticmethod
-    def get_ride_obj(vehicle_no_plate):
+    def get_ride_obj(**kwargs):
         try:
-            ride_obj = Ride.objects.filter(vehicle_id__vehicle_no_plate=vehicle_no_plate).first()
+            vehicle_no_plate = kwargs.get('vehicle_no_plate')
+            ride_date = kwargs.get('ride_date')
+
+            ride_obj = Ride.objects.filter(
+                vehicle_id__vehicle_no_plate=vehicle_no_plate,
+                start_time__date=ride_date).first()
             if ride_obj:
                 return ride_obj
 
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'No Ride Available',
-            })
+            return None
 
         except TypeError:
             return False
@@ -97,6 +100,7 @@ class RideBook(generics.GenericAPIView):
             vehicle_no_plate = kwargs.get('vehicle_no_plate')
             payment_method_obj = kwargs.get('payment_method')
             fare_per_km = RideBook.db_price()
+            ride_start_time = kwargs.get('ride_start_time')
 
             with transaction.atomic():
 
@@ -130,6 +134,8 @@ class RideBook(generics.GenericAPIView):
                     fixed_fare=FIXED_FARE,
                     pick_up_point=pick_up_point,
                     drop_off_point=drop_off_point,
+                    ride_status="pending",
+                    ride_date=ride_start_time,
                 )
                 user_ride.save()
 
@@ -174,8 +180,9 @@ class RideBook(generics.GenericAPIView):
             user = kwargs.get('user')
             customer = kwargs.get('customer')
             payment_method = kwargs.get('payment_method')
+            ride_date = kwargs.get('ride_date')
 
-            ride_obj = RideBook.get_ride_obj(vehicle_no_plate)
+            ride_obj = RideBook.get_ride_obj(vehicle_no_plate=vehicle_no_plate, ride_date=ride_date)
             if not ride_obj:
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
@@ -210,7 +217,7 @@ class RideBook(generics.GenericAPIView):
                                              req_seats=req_seats, pick_up_point=pick_up_point,
                                              ride_obj=ride_obj, drop_off_point=drop_up_point,
                                              kilometer=kilometer, fare_per_person=fare_per_person,
-                                             payment_method=payment_method_obj)
+                                             payment_method=payment_method_obj, ride_start_time=ride_obj.start_time)
 
         except Exception as e:
             return JsonResponse({
@@ -341,14 +348,14 @@ class UserRides(generics.GenericAPIView):
                     'message': 'Customer not found.',
                 })
 
+            user_rides = []
             user_reservations = Reservation.objects.filter(customer_id=customer.id)
             if not user_reservations:
                 return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'No Trips.',
+                    'status': HTTP_200_OK,
+                    'message': user_rides,
                 })
 
-            user_rides = []
             for reservations in user_reservations:
                 ride_details = UserRideDetail.objects.filter(reservation_id=reservations.id).first()
                 user_rides.append(UserRides.rides(ride=ride_details, reservation=reservations))
@@ -369,19 +376,18 @@ class UserRides(generics.GenericAPIView):
         ride = kwargs.get('ride')
         user_reservation = kwargs.get('reservation')
 
+        ride_details = {}
         if not ride:
-            return JsonResponse({
-                'status': HTTP_404_NOT_FOUND,
-                'message': 'No Rides.',
-            })
+            return ride_details
 
-        ride_details = {
+        ride_details.update({
             'reservation_no': user_reservation.reservation_number,
             'pick_up_point': ride.pick_up_point,
-            'drop_up_point': ride.drop_up_point,
-            'seats': user_reservation.reservation_seats,
-            'ride_date': ride.ride_date,
-        }
+            'drop_off_point': ride.drop_off_point,
+            # 'seats': user_reservation.reservation_seats,
+            'ride_date': ride.ride_date.date(),
+            'ride_status': ride.ride_status,
+        })
 
         return ride_details
 
@@ -401,14 +407,32 @@ class CancelRide(generics.GenericAPIView):
                 user_ride_detail_obj = UserRideDetail.objects.filter(reservation_id=reservation_number_obj.id).first()
                 ride_obj = Ride.objects.filter(id=user_ride_detail_obj.ride_id.id, is_complete=False).first()
 
-                user_ride_detail_obj.seats_left = ride_obj.seats_left + int(user_reservation_seats)
-                reservation_number_obj.is_confirmed = False
-                user_ride_detail_obj.save()
-                reservation_number_obj.save()
+                if user_ride_detail_obj.ride_status == ("complete" or "COMPLETE" or "Complete"):
+                    return JsonResponse({
+                        'status': HTTP_200_OK,
+                        'message': 'User Ride is completed.',
+                    })
+
+                if user_ride_detail_obj.ride_status == ("pending" or "Pending" or "PENDING"):
+                    datetime_now = BusRoute.utc_to_local(timezone.now())
+                    datetime_db = BusRoute.utc_to_local(user_ride_detail_obj.ride_date)
+
+                    if datetime_now < datetime_db:
+                        ride_obj.seats_left = ride_obj.seats_left + int(user_reservation_seats)
+                        reservation_number_obj.is_confirmed = False
+                        user_ride_detail_obj.ride_status = "cancelled"
+                        user_ride_detail_obj.save()
+                        reservation_number_obj.save()
+                        ride_obj.save()
+
+                        return JsonResponse({
+                            'status': HTTP_200_OK,
+                            'message': 'Ride cancelled.',
+                        })
 
                 return JsonResponse({
                     'status': HTTP_200_OK,
-                    'message': 'Ride cancelled.',
+                    'message': 'You can\'t cancel ride now.',
                 })
 
         except Exception as e:

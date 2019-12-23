@@ -20,11 +20,18 @@ def reserve_ride_decorator(f):
             drop_up_point_stop_id = request.data.get('drop_up_point_stop_id')
             kilometer = request.data.get('kilometer')
             payment_method = request.data.get('payment_method')
+            ride_date = request.data.get('ride_date')
 
             if not (vehicle_no_plate or req_seats or pick_up_point_stop_id or drop_up_point_stop_id or kilometer):
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
                     'message': 'Value Missing.',
+                })
+
+            if not ride_date:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'ride_date needed.',
                 })
 
             customer = Customer.objects.filter(user=user).first()
@@ -64,7 +71,7 @@ def reserve_ride_decorator(f):
 
             return f(args[0], request, user=user, customer=customer, vehicle_no_plate=vehicle_no_plate,
                      req_seats=req_seats, pick_up_point=pick_up_point, drop_up_point=drop_off_point,
-                     kilometer=kilometer, payment_method=payment_method)
+                     kilometer=kilometer, payment_method=payment_method, ride_date=ride_date)
 
         except Exception as e:
             return JsonResponse({
