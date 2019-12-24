@@ -31,7 +31,7 @@ class UserOTPMixin(object):
             )
             return True
 
-        except Exception:
+        except Exception as e:
             return False
 
     @staticmethod

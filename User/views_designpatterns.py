@@ -750,6 +750,32 @@ class UpdateName(generics.GenericAPIView):
 
 class ChangePhoneNumber(generics.GenericAPIView, UserOTPMixin):
 
+    @staticmethod
+    @transaction.atomic
+    def phone_send_otp(user_otp_obj, otp, **kwargs):
+        try:
+            phone_number = kwargs.get('phone_number')
+            user_otp_obj = kwargs.get('user_otp_obj')
+            otp = kwargs.get('otp')
+
+            if not phone_number:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'Phone number not found.',
+                })
+
+            with transaction.atomic():
+                if PHONE_VERIFICATION:
+                    if not UserOTPMixin.send_otp_phone(phone_number, otp):
+                        return False
+
+                UserMixinMethods.user_otp_save(user_otp_obj, otp)
+                print(otp)
+                return True
+
+        except Exception as e:
+            print(str(e))
+
     @transaction.atomic
     @login_decorator
     @phone_number_decorator
@@ -772,7 +798,11 @@ class ChangePhoneNumber(generics.GenericAPIView, UserOTPMixin):
                         'status': HTTP_400_BAD_REQUEST,
                         'message': "User not found."
                     })
-                ResendOtpRegister.phone_resend_otp(user_otp_obj, otp, phone_number=phone_number)
+                if not ChangePhoneNumber.phone_send_otp(user_otp_obj=user_otp_obj, otp=otp, phone_number=phone_number):
+                    return JsonResponse({
+                        'status': HTTP_404_NOT_FOUND,
+                        'message': 'OTP not sent.',
+                    })
 
                 print(otp)
                 return JsonResponse({

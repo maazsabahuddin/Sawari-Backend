@@ -346,8 +346,24 @@ def phone_number_decorator(f):
                     'message': "Phone Number required."
                 })
 
-            from User.views_designpatterns import UserMixinMethods
-            UserMixinMethods.validate_phone(phone_number)
+            # Checking Validation
+            if phone_number:
+                print(phone_number[0])
+                if phone_number[0] != ("0" and "+"):
+                    return JsonResponse({
+                        'status': HTTP_404_NOT_FOUND,
+                        'message': 'Invalid Phonenumber',
+                    })
+
+                if phone_number[0] == "0":
+                    phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
+
+                from User.views_designpatterns import UserMixinMethods
+                if not UserMixinMethods.validate_phone(phone_number):
+                    return JsonResponse({
+                        'status': HTTP_400_BAD_REQUEST,
+                        'message': 'Invalid Phone Number',
+                    })
 
             if phone_number == user.phone_number:
                 return JsonResponse({
