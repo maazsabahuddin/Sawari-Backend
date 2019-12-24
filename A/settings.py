@@ -195,8 +195,8 @@ PHONE_VERIFICATION = True
 
 # FIXED_FARE_PRICE = 50
 # KILOMETER_FARE_PRICE = 8.8
-KILOMETER_FARE = True
-FIXED_FARE = False
+KILOMETER_FARE = False
+FIXED_FARE = True
 
 # Payment through Foree, Easypaisa and more.
 ONLINE_PAYMENT = True

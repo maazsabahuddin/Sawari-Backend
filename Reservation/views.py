@@ -46,6 +46,12 @@ class RideBook(generics.GenericAPIView):
             return False
 
     @staticmethod
+    def price_per_km():
+        price_obj = Pricing.objects.filter().first()
+        if price_obj:
+            return float(price_obj.price_per_km)
+
+    @staticmethod
     def get_ride_obj(**kwargs):
         try:
             vehicle_no_plate = kwargs.get('vehicle_no_plate')
@@ -99,7 +105,7 @@ class RideBook(generics.GenericAPIView):
             fare_per_person = kwargs.get('fare_per_person')
             vehicle_no_plate = kwargs.get('vehicle_no_plate')
             payment_method_obj = kwargs.get('payment_method')
-            fare_per_km = RideBook.db_price()
+            fare_per_km = RideBook.price_per_km()
             ride_start_time = kwargs.get('ride_start_time')
 
             with transaction.atomic():
@@ -134,7 +140,7 @@ class RideBook(generics.GenericAPIView):
                     fixed_fare=FIXED_FARE,
                     pick_up_point=pick_up_point,
                     drop_off_point=drop_off_point,
-                    ride_status="pending",
+                    ride_status="active",
                     ride_date=ride_start_time,
                 )
                 user_ride.save()
@@ -156,10 +162,10 @@ class RideBook(generics.GenericAPIView):
                 return JsonResponse({
                     'status': HTTP_200_OK,
                     'reservation_number': reservation.reservation_number,
-                    'Vehicle': vehicle_no_plate,
-                    'Fare': user_ride.fare + "x" + req_seats,
-                    'Pick-up point': user_ride.pick_up_point,
-                    'Drop-up point': user_ride.drop_up_point,
+                    'vehicle': vehicle_no_plate,
+                    'fare': str(fare_per_person) + "x" + req_seats,
+                    'pick-up-point': user_ride.pick_up_point,
+                    'drop-off-point': user_ride.drop_off_point,
                     'message': 'Ride booked, but not confirmed.',
                 })
         except Exception as e:
