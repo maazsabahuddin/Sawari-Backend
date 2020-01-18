@@ -1,15 +1,17 @@
 from django.http import JsonResponse
+from rest_framework import generics
 from rest_framework.generics import GenericAPIView
-from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
 
+from Reservation.models import Ride
 from User.decorators import login_decorator
 
 
 class Vehicle(GenericAPIView):
 
     @login_decorator
-    def add_vehicle(self, request):
-        user = self.user
+    def add_vehicle(self, request, data=None):
+        user = data['user']
 
         if not user:
             return JsonResponse({
@@ -30,5 +32,6 @@ class Vehicle(GenericAPIView):
                 'status': HTTP_400_BAD_REQUEST,
                 'message': 'Missing requirements.'
             })
+
 
 
