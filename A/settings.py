@@ -154,6 +154,8 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
 STATIC_URL = '/static/'
 
+STATIC_ROOT = '/home/sohaibaijaz9/SAWAARI_backend/static'
+
 # Changes as per business requirements.
 OTP_COUNTER_LIMIT = 3
 # kitni der tk otp valid rhega.
