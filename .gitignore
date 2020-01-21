@@ -8,6 +8,9 @@
 #migrations
 */migrations/
 
+/queries.txt
+/A/config.py
+
 # C extensions
 *.so
 

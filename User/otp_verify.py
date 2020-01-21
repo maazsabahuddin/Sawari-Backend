@@ -5,8 +5,9 @@ import random
 
 import pytz
 
-from A.settings import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, EMAIL_HOST_USER, local_tz, OTP_COUNTER_LIMIT, \
-    OTP_VALID_TIME, SENDER_PHONE_NUMBER
+from A.settings import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, SENDER_PHONE_NUMBER
+from A.settings import EMAIL_HOST_USER, local_tz, OTP_COUNTER_LIMIT, \
+    OTP_VALID_TIME
 from django_twilio.client import Client
 from .models import User, UserOtp
 from django.core.mail import EmailMessage

@@ -1,6 +1,6 @@
-pytz
-googlemaps
-djangorestframework
-phonenumbers
-django_twilio
-django
+googlemaps==4.0.0
+djangorestframework==3.11.0
+phonenumbers==8.11.2
+django_twilio==0.11.0
+django==2.2.9
+twilio==6.35.2
