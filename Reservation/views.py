@@ -6,7 +6,9 @@ from rest_framework import generics
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
 from rest_framework.views import APIView
 
+
 from A.settings import FIXED_FARE, KILOMETER_FARE, SENDER_PHONE_NUMBER
+
 from Payment.models import Pricing, PaymentMethod
 # from Payment.views import PaymentMixin
 from Reservation.decorator_reservation import reserve_ride_decorator, confirm_ride, cancel_ride

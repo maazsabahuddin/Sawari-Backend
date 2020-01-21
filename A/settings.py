@@ -13,7 +13,8 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-from googlemaps import Client
+
+import googlemaps
 import pytz
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -62,9 +63,13 @@ TWILIO_AUTH_TOKEN = '33545ed3be08f4d14a4a21cdb56d4050'
 # TWILIO_AUTH_TOKEN = '6b978d120ab33f30ce16ee4e275df2f9'
 # SENDER_PHONE_NUMBER = '+12068097984'
 
+
+TWILIO_ACCOUNT_SID = os.environ['TWILIO_ACCOUNT_SID']
+TWILIO_AUTH_TOKEN = os.environ['TWILIO_AUTH_TOKEN']
+
 # Google Maps Api Key.
-GOOGLE_API_KEY = 'AIzaSyCxh6jiboDAWzR7c_373KDStrtj2W4Sgg4'
-gmaps = Client(key=GOOGLE_API_KEY)
+GOOGLE_API_KEY = os.environ['GOOGLE_API_KEY']
+gmaps = googlemaps.Client(key=GOOGLE_API_KEY)
 
 AUTH_USER_MODEL = "User.User"
 
@@ -160,7 +165,7 @@ SERVER_EMAIL = 'maazsabahuddin@gmail.com'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'maazsabahuddin@gmail.com'
-EMAIL_HOST_PASSWORD = 'tlypbqtxmuxjeysy'
+EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
@@ -197,14 +202,16 @@ PHONE_VERIFICATION = True
 
 # FIXED_FARE_PRICE = 50
 # KILOMETER_FARE_PRICE = 8.8
-KILOMETER_FARE = True
-FIXED_FARE = False
+
+KILOMETER_FARE = False
+FIXED_FARE = True
+
 
 # Payment through Foree, Easypaisa and more.
 ONLINE_PAYMENT = True
 ONLINE_PAYMENT_FEE = False
 
-DISTANCE_KILOMETRE_LIMIT = 3.0
+DISTANCE_KILOMETRE_LIMIT = 1.0
 
 # Each stop wait time in minutes.
 STOP_WAIT_TIME = 1
