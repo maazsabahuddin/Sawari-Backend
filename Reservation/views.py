@@ -168,6 +168,8 @@ class RideBook(generics.GenericAPIView):
                     'vehicle': vehicle_no_plate,
                     'fare': float(fare_per_person)*float(req_seats),
                     'fare_per_person': str(fare_per_person) + " x " + req_seats,
+                    'price_per_km': "",
+                    'kilometer': None,
                     'pick-up-point': user_ride.pick_up_point,
                     'drop-off-point': user_ride.drop_off_point,
                     'price_per_km': "",
