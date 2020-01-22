@@ -56,7 +56,7 @@ INSTALLED_APPS = [
 
 # if use file extraction method.
 # retrieve external file data
-file_url = 'H:/MyGithub/secret_keys.txt'
+file_url = '/home/sohaibaijaz9/secret_keys.txt'
 retrieve_keys_of_list = []
 with open(file_url, 'r') as f:
     for line in f:
@@ -243,7 +243,7 @@ FIXED_FARE = True
 ONLINE_PAYMENT = True
 ONLINE_PAYMENT_FEE = False
 
-DISTANCE_KILOMETRE_LIMIT = 1.0
+DISTANCE_KILOMETRE_LIMIT = 2.0
 
 # Each stop wait time in minutes.
 STOP_WAIT_TIME = 1
