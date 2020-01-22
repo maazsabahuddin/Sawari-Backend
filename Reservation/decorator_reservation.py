@@ -18,11 +18,11 @@ def reserve_ride_decorator(f):
             req_seats = request.data.get('req_seats')
             pick_up_point_stop_id = request.data.get('pick_up_point_stop_id')
             drop_up_point_stop_id = request.data.get('drop_up_point_stop_id')
-            kilometer = request.data.get('kilometer')
+            # kilometer = request.data.get('kilometer')
             payment_method = request.data.get('payment_method')
             ride_date = request.data.get('ride_date')
 
-            if not (vehicle_no_plate or req_seats or pick_up_point_stop_id or drop_up_point_stop_id or kilometer):
+            if not (vehicle_no_plate or req_seats or pick_up_point_stop_id or drop_up_point_stop_id):
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
                     'message': 'Value Missing.',
@@ -55,13 +55,21 @@ def reserve_ride_decorator(f):
 
             pick_up_point = ''
             drop_off_point = ''
+            pick_up_stop = ''
+            drop_off_stop = ''
 
             for stop in stops_obj:
                 if stop.id == int(pick_up_point_stop_id):
                     pick_up_point = stop.name
+                    pick_up_stop = (stop.latitude, stop.longitude)
 
                 elif stop.id == int(drop_up_point_stop_id):
                     drop_off_point = stop.name
+                    drop_off_stop = (stop.latitude, stop.longitude)
+
+            from A.settings import gmaps
+            result = gmaps.distance_matrix(pick_up_stop, drop_off_stop, mode='driving')
+            kilometer = float(result['rows'][0]['elements'][0]['distance']['text'].split(' ')[0])
 
             if not (pick_up_point or drop_off_point):
                 return JsonResponse({
