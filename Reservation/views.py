@@ -154,10 +154,11 @@ class RideBook(generics.GenericAPIView):
                         'vehicle': vehicle_no_plate,
                         'fare_per_person': str(fare_per_person) + " x " + req_seats,
                         'fare': str(user_ride.fare),
-                        'price_per_km': user_ride.price_per_km,
+                        'price_per_km': str(user_ride.price_per_km),
                         'kilometer': user_ride.kilometer,
                         'pick-up-point': user_ride.pick_up_point,
                         'drop-off-point': user_ride.drop_off_point,
+                        'seats': req_seats,
                         'message': 'Ride booked, but not confirmed.',
                     })
 
@@ -165,9 +166,12 @@ class RideBook(generics.GenericAPIView):
                     'status': HTTP_200_OK,
                     'reservation_number': reservation.reservation_number,
                     'vehicle': vehicle_no_plate,
-                    'fare': str(fare_per_person) + "x" + req_seats,
+                    'fare': float(fare_per_person)*float(req_seats),
+                    'fare_per_person': str(fare_per_person) + " x " + req_seats,
                     'pick-up-point': user_ride.pick_up_point,
                     'drop-off-point': user_ride.drop_off_point,
+                    'price_per_km': "",
+                    'seats': req_seats,
                     'message': 'Ride booked, but not confirmed.',
                 })
         except Exception as e:
