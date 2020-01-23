@@ -388,9 +388,10 @@ class UserRides(generics.GenericAPIView):
                 ride_details = UserRideDetail.objects.filter(reservation_id=reservations.id).first()
                 user_rides.append(UserRides.rides(ride=ride_details, reservation=reservations))
 
+            reverse_user_rides = user_rides[::-1]
             return JsonResponse({
                 'status': HTTP_200_OK,
-                'reservations': user_rides,
+                'reservations': reverse_user_rides,
             })
 
         except Exception as e:
@@ -411,8 +412,9 @@ class UserRides(generics.GenericAPIView):
         ride_details.update({
             'reservation_no': user_reservation.reservation_number,
             'pick_up_point': ride.pick_up_point,
+            'pick_up_time': ride.ride_arrival_time,
             'drop_off_point': ride.drop_off_point,
-            # 'seats': user_reservation.reservation_seats,
+            'seats': user_reservation.reservation_seats,
             'ride_date': ride.ride_date.date(),
             'ride_status': ride.ride_status,
         })
