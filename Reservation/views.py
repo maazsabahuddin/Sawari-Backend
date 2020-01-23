@@ -316,14 +316,13 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                     })
 
                 user_ride_obj = UserRideDetail.objects.filter(reservation_id=reservation_number_obj.id).first()
-                flag = ConfirmRide.ride_confirm_message(phone_number=customer.user.phone_number,
+                if not ConfirmRide.ride_confirm_message(phone_number=customer.user.phone_number,
                                                         res_no=reservation_number_obj.reservation_number,
                                                         vehicle_no_plate=vehicle_obj.vehicle_no_plate,
                                                         pick_up_point=user_ride_obj.pick_up_point,
                                                         drop_off_point=user_ride_obj.drop_off_point,
                                                         first_name=customer.user.first_name,
-                                                        arrival_time=user_ride_obj.ride_arrival_time)
-                if flag:
+                                                        arrival_time=user_ride_obj.ride_arrival_time):
                     return JsonResponse({
                         'status': HTTP_400_BAD_REQUEST,
                         'message': 'Please verify this number on your twilio trial account.',
