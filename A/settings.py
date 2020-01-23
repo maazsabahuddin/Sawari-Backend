@@ -14,6 +14,7 @@ import os
 import re
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+
 import googlemaps
 import pytz
 
@@ -76,6 +77,13 @@ for string_list in retrieve_keys_of_list:
         secret_keys.append(string_without_space)
     dict_keys.append({secret_keys[0]: secret_keys[1]})
     secret_keys.clear()
+
+
+
+# Sohaib Twilio account credentials
+# TWILIO_ACCOUNT_SID = 'ACc2d21586f29d9728eb8be6b7f7cbab17'
+# TWILIO_AUTH_TOKEN = '6b978d120ab33f30ce16ee4e275df2f9'
+# SENDER_PHONE_NUMBER = '+12068097984'
 
 # Maaz Twilio account credentials
 TWILIO_ACCOUNT_SID = dict_keys[0].get('TWILIO_ACCOUNT_SID')
@@ -198,6 +206,8 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
 STATIC_URL = '/static/'
 
+STATIC_ROOT = '/home/sohaibaijaz9/SAWAARI_backend/static'
+
 # Changes as per business requirements.
 OTP_COUNTER_LIMIT = 3
 
@@ -224,14 +234,16 @@ PHONE_VERIFICATION = True
 
 # FIXED_FARE_PRICE = 50
 # KILOMETER_FARE_PRICE = 8.8
+
 KILOMETER_FARE = False
 FIXED_FARE = True
+
 
 # Payment through Foree, Easypaisa and more.
 ONLINE_PAYMENT = True
 ONLINE_PAYMENT_FEE = False
 
-DISTANCE_KILOMETRE_LIMIT = 1.0
+DISTANCE_KILOMETRE_LIMIT = 2.0
 
 # Each stop wait time in minutes.
 STOP_WAIT_TIME = 1

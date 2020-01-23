@@ -15,9 +15,10 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 
 from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
-from A.settings import OTP_INITIAL_COUNTER, EMAIL_REGEX, PHONE_NUMBER_REGEX, \
+
+from A.settings import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_COUNTER, EMAIL_REGEX, PHONE_NUMBER_REGEX, \
     EMAIL_VERIFICATION, PHONE_VERIFICATION
-from A.settings import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID
+
 from .otp_verify import UserOTPMixin
 from .models import User, Customer, UserOtp
 # from .user_token_authentication import UserMixin
