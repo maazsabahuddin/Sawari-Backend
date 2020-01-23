@@ -55,7 +55,7 @@ INSTALLED_APPS = [
 
 # if use file extraction method.
 # retrieve external file data
-file_url = 'H:/MyGithub/secret_keys.txt'
+file_url = 'D:/H Drive/MyGithub/secret_keys.txt'
 retrieve_keys_of_list = []
 with open(file_url, 'r') as f:
     for line in f:

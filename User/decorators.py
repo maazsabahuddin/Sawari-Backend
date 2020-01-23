@@ -349,7 +349,7 @@ def phone_number_decorator(f):
             # Checking Validation
             if phone_number:
                 print(phone_number[0])
-                if phone_number[0] != ("0" and "+"):
+                if phone_number[0] != ("0" or "+"):
                     return JsonResponse({
                         'status': HTTP_404_NOT_FOUND,
                         'message': 'Invalid Phonenumber',
