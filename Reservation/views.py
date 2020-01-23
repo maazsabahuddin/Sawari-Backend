@@ -255,15 +255,17 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
             pick_up_point = kwargs.get('pick_up_point')
             pick_up_time = kwargs.get('ride_arrival_time')
             drop_off_point = kwargs.get('drop_off_point')
+            booked_seats = kwargs.get('booked_seats')
 
             sawaari_message = "RIDE WITH SAWAARI\n"
-            message_body = sawaari_message + 'Hi {}, your ride is confirmed.\nReservation Number - {}\nVehicle - {}\n' \
-                                             'Pick-up-point - {} at {}\nDrop-off-point: {}'.format(first_name,
-                                                                                                   res_no,
-                                                                                                   vehicle_no_plate,
-                                                                                                   pick_up_point,
-                                                                                                   pick_up_time,
-                                                                                                   drop_off_point, )
+            message_body = sawaari_message + 'Hi {}, your ride is confirmed.\n' \
+                                             'Reservation Number - {}\n' \
+                                             'Vehicle - {}\n' \
+                                             'Seats: {}\n' \
+                                             'Pick-up-point: {} at {}\n' \
+                                             'Drop-off-point: {}'.format(first_name, res_no, vehicle_no_plate,
+                                                                         booked_seats, pick_up_point,
+                                                                         pick_up_time, drop_off_point)
 
             from User.twilio_verify import client
 
@@ -322,7 +324,8 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                                                         pick_up_point=user_ride_obj.pick_up_point,
                                                         drop_off_point=user_ride_obj.drop_off_point,
                                                         first_name=customer.user.first_name,
-                                                        arrival_time=user_ride_obj.ride_arrival_time):
+                                                        arrival_time=user_ride_obj.ride_arrival_time,
+                                                        booked_seats=reservation_number_obj.reservation_seats):
                     return JsonResponse({
                         'status': HTTP_400_BAD_REQUEST,
                         'message': 'Please verify this number on your twilio trial account.',
