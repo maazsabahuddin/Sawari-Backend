@@ -6,7 +6,6 @@ from rest_framework import generics
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
 from rest_framework.views import APIView
 
-
 from A.settings import FIXED_FARE, KILOMETER_FARE, SENDER_PHONE_NUMBER
 
 from Payment.models import Pricing, PaymentMethod
@@ -17,6 +16,7 @@ from RideSchedule.views import BusRoute
 from User.context_processors import singleton
 from User.decorators import login_decorator
 from User.models import Customer
+from exceptions import InvalidUsage
 from .models import Reservation, Ride, Vehicle, Route
 from .reservation_pattern import ReservationNumber
 
@@ -168,7 +168,7 @@ class RideBook(generics.GenericAPIView):
                     'status': HTTP_200_OK,
                     'reservation_number': reservation.reservation_number,
                     'vehicle': vehicle_no_plate,
-                    'fare': float(fare_per_person)*float(req_seats),
+                    'fare': float(fare_per_person) * float(req_seats),
                     'fare_per_person': str(fare_per_person) + " x " + req_seats,
                     'price_per_km': "",
                     'kilometer': None,
@@ -263,21 +263,19 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                                                                                                    vehicle_no_plate,
                                                                                                    pick_up_point,
                                                                                                    pick_up_time,
-                                                                                                   drop_off_point,)
-            sender_phone_number = SENDER_PHONE_NUMBER
+                                                                                                   drop_off_point, )
 
             from User.twilio_verify import client
 
             client.messages.create(
-                from_=sender_phone_number,
+                from_=SENDER_PHONE_NUMBER,
                 body=message_body,
                 to=phone_number,
             )
             return True
 
         except Exception as e:
-            print(str(e))
-            return False
+            raise InvalidUsage(status_code=1000, message=str(e))
 
     @staticmethod
     @transaction.atomic
@@ -318,13 +316,14 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                     })
 
                 user_ride_obj = UserRideDetail.objects.filter(reservation_id=reservation_number_obj.id).first()
-                if not ConfirmRide.ride_confirm_message(phone_number=customer.user.phone_number,
+                flag = ConfirmRide.ride_confirm_message(phone_number=customer.user.phone_number,
                                                         res_no=reservation_number_obj.reservation_number,
                                                         vehicle_no_plate=vehicle_obj.vehicle_no_plate,
                                                         pick_up_point=user_ride_obj.pick_up_point,
                                                         drop_off_point=user_ride_obj.drop_off_point,
                                                         first_name=customer.user.first_name,
-                                                        arrival_time=user_ride_obj.ride_arrival_time):
+                                                        arrival_time=user_ride_obj.ride_arrival_time)
+                if flag:
                     return JsonResponse({
                         'status': HTTP_400_BAD_REQUEST,
                         'message': 'Please verify this number on your twilio trial account.',
@@ -343,6 +342,12 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                     'message': 'Your ride is confirmed.'
                 })
 
+        except InvalidUsage as e:
+            if e.status_code == 1000:
+                return JsonResponse({
+                    'status':HTTP_400_BAD_REQUEST,
+                    'message': str(e.message),
+                })
         except Exception as e:
             JsonResponse({
                 'status': HTTP_404_NOT_FOUND,
