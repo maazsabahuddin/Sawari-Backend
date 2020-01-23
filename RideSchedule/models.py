@@ -30,6 +30,7 @@ class UserRideDetail(models.Model):
     # drop_off_time = models.TimeField(blank=True, null=True)
     ride_status = models.CharField(max_length=10, choices=COLOR_CHOICES, default='pending')
     ride_date = models.DateTimeField(blank=True, null=True)
+    ride_arrival_time = models.TimeField(blank=True, null=True)
 
     def __str__(self):
         return "{} - {}".format(self.reservation_id, self.ride_id)

@@ -109,6 +109,7 @@ class RideBook(generics.GenericAPIView):
             payment_method_obj = kwargs.get('payment_method')
             fare_per_km = RideBook.price_per_km()
             ride_start_time = kwargs.get('ride_start_time')
+            arrival_time = kwargs.get('arrival_time')
 
             with transaction.atomic():
 
@@ -143,7 +144,8 @@ class RideBook(generics.GenericAPIView):
                     pick_up_point=pick_up_point,
                     drop_off_point=drop_off_point,
                     ride_status="active",
-                    ride_date=ride_start_time,
+                    ride_date=ride_start_time.date(),
+                    ride_arrival_time=arrival_time,
                 )
                 user_ride.save()
 
@@ -194,6 +196,7 @@ class RideBook(generics.GenericAPIView):
             customer = kwargs.get('customer')
             payment_method = kwargs.get('payment_method')
             ride_date = kwargs.get('ride_date')
+            arrival_time = kwargs.get('arrival_time')
 
             ride_obj = RideBook.get_ride_obj(vehicle_no_plate=vehicle_no_plate, ride_date=ride_date)
             if not ride_obj:
@@ -230,7 +233,8 @@ class RideBook(generics.GenericAPIView):
                                              req_seats=req_seats, pick_up_point=pick_up_point,
                                              ride_obj=ride_obj, drop_off_point=drop_up_point,
                                              kilometer=kilometer, fare_per_person=fare_per_person,
-                                             payment_method=payment_method_obj, ride_start_time=ride_obj.start_time)
+                                             payment_method=payment_method_obj, ride_start_time=ride_obj.start_time,
+                                             arrival_time=arrival_time)
 
         except Exception as e:
             return JsonResponse({
@@ -249,14 +253,17 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
             res_no = kwargs.get('res_no')
             vehicle_no_plate = kwargs.get('vehicle_no_plate')
             pick_up_point = kwargs.get('pick_up_point')
+            pick_up_time = kwargs.get('ride_arrival_time')
             drop_off_point = kwargs.get('drop_off_point')
 
-            sawaari_message = "\nRIDE WITH SAWAARI\n"
+            sawaari_message = "RIDE WITH SAWAARI\n"
             message_body = sawaari_message + 'Hi {}, your ride is confirmed.\nReservation Number - {}\nVehicle - {}\n' \
-                                             'Pick-up-point - {}\nDrop-off-point: {}'.format(first_name, res_no,
-                                                                                             vehicle_no_plate,
-                                                                                             pick_up_point,
-                                                                                             drop_off_point)
+                                             'Pick-up-point - {} at {}\nDrop-off-point: {}'.format(first_name,
+                                                                                                   res_no,
+                                                                                                   vehicle_no_plate,
+                                                                                                   pick_up_point,
+                                                                                                   pick_up_time,
+                                                                                                   drop_off_point,)
             sender_phone_number = SENDER_PHONE_NUMBER
 
             from User.twilio_verify import client
@@ -316,7 +323,8 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                                                         vehicle_no_plate=vehicle_obj.vehicle_no_plate,
                                                         pick_up_point=user_ride_obj.pick_up_point,
                                                         drop_off_point=user_ride_obj.drop_off_point,
-                                                        first_name=customer.user.first_name,):
+                                                        first_name=customer.user.first_name,
+                                                        arrival_time=user_ride_obj.ride_arrival_time):
                     return JsonResponse({
                         'status': HTTP_400_BAD_REQUEST,
                         'message': 'Please verify this number on your twilio trial account.',
