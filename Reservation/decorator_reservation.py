@@ -51,6 +51,12 @@ def reserve_ride_decorator(f):
                     'message': 'No ride available right now.',
                 })
 
+            if ride_obj.seats_left < int(req_seats):
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': req_seats + " seats not available.",
+                })
+
             route_obj = Route.objects.filter(ride_id=ride_obj.id).first()
             stops_obj = route_obj.stop_ids.get_queryset()
 
