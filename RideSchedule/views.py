@@ -8,15 +8,13 @@ from django.utils import timezone
 from rest_framework import generics
 from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_200_OK, HTTP_400_BAD_REQUEST
 
-from A.settings import DISTANCE_KILOMETRE_LIMIT, GOOGLE_API_KEY, gmaps, local_tz, STOP_WAIT_TIME
+from A.settings.base import DISTANCE_KILOMETRE_LIMIT, gmaps, local_tz, STOP_WAIT_TIME
 
 from Reservation.models import Ride, Stop, Route
-from User import otp_verify
 from User.decorators import login_decorator
 
 
 from math import cos, asin, sqrt
-import requests
 
 
 # It returns the result in Kilometer.

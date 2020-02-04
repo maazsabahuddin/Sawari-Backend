@@ -56,15 +56,18 @@ INSTALLED_APPS = [
 
 # if use file extraction method.
 # retrieve external file data
-file_url = 'D:/H Drive/MyGithub/secret_keys.txt'
+file_url = 'I:/Work/MyGithub/secret_keys.txt'
 retrieve_keys_of_list = []
-with open(file_url, 'r') as f:
-    for line in f:
-        inner_list = [elt.strip() for elt in line.split(',')]
-        inner_list = list(filter(None, inner_list))
-        if not inner_list:
-            continue
-        retrieve_keys_of_list.append(inner_list)
+try:
+    with open(file_url, 'r') as f:
+        for line in f:
+            inner_list = [elt.strip() for elt in line.split(',')]
+            inner_list = list(filter(None, inner_list))
+            if not inner_list:
+                continue
+            retrieve_keys_of_list.append(inner_list)
+except:
+    print("Unable to open file secret_keys")
 
 list_value = []
 dict_keys = []
@@ -77,7 +80,6 @@ for string_list in retrieve_keys_of_list:
         secret_keys.append(string_without_space)
     dict_keys.append({secret_keys[0]: secret_keys[1]})
     secret_keys.clear()
-
 
 
 # Sohaib Twilio account credentials
@@ -243,7 +245,7 @@ FIXED_FARE = True
 ONLINE_PAYMENT = True
 ONLINE_PAYMENT_FEE = False
 
-DISTANCE_KILOMETRE_LIMIT = 2.0
+DISTANCE_KILOMETRE_LIMIT = 1.0
 
 # Each stop wait time in minutes.
 STOP_WAIT_TIME = 1

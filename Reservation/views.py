@@ -4,20 +4,18 @@ from django.http import JsonResponse
 from django.utils import timezone
 from rest_framework import generics
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
-from rest_framework.views import APIView
 
-
-from A.settings import FIXED_FARE, KILOMETER_FARE, SENDER_PHONE_NUMBER
+from A.settings.base import FIXED_FARE, KILOMETER_FARE, SENDER_PHONE_NUMBER
 
 from Payment.models import Pricing, PaymentMethod
 # from Payment.views import PaymentMixin
 from Reservation.decorator_reservation import reserve_ride_decorator, confirm_ride, cancel_ride
 from RideSchedule.models import UserRideDetail
 from RideSchedule.views import BusRoute
-from User.context_processors import singleton
 from User.decorators import login_decorator
 from User.models import Customer
-from .models import Reservation, Ride, Vehicle, Route
+from exceptions import InvalidUsage
+from .models import Reservation, Ride, Vehicle
 from .reservation_pattern import ReservationNumber
 
 
@@ -109,6 +107,7 @@ class RideBook(generics.GenericAPIView):
             payment_method_obj = kwargs.get('payment_method')
             fare_per_km = RideBook.price_per_km()
             ride_start_time = kwargs.get('ride_start_time')
+            arrival_time = kwargs.get('arrival_time')
 
             with transaction.atomic():
 
@@ -143,7 +142,8 @@ class RideBook(generics.GenericAPIView):
                     pick_up_point=pick_up_point,
                     drop_off_point=drop_off_point,
                     ride_status="active",
-                    ride_date=ride_start_time,
+                    ride_date=ride_start_time.date(),
+                    ride_arrival_time=arrival_time,
                 )
                 user_ride.save()
 
@@ -166,13 +166,12 @@ class RideBook(generics.GenericAPIView):
                     'status': HTTP_200_OK,
                     'reservation_number': reservation.reservation_number,
                     'vehicle': vehicle_no_plate,
-                    'fare': float(fare_per_person)*float(req_seats),
+                    'fare': float(fare_per_person) * float(req_seats),
                     'fare_per_person': str(fare_per_person) + " x " + req_seats,
                     'price_per_km': "",
                     'kilometer': None,
                     'pick-up-point': user_ride.pick_up_point,
                     'drop-off-point': user_ride.drop_off_point,
-                    'price_per_km': "",
                     'seats': req_seats,
                     'message': 'Ride booked, but not confirmed.',
                 })
@@ -195,6 +194,7 @@ class RideBook(generics.GenericAPIView):
             customer = kwargs.get('customer')
             payment_method = kwargs.get('payment_method')
             ride_date = kwargs.get('ride_date')
+            arrival_time = kwargs.get('arrival_time')
 
             ride_obj = RideBook.get_ride_obj(vehicle_no_plate=vehicle_no_plate, ride_date=ride_date)
             if not ride_obj:
@@ -231,7 +231,8 @@ class RideBook(generics.GenericAPIView):
                                              req_seats=req_seats, pick_up_point=pick_up_point,
                                              ride_obj=ride_obj, drop_off_point=drop_up_point,
                                              kilometer=kilometer, fare_per_person=fare_per_person,
-                                             payment_method=payment_method_obj, ride_start_time=ride_obj.start_time)
+                                             payment_method=payment_method_obj, ride_start_time=ride_obj.start_time,
+                                             arrival_time=arrival_time)
 
         except Exception as e:
             return JsonResponse({
@@ -250,28 +251,31 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
             res_no = kwargs.get('res_no')
             vehicle_no_plate = kwargs.get('vehicle_no_plate')
             pick_up_point = kwargs.get('pick_up_point')
+            pick_up_time = kwargs.get('ride_arrival_time')
             drop_off_point = kwargs.get('drop_off_point')
+            booked_seats = kwargs.get('booked_seats')
 
-            sawaari_message = "\nRIDE WITH SAWAARI\n"
-            message_body = sawaari_message + 'Hi {}, your ride is confirmed.\nReservation Number - {}\nVehicle - {}\n' \
-                                             'Pick-up-point - {}\nDrop-off-point: {}'.format(first_name, res_no,
-                                                                                             vehicle_no_plate,
-                                                                                             pick_up_point,
-                                                                                             drop_off_point)
-            sender_phone_number = SENDER_PHONE_NUMBER
+            sawaari_message = "RIDE WITH SAWAARI\n"
+            message_body = sawaari_message + 'Hi {}, your ride is confirmed.\n' \
+                                             'Reservation Number - {}\n' \
+                                             'Vehicle - {}\n' \
+                                             'Seats: {}\n' \
+                                             'Pick-up-point: {} at {}\n' \
+                                             'Drop-off-point: {}'.format(first_name, res_no, vehicle_no_plate,
+                                                                         booked_seats, pick_up_point,
+                                                                         pick_up_time, drop_off_point)
 
             from User.twilio_verify import client
 
             client.messages.create(
-                from_=sender_phone_number,
+                from_=SENDER_PHONE_NUMBER,
                 body=message_body,
                 to=phone_number,
             )
             return True
 
         except Exception as e:
-            print(str(e))
-            return False
+            raise InvalidUsage(status_code=1000, message=str(e))
 
     @staticmethod
     @transaction.atomic
@@ -317,7 +321,9 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                                                         vehicle_no_plate=vehicle_obj.vehicle_no_plate,
                                                         pick_up_point=user_ride_obj.pick_up_point,
                                                         drop_off_point=user_ride_obj.drop_off_point,
-                                                        first_name=customer.user.first_name,):
+                                                        first_name=customer.user.first_name,
+                                                        arrival_time=user_ride_obj.ride_arrival_time,
+                                                        booked_seats=reservation_number_obj.reservation_seats):
                     return JsonResponse({
                         'status': HTTP_400_BAD_REQUEST,
                         'message': 'Please verify this number on your twilio trial account.',
@@ -336,6 +342,12 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                     'message': 'Your ride is confirmed.'
                 })
 
+        except InvalidUsage as e:
+            if e.status_code == 1000:
+                return JsonResponse({
+                    'status':HTTP_400_BAD_REQUEST,
+                    'message': str(e.message),
+                })
         except Exception as e:
             JsonResponse({
                 'status': HTTP_404_NOT_FOUND,
@@ -374,9 +386,10 @@ class UserRides(generics.GenericAPIView):
                 ride_details = UserRideDetail.objects.filter(reservation_id=reservations.id).first()
                 user_rides.append(UserRides.rides(ride=ride_details, reservation=reservations))
 
+            reverse_user_rides = user_rides[::-1]
             return JsonResponse({
                 'status': HTTP_200_OK,
-                'reservations': user_rides,
+                'reservations': reverse_user_rides,
             })
 
         except Exception as e:
@@ -397,8 +410,9 @@ class UserRides(generics.GenericAPIView):
         ride_details.update({
             'reservation_no': user_reservation.reservation_number,
             'pick_up_point': ride.pick_up_point,
+            'pick_up_time': ride.ride_arrival_time,
             'drop_off_point': ride.drop_off_point,
-            # 'seats': user_reservation.reservation_seats,
+            'seats': user_reservation.reservation_seats,
             'ride_date': ride.ride_date.date(),
             'ride_status': ride.ride_status,
         })

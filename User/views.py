@@ -1,6 +1,5 @@
 import datetime
 import re
-import uuid
 from rest_framework import generics
 
 from django.contrib.auth.hashers import make_password
@@ -14,9 +13,9 @@ from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_200_OK, HTTP_400_BAD_
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 
-from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
+from CustomAuthentication.backend_authentication import CustomAuthenticationBackend
 
-from A.settings import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_COUNTER, EMAIL_REGEX, PHONE_NUMBER_REGEX, \
+from A import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_COUNTER, EMAIL_REGEX, PHONE_NUMBER_REGEX, \
     EMAIL_VERIFICATION, PHONE_VERIFICATION
 
 from .otp_verify import UserOTPMixin
