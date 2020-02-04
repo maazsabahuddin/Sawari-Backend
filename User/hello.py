@@ -250,10 +250,6 @@
 #
 #
 
-from cmath import sqrt, asin, cos
-
-from A.settings import GOOGLE_API_KEY
-
 # email = 'maazsabahuddin@gmail.com'
 # first_name = email.split('@')
 # print(first_name[0])

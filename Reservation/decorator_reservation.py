@@ -1,9 +1,6 @@
-from tokenize import Token
-
 from django.http import JsonResponse
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-from Payment.models import PaymentMethod
 from Reservation.models import Reservation, Route, Ride, Vehicle
 from User.models import Customer
 
@@ -27,6 +24,12 @@ def reserve_ride_decorator(f):
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
                     'message': 'Field Missing.',
+                })
+
+            if payment_method == "Card":
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'Card transaction coming soon.',
                 })
 
             if not ride_date:
@@ -54,7 +57,7 @@ def reserve_ride_decorator(f):
             if ride_obj.seats_left < int(req_seats):
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
-                    'message': req_seats + " seats not available.",
+                    'message': req_seats + " seats are not available.",
                 })
 
             route_obj = Route.objects.filter(ride_id=ride_obj.id).first()
@@ -74,7 +77,7 @@ def reserve_ride_decorator(f):
                     drop_off_point = stop.name
                     drop_off_stop = (stop.latitude, stop.longitude)
 
-            from A.settings import gmaps
+            from A import gmaps
             result = gmaps.distance_matrix(pick_up_stop, drop_off_stop, mode='driving')
             kilometer = float(result['rows'][0]['elements'][0]['distance']['text'].split(' ')[0])
 

@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from rest_framework.authtoken.models import Token
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_401_UNAUTHORIZED
 
-from A.settings import PHONE_NUMBER_REGEX, EMAIL_REGEX, COUNTRY_CODE_PK
+from A import PHONE_NUMBER_REGEX, EMAIL_REGEX, COUNTRY_CODE_PK
 from CustomAuthentication.backend_authentication import CustomUserCheck
 from User.models import UserOtp
 # from User.views_designpatterns import UserMixinMethods

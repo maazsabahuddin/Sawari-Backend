@@ -3,7 +3,7 @@ from builtins import staticmethod
 from django.http import JsonResponse
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
-from A.settings import ONLINE_PAYMENT, ONLINE_PAYMENT_FEE, FIXED_FARE, KILOMETER_FARE
+from A import ONLINE_PAYMENT, ONLINE_PAYMENT_FEE, FIXED_FARE, KILOMETER_FARE
 from Payment.models import PaymentMethod
 from Reservation.views import fare_object
 

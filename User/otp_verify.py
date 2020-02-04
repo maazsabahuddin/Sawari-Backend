@@ -5,11 +5,11 @@ import random
 
 import pytz
 
-from A.settings import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, EMAIL_HOST_USER, local_tz, OTP_COUNTER_LIMIT, \
+from A import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, EMAIL_HOST_USER, local_tz, OTP_COUNTER_LIMIT, \
     OTP_VALID_TIME, SENDER_PHONE_NUMBER
 
 from django_twilio.client import Client
-from .models import User, UserOtp
+from .models import UserOtp
 from django.core.mail import EmailMessage
 
 account_sid = TWILIO_ACCOUNT_SID
