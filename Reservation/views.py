@@ -5,7 +5,7 @@ from django.utils import timezone
 from rest_framework import generics
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
 
-from A import FIXED_FARE, KILOMETER_FARE, SENDER_PHONE_NUMBER
+from A.settings.base import FIXED_FARE, KILOMETER_FARE, SENDER_PHONE_NUMBER
 
 from Payment.models import Pricing, PaymentMethod
 # from Payment.views import PaymentMixin

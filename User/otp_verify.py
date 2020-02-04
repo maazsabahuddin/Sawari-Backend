@@ -5,7 +5,7 @@ import random
 
 import pytz
 
-from A import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, EMAIL_HOST_USER, local_tz, OTP_COUNTER_LIMIT, \
+from A.settings.base import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, EMAIL_HOST_USER, local_tz, OTP_COUNTER_LIMIT, \
     OTP_VALID_TIME, SENDER_PHONE_NUMBER
 
 from django_twilio.client import Client
