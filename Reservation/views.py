@@ -345,7 +345,7 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
         except InvalidUsage as e:
             if e.status_code == 1000:
                 return JsonResponse({
-                    'status':HTTP_400_BAD_REQUEST,
+                    'status': HTTP_400_BAD_REQUEST,
                     'message': str(e.message),
                 })
         except Exception as e:

@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-from Reservation.models import Reservation, Route, Ride, Vehicle
+from Reservation.models import Reservation, Route, Ride, Vehicle, Stop
 from User.models import Customer
 
 
@@ -68,6 +68,13 @@ def reserve_ride_decorator(f):
             pick_up_stop = ''
             drop_off_stop = ''
 
+            if pick_up_point_stop_id == drop_up_point_stop_id:
+                stop = Stop.objects.filter(id=pick_up_point_stop_id).first()
+                pick_up_point = stop.name
+                pick_up_stop = (stop.latitude, stop.longitude)
+                drop_off_point = stop.name
+                drop_off_stop = (stop.latitude, stop.longitude)
+
             for stop in stops_obj:
                 if stop.id == int(pick_up_point_stop_id):
                     pick_up_point = stop.name
@@ -77,7 +84,7 @@ def reserve_ride_decorator(f):
                     drop_off_point = stop.name
                     drop_off_stop = (stop.latitude, stop.longitude)
 
-            from A import gmaps
+            from A.settings.base import gmaps
             result = gmaps.distance_matrix(pick_up_stop, drop_off_stop, mode='driving')
             kilometer = float(result['rows'][0]['elements'][0]['distance']['text'].split(' ')[0])
 
