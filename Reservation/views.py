@@ -14,7 +14,7 @@ from RideSchedule.models import UserRideDetail
 from RideSchedule.views import BusRoute
 from User.decorators import login_decorator
 from User.models import Customer
-from exceptions import InvalidUsage
+from User.exceptions import InvalidUsage
 from .models import Reservation, Ride, Vehicle
 from .reservation_pattern import ReservationNumber
 
