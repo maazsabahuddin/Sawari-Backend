@@ -266,3 +266,22 @@ STOP_WAIT_TIME = 1
 # print(TWILIO_AUTH_TOKEN)
 # print(GOOGLE_API_KEY)
 """
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': '/app.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}

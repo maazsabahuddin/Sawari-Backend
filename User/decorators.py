@@ -272,7 +272,7 @@ def logout_decorator(f):
     def decorated_function(*args):
         try:
             request = args[1]
-            token = request.headers.get('authorization')
+            token = request.headers['authorization']
 
             if not token:
                 return JsonResponse({
