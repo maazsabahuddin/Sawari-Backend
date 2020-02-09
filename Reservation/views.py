@@ -438,17 +438,23 @@ class CancelRide(generics.GenericAPIView):
                 if user_ride_detail_obj.ride_status == ("complete" or "COMPLETE" or "Complete"):
                     return JsonResponse({
                         'status': HTTP_200_OK,
-                        'message': 'User Ride is completed.',
+                        'message': 'Ride completed.',
                     })
 
-                if user_ride_detail_obj.ride_status == ("pending" or "Pending" or "PENDING"):
+                if user_ride_detail_obj.ride_status == ("cancelled" or "Cancelled" or "CANCELLED"):
+                    return JsonResponse({
+                        'status': HTTP_200_OK,
+                        'message': 'Ride already cancelled.',
+                    })
+
+                if user_ride_detail_obj.ride_status == ("active" or "Active" or "ACTIVE"):
                     datetime_now = BusRoute.utc_to_local(timezone.now())
                     datetime_db = BusRoute.utc_to_local(user_ride_detail_obj.ride_date)
 
                     if datetime_now < datetime_db:
                         ride_obj.seats_left = ride_obj.seats_left + int(user_reservation_seats)
                         reservation_number_obj.is_confirmed = False
-                        user_ride_detail_obj.ride_status = "cancelled"
+                        user_ride_detail_obj.ride_status = "CANCELLED"
                         user_ride_detail_obj.save()
                         reservation_number_obj.save()
                         ride_obj.save()
