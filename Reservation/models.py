@@ -10,8 +10,8 @@ class Vehicle(models.Model):
     owner = models.ForeignKey(Captain, on_delete=models.CASCADE)
     brand = models.CharField(blank=True, max_length=20)
     max_seats = models.IntegerField(blank=False)
-    from_loc = models.CharField(max_length=255, default="K")
-    to_loc = models.CharField(max_length=255, default="L")
+    from_loc = models.CharField(max_length=255, blank=True)
+    to_loc = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return "Vehicle {} - {}".format(self.id, self.vehicle_no_plate)

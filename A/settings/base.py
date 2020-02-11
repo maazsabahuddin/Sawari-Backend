@@ -56,6 +56,8 @@ INSTALLED_APPS = [
 
 # if use file extraction method.
 # retrieve external file data
+# AWS server absolute path.
+# file_url = '/home/ec2-user/SAWARI_backend/A/secret_keys.txt'
 file_url = 'I:/Work/MyGithub/secret_keys.txt'
 retrieve_keys_of_list = []
 try:
@@ -207,9 +209,14 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
+# STATIC FILES
 STATIC_URL = '/static/'
+# STATIC_ROOT = '/home/sohaibaijaz9/SAWAARI_backend/static'
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
-STATIC_ROOT = '/home/sohaibaijaz9/SAWAARI_backend/static'
+# MEDIA FILES
+MEDIA_ROOT  = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
 # Changes as per business requirements.
 OTP_COUNTER_LIMIT = 3
