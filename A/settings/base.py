@@ -194,14 +194,6 @@ EMAIL_BACKEND = dict_keys[10].get('EMAIL_BACKEND')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-print(SERVER_EMAIL)
-print(EMAIL_HOST)
-print(EMAIL_PORT)
-print(EMAIL_HOST_PASSWORD)
-print(EMAIL_HOST_USER)
-print(EMAIL_BACKEND)
-
-
 # STATIC FILES
 STATIC_URL = '/static/'
 # STATIC_ROOT = '/home/sohaibaijaz9/SAWAARI_backend/static'
@@ -230,7 +222,7 @@ PHONE_NUMBER_REGEX = r"\+" + COUNTRY_CODE_PK + r"3\d{9}"
 EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
 
 # Email Verification
-EMAIL_VERIFICATION = True
+EMAIL_VERIFICATION = False
 
 # Phone Verification
 PHONE_VERIFICATION = True
@@ -240,7 +232,6 @@ PHONE_VERIFICATION = True
 
 KILOMETER_FARE = False
 FIXED_FARE = True
-
 
 # Payment through Foree, Easypaisa and more.
 ONLINE_PAYMENT = True

@@ -12,6 +12,8 @@ from django_twilio.client import Client
 from .models import UserOtp
 from django.core.mail import EmailMessage
 
+from User.exceptions import TwilioEmailException
+
 account_sid = TWILIO_ACCOUNT_SID
 auth_token = TWILIO_AUTH_TOKEN
 client = Client(account_sid, auth_token)
@@ -30,10 +32,9 @@ class UserOTPMixin(object):
                 body=message_body,
                 to=phone_number,
             )
-            return True
 
         except Exception as e:
-            return False
+            raise TwilioEmailException(status_code=101)
 
     @staticmethod
     def send_otp_email(email, otp):
@@ -51,10 +52,9 @@ class UserOTPMixin(object):
                 mail_subject, content, to=[to_email]
             )
             send_email.send()
-            return True
 
         except Exception as e:
-            return False
+            raise TwilioEmailException(status_code=102)
 
     # local_tz = pytz.timezone(TIME_ZONE)
 

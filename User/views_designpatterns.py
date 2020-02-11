@@ -22,6 +22,8 @@ from User.decorators import login_credentials, otp_verify, login_decorator, regi
 from .models import User, Customer, UserOtp
 from User.otp_verify import UserOTPMixin
 
+from User.exceptions import TwilioEmailException
+
 account_sid = TWILIO_ACCOUNT_SID
 auth_token = TWILIO_AUTH_TOKEN
 client = Client(account_sid, auth_token)
@@ -154,7 +156,6 @@ class ResendOtpRegister(UserMixinMethods, generics.GenericAPIView):
 
             return JsonResponse({
                 'status': HTTP_200_OK,
-                # 'verification': EMAIL_VERIFICATION,
                 'message': 'OTP has been successfully resent.',
             })
 
@@ -226,6 +227,7 @@ class Register(RegisterCase, UserMixinMethods):
     permission_classes = (AllowAny,)
 
     def email_phone_otp(self, otp, **kwargs):
+        phone_number = ''
         try:
             email = kwargs.get('email')
             phone_number = kwargs.get('phone_number')
@@ -234,48 +236,40 @@ class Register(RegisterCase, UserMixinMethods):
                 UserOTPMixin.send_otp_email(email, otp)
 
             if PHONE_VERIFICATION:
-                if not UserOTPMixin.send_otp_phone(phone_number, otp):
-                    return JsonResponse({
-                        'status': HTTP_404_NOT_FOUND,
-                        'message': 'OTP not sent.',
-                    })
-                return True
-            return False
+                UserOTPMixin.send_otp_phone(phone_number, otp)
 
-        except Exception as e:
-            print(str(e))
+        except TwilioEmailException as e:
+            if e.status_code == 102:
+                raise TwilioEmailException(status_code=102, message="Email not sent.")
+            if e.status_code == 101:
+                raise TwilioEmailException(status_code=101,
+                                           message=phone_number + " is not verified on your Twilio trial account.")
 
     def email_otp(self, otp, **kwargs):
-
         try:
             email = kwargs.get('email')
 
             # Sending OTP Via Email
             if EMAIL_VERIFICATION:
                 UserOTPMixin.send_otp_email(email, otp)
-                return True
-            return False
 
-        except Exception as e:
-            print(str(e))
+        except TwilioEmailException as e:
+            if e.status_code == 102:
+                raise TwilioEmailException(status_code=102, message="Email not sent.")
 
     def phone_otp(self, otp, **kwargs):
+        phone_number = ''
         try:
             phone_number = kwargs.get('phone_number')
 
             # Sending OTP Via Phone
             if PHONE_VERIFICATION:
-                if not UserOTPMixin.send_otp_phone(phone_number, otp):
-                    return JsonResponse({
-                        'status': HTTP_404_NOT_FOUND,
-                        'message': 'OTP not sent.',
-                    })
-                return True
+                UserOTPMixin.send_otp_phone(phone_number, otp)
 
-            return False
-
-        except Exception as e:
-            print(str(e))
+        except TwilioEmailException as e:
+            if e.status_code == 101:
+                 raise TwilioEmailException(status_code=101,
+                                            message=phone_number + " is not verified on your Twilio trial account.")
 
     @transaction.atomic
     @register
@@ -346,10 +340,19 @@ class Register(RegisterCase, UserMixinMethods):
                     'message': 'OTP has been successfully sent.',
                 })
 
+        except TwilioEmailException as e:
+            if e.status_code == 101:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': str(e.message),
+                })
+            if e.status_code == 101:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': str(e.message),
+                })
+
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.info(e)
             return JsonResponse({
                 'status': HTTP_400_BAD_REQUEST,
                 'message': str(e),
