@@ -12,19 +12,12 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 import re
-
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-
 import googlemaps
 import pytz
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'u*0dpb92__ipl20f%3z==m82k2e&gq#*n*fc&fidxptbu_p+pq'
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+
 
 ALLOWED_HOSTS = ['*']
 
@@ -86,6 +79,10 @@ SENDER_PHONE_NUMBER = dict_keys[2].get('SENDER_PHONE_NUMBER')
 # Google Key
 GOOGLE_API_KEY = dict_keys[3].get('GOOGLE_API_KEY')
 gmaps = googlemaps.Client(key=GOOGLE_API_KEY)
+
+# Django Secret Key
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = dict_keys[4].get('DJANGO_SECRET_KEY')
 
 # if use os credentials
 # Twilio Credentials
@@ -187,16 +184,23 @@ USE_L10N = True
 USE_TZ = True
 
 EMAIL_USE_TLS = True
-SERVER_EMAIL = 'maazsabahuddin@gmail.com'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = 'maazsabahuddin@gmail.com'
-EMAIL_HOST_PASSWORD = dict_keys[4].get('EMAIL_HOST_PASSWORD')
+SERVER_EMAIL = dict_keys[5].get('SERVER_EMAIL')
+EMAIL_HOST = dict_keys[6].get('EMAIL_HOST')
+EMAIL_PORT = dict_keys[7].get('EMAIL_PORT')
+EMAIL_HOST_PASSWORD = dict_keys[8].get('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = dict_keys[9].get('EMAIL_HOST_USER')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_BACKEND = dict_keys[10].get('EMAIL_BACKEND')
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.2/howto/static-files/
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+print(SERVER_EMAIL)
+print(EMAIL_HOST)
+print(EMAIL_PORT)
+print(EMAIL_HOST_PASSWORD)
+print(EMAIL_HOST_USER)
+print(EMAIL_BACKEND)
+
 
 # STATIC FILES
 STATIC_URL = '/static/'
@@ -247,37 +251,21 @@ DISTANCE_KILOMETRE_LIMIT = 2.0
 # Each stop wait time in minutes.
 STOP_WAIT_TIME = 1
 
-"""
-# for i in range(len(dict_keys)):
-#     if not TWILIO_ACCOUNT_SID:
-#         TWILIO_ACCOUNT_SID = dict_keys[i].get('TWILIO_ACCOUNT_SID')
-#     if not TWILIO_AUTH_TOKEN:
-#         TWILIO_AUTH_TOKEN = dict_keys[i].get('TWILIO_AUTH_TOKEN')
-#     if not maaz_security_setup:
-#         maaz_security_setup = dict_keys[i].get('maaz_security_setup')
-
-
-# print(EMAIL_HOST_PASSWORD)
-# print(TWILIO_ACCOUNT_SID)
-# print(TWILIO_AUTH_TOKEN)
-# print(GOOGLE_API_KEY)
-"""
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': '/app.log',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-    },
-}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'file': {
+#             'level': 'DEBUG',
+#             'class': 'logging.FileHandler',
+#             'filename': '/app.log',
+#         },
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['file'],
+#             'level': 'DEBUG',
+#             'propagate': True,
+#         },
+#     },
+# }
