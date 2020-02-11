@@ -305,8 +305,12 @@ print(a)
 
 """
 
-import datetime
+# import datetime
+#
+# time_now = datetime.datetime.today()
+# print(time_now.date())
+# print(time_now.time())
 
-time_now = datetime.datetime.today()
-print(time_now.date())
-print(time_now.time())
+a = 'Maaz'
+a.isdigit()
+

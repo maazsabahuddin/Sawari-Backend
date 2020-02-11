@@ -729,6 +729,18 @@ class PasswordResetResendOtp(generics.GenericAPIView, UserOTPMixin):
 
 class UpdateName(generics.GenericAPIView):
 
+    @staticmethod
+    def has_numbers(name):
+        return any(char.isdigit() for char in name)
+
+    @staticmethod
+    def check_string_for_numbers(**kwargs):
+        first_name = kwargs.get('first_name')
+        last_name = kwargs.get('last_name')
+
+        name = first_name + ' ' + last_name
+        return any(char.isdigit() for char in name)
+
     @transaction.atomic
     @login_decorator
     def post(self, request, data=None):
@@ -742,6 +754,12 @@ class UpdateName(generics.GenericAPIView):
 
             first_name = request.data.get('first_name')
             last_name = request.data.get('last_name')
+
+            if UpdateName.check_string_for_numbers(first_name=first_name, last_name=last_name):
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Name cannot contain digits.',
+                })
 
             if not first_name:
                 return JsonResponse({
