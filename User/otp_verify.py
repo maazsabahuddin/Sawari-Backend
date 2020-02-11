@@ -12,7 +12,7 @@ from django_twilio.client import Client
 from .models import UserOtp
 from django.core.mail import EmailMessage
 
-from User.exceptions import TwilioEmailException
+from User.exceptions import TwilioEmailException, InvalidUsage, UserException
 
 account_sid = TWILIO_ACCOUNT_SID
 auth_token = TWILIO_AUTH_TOKEN
@@ -72,21 +72,18 @@ class UserOTPMixin(object):
             otp_user_obj = UserOtp.objects.filter(user=user).first()
             if not otp_user_obj:
                 return False
+            if otp_user_obj.otp_counter > OTP_COUNTER_LIMIT:
+                return False
 
             # adding current timezone to local time.
             time_now_format = local_tz.localize(time_now)
 
             # fetch db time
             otp_send_time = otp_user_obj.otp_time
-
             # adding seconds to db time..s
             otp_end_time = otp_send_time + datetime.timedelta(0, OTP_VALID_TIME)
-
             # convert db time utc to local time format
             otp_end_time_local = cls.utc_to_local(otp_end_time)
-
-            if otp_user_obj.otp_counter > OTP_COUNTER_LIMIT:
-                return False
 
             if time_now_format > otp_end_time_local:
                 return False
@@ -99,11 +96,8 @@ class UserOTPMixin(object):
 
             return False
 
-        except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.info(e)
-            return None
+        except Exception:
+            raise UserException(status_code=405)
 
     @staticmethod
     def generate_otp():
@@ -115,10 +109,11 @@ class UserOTPMixin(object):
             return otp
 
         except Exception as e:
-            return None
+            raise InvalidUsage(status_code=410)
 
-    # @staticmethod
-    # def password_reset_key():
+    @staticmethod
+    def password_reset_key():
+        pass
     #     try:
     #         digits = "0123456789"
     #         otp = ""

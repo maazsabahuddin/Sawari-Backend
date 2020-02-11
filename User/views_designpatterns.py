@@ -369,16 +369,19 @@ class IsVerified(generics.GenericAPIView, UserOTPMixin):
 
     @staticmethod
     def verify_otp(user, otp):
+        try:
+            time_now = datetime.datetime.today()
+            verify_result = UserOTPMixin.verify_user_otp(user, otp, time_now)
 
-        time_now = datetime.datetime.today()
-        verify_result = UserOTPMixin.verify_user_otp(user, otp, time_now)
+            if verify_result:
+                user.is_active = True
+                user.save()
+                return True
+            return False
 
-        if verify_result:
-            user.is_active = True
-            user.save()
-            return True
-
-        return False
+        except UserException as e:
+            if e.status_code == 405:
+                raise UserException(status_code=405, message="User Counter Exception.")
 
     @otp_verify
     def post(self, request, context=None):
@@ -402,6 +405,13 @@ class IsVerified(generics.GenericAPIView, UserOTPMixin):
                 'status': HTTP_400_BAD_REQUEST,
                 'message': 'OTP not matched.',
             })
+
+        except UserException as e:
+            if e.status_code == 405:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': str(e.message),
+                })
 
         except Exception as e:
             return JsonResponse({
