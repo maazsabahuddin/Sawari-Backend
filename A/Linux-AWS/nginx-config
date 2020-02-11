@@ -1,0 +1,37 @@
+# Nginx and UWSGI Configuration on Linux Environment
+
+1) Make two directories in the following path
+    /etc/nginx/sites-enabled
+    /etc/nginx/sites-available
+
+2) In the sites available directory, make a file 'my-djangoproject.com.conf'
+    vim /etc/nginx/sites-available/my-djangoproject.com.conf
+
+    # Write into the file
+    server {
+        listen 80;
+
+        location / {
+                proxy_pass http://127.0.0.1:8000/; # 80 port pr listen kr k 8000 port pr request transfer krdega.
+                proxy_redirect off;
+                proxy_buffering off;
+
+                proxy_http_version 1.1;
+                proxy_set_header Connection "Keep-Alive";
+                proxy_set_header Proxy-Connection "Keep-Alive";
+        }
+    }
+
+3) Now link up two directories 'sites-enabled' and 'sites-available'
+    sudo ln -s /etc/nginx/sites-available/my-djangoproject.com.conf /etc/nginx/sites-enabled/my-djangoproject.com.conf
+
+    # It means whatever you change in sites-available directory it will be automatically
+      change in sites-enabled directory.
+
+4) Now run your service using..
+    sudo service django-server.service start
+
+    # You can stop the service using 'sudo service django-server.service stop'
+    # You can check the status of the service using 'sudo service django-server.service status'
+
+

@@ -18,11 +18,7 @@ import re
 import googlemaps
 import pytz
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'u*0dpb92__ipl20f%3z==m82k2e&gq#*n*fc&fidxptbu_p+pq'
@@ -31,7 +27,6 @@ SECRET_KEY = 'u*0dpb92__ipl20f%3z==m82k2e&gq#*n*fc&fidxptbu_p+pq'
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
@@ -82,12 +77,6 @@ for string_list in retrieve_keys_of_list:
         secret_keys.append(string_without_space)
     dict_keys.append({secret_keys[0]: secret_keys[1]})
     secret_keys.clear()
-
-
-# Sohaib Twilio account credentials
-# TWILIO_ACCOUNT_SID = 'ACc2d21586f29d9728eb8be6b7f7cbab17'
-# TWILIO_AUTH_TOKEN = '6b978d120ab33f30ce16ee4e275df2f9'
-# SENDER_PHONE_NUMBER = '+12068097984'
 
 # Maaz Twilio account credentials
 TWILIO_ACCOUNT_SID = dict_keys[0].get('TWILIO_ACCOUNT_SID')
@@ -215,7 +204,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
 # MEDIA FILES
-MEDIA_ROOT  = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 # Changes as per business requirements.

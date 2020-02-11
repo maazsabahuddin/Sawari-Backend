@@ -1,0 +1,20 @@
+# This is a UWSGI Service.
+
+[Unit]
+Description=Django Server Workers
+After=network.target auditd.service
+
+[Service]
+#Type=forking
+Environment=LD_LIBRARY_PATH=/usr/local/lib
+ExecStart=/home/ec2-user/SAWARI_backend/py3.7-venv/bin/python3 manage.py runserver
+KillSignal=SIGINT
+Restart=on-failure
+User=root
+Group=root
+WorkingDirectory=/home/ec2-user/SAWARI_backend/
+
+[Install]
+WantedBy=multi-user.target
+
+# vi /etc/systemd/system/django-server.service
