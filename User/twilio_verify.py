@@ -45,9 +45,6 @@ def send_otp_email(email, otp):
         return True
 
     except Exception as e:
-        import logging
-        logger = logging.info(__name__)
-        logger.info(e)
         return False
 
 

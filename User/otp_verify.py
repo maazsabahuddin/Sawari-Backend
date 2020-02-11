@@ -24,7 +24,7 @@ class UserOTPMixin(object):
     @staticmethod
     def send_otp_phone(phone_number, otp):
         try:
-            message_body = 'Dear Sawaari user, your OTP code is: ' + str(otp)
+            message_body = 'Dear Sawaari user, your OTP is: ' + str(otp)
             sender_phone_number = SENDER_PHONE_NUMBER
 
             client.messages.create(

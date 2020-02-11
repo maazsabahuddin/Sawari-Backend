@@ -22,7 +22,7 @@ from User.decorators import login_credentials, otp_verify, login_decorator, regi
 from .models import User, Customer, UserOtp
 from User.otp_verify import UserOTPMixin
 
-from User.exceptions import TwilioEmailException
+from User.exceptions import TwilioEmailException, UserException, InvalidUsage
 
 account_sid = TWILIO_ACCOUNT_SID
 auth_token = TWILIO_AUTH_TOKEN
@@ -36,10 +36,8 @@ class UserMixinMethods(object):
     def get_serializer_object_register(email, phone_number):
         if email and phone_number:
             return Register().email_phone_otp
-
         elif email:
             return Register().email_otp
-
         elif phone_number:
             return Register().phone_otp
 
@@ -59,18 +57,19 @@ class UserMixinMethods(object):
 
     @staticmethod
     def user_otp_save(user, otp):
-        if user:
-            otp_counter = user.otp_counter
-            otp_counter += 1
+        try:
+            if user:
+                otp_counter = user.otp_counter
+                otp_counter += 1
 
-            user.otp = otp
-            user.otp_time = datetime.datetime.today()
-            user.is_verified = False
-            user.otp_counter = otp_counter
-            user.save()
-            return True
+                user.otp = otp
+                user.otp_time = datetime.datetime.today()
+                user.is_verified = False
+                user.otp_counter = otp_counter
+                user.save()
 
-        return False
+        except Exception as e:
+            raise UserException(status_code=404, message="User doesn't exist.")
 
     @staticmethod
     def save_user_password_reset_uuid(user, password_uuid):
@@ -111,113 +110,124 @@ class ResendOtpRegister(UserMixinMethods, generics.GenericAPIView):
 
     @staticmethod
     def get_method_object(email, phone_number):
-        try:
-            if email and phone_number:
-                return ResendOtpRegister().email_phone_resend_otp
-            elif phone_number:
-                return ResendOtpRegister().phone_resend_otp
-            elif email:
-                return ResendOtpRegister().email_resend_otp
-
-        except Exception as e:
-            print(str(e))
-
-    @staticmethod
-    def email_phone_resend_otp(user_otp_obj, otp, **kwargs):
-        try:
-            email = kwargs.get('email')
-            phone_number = kwargs.get('phone_number')
-
-            if EMAIL_VERIFICATION:
-                UserOTPMixin.send_otp_email(email, otp)
-
-            if PHONE_VERIFICATION:
-                UserOTPMixin.send_otp_phone(phone_number, otp)
-
-            UserMixinMethods.user_otp_save(user_otp_obj, otp)
-
-            return JsonResponse({
-                'status': HTTP_200_OK,
-                'message': 'OTP has been successfully resent.',
-            })
-
-        except Exception as e:
-            print(str(e))
+        pass
+        # try:
+        #     if email and phone_number:
+        #         return ResendOtpRegister().email_phone_resend_otp
+        #     elif phone_number:
+        #         return ResendOtpRegister().phone_resend_otp
+        #     elif email:
+        #         return ResendOtpRegister().email_resend_otp
+        #
+        # except InvalidUsage as e:
+        #     raise InvalidUsage(status_code=100)
 
     @staticmethod
-    def email_resend_otp(user_otp_obj, otp, **kwargs):
-        try:
-            email = kwargs.get('email')
+    def email_phone_resend_otp(otp, **kwargs):
+        pass
+        # phone_number = ''
+        # try:
+        #     email = kwargs.get('email')
+        #     phone_number = kwargs.get('phone_number')
+        #
+        #     if EMAIL_VERIFICATION:
+        #         UserOTPMixin.send_otp_email(email, otp)
+        #     if PHONE_VERIFICATION:
+        #         UserOTPMixin.send_otp_phone(phone_number, otp)
+        #
+        # except TwilioEmailException as e:
+        #     if e.status_code == 102:
+        #         raise TwilioEmailException(status_code=102, message="Email not sent.")
+        #     if e.status_code == 101:
+        #         raise TwilioEmailException(status_code=101,
+        #                                    message=phone_number + " is not verified on your Twilio trial account.")
 
-            if EMAIL_VERIFICATION:
-                UserOTPMixin.send_otp_email(email, otp)
-
-            UserMixinMethods.user_otp_save(user_otp_obj, otp)
-
-            return JsonResponse({
-                'status': HTTP_200_OK,
-                'message': 'OTP has been successfully resent.',
-            })
-
-        except Exception as e:
-            print(str(e))
+    @staticmethod
+    def email_resend_otp(otp, **kwargs):
+        pass
+        # try:
+        #     email = kwargs.get('email')
+        #
+        #     if EMAIL_VERIFICATION:
+        #         UserOTPMixin.send_otp_email(email, otp)
+        #
+        # except TwilioEmailException as e:
+        #     if e.status_code == 102:
+        #         raise TwilioEmailException(status_code=102, message="Email not sent.")
 
     @staticmethod
     @transaction.atomic
-    def phone_resend_otp(user_otp_obj, otp, **kwargs):
-        try:
-            phone_number = kwargs.get('phone_number')
+    def phone_resend_otp(otp, **kwargs):
+        pass
+        # phone_number = ''
+        # try:
+        #     phone_number = kwargs.get('phone_number')
+        #
+        #     with transaction.atomic():
+        #         if PHONE_VERIFICATION:
+        #             UserOTPMixin.send_otp_phone(phone_number, otp)
+        #
+        # except TwilioEmailException as e:
+        #     if e.status_code == 101:
+        #         raise TwilioEmailException(status_code=101,
+        #                                    message=phone_number + " is not verified on your Twilio trial account.")
 
-            if not phone_number:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'Phone number not found.',
-                })
-
-            with transaction.atomic():
-                if PHONE_VERIFICATION:
-                    if not UserOTPMixin.send_otp_phone(phone_number, otp):
-                        return JsonResponse({
-                            'status': HTTP_404_NOT_FOUND,
-                            'message': 'OTP not sent.',
-                        })
-
-                UserMixinMethods.user_otp_save(user_otp_obj, otp)
-                print(otp)
-
-                return JsonResponse({
-                    'status': HTTP_200_OK,
-                    'message': 'OTP has been successfully resent.',
-                })
-
-        except Exception as e:
-            print(str(e))
-
+    @transaction.atomic
     @resend_otp
-    @transaction.atomic
     def post(self, request, context=None):
         try:
             user = context['user']
             if not user:
                 return JsonResponse({
                     'status': HTTP_404_NOT_FOUND,
-                    'message': 'User not found',
+                    'message': 'User not exist',
                 })
 
             user_otp_obj = UserOtp.objects.filter(user=user).first()
-
             with transaction.atomic():
 
                 otp = UserOTPMixin.generate_otp()
+                UserMixinMethods.user_otp_save(user_otp_obj, otp)
                 # FACTORY PATTERN it delegates the decision to the get_serializer method and
                 # return the object of concrete/implementation method
-                serializer = ResendOtpRegister.get_method_object(user.email, user.phone_number)
-                return serializer(user_otp_obj, otp, email=user.email, phone_number=user.phone_number)
+                serializer = UserMixinMethods.get_serializer_object_register(user.email, user.phone_number)
+                serializer(otp, email=user.email, phone_number=user.phone_number)
+
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'message': 'OTP has been successfully resent.',
+                })
+
+        except InvalidUsage as e:
+            if e.status_code == 100:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': str(e.message),
+                })
+
+        except UserException as e:
+            if e.status_code == 404:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': str(e.message),
+                })
+
+        except TwilioEmailException as e:
+            if e.status_code == 101:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': str(e.message),
+                })
+            if e.status_code == 101:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': str(e.message),
+                })
 
         except Exception as e:
             return JsonResponse({
                 'status': HTTP_400_BAD_REQUEST,
-                'message': "Server Error." + str(e),
+                'message': "Server Error. " + str(e),
             })
 
 
@@ -268,8 +278,8 @@ class Register(RegisterCase, UserMixinMethods):
 
         except TwilioEmailException as e:
             if e.status_code == 101:
-                 raise TwilioEmailException(status_code=101,
-                                            message=phone_number + " is not verified on your Twilio trial account.")
+                raise TwilioEmailException(status_code=101,
+                                           message=phone_number + " is not verified on your Twilio trial account.")
 
     @transaction.atomic
     @register
@@ -303,11 +313,7 @@ class Register(RegisterCase, UserMixinMethods):
                 # FACTORY PATTERN it delegates the decision to the get_serializer method and
                 # return the object of concrete/implementation method
                 serializer = UserMixinMethods.get_serializer_object_register(email, phone_number)
-                if not serializer(otp, email=email, phone_number=phone_number):
-                    return JsonResponse({
-                        'status': HTTP_400_BAD_REQUEST,
-                        'message': 'OTP not sent.',
-                    })
+                serializer(otp, email=email, phone_number=phone_number)
 
                 if not email:
                     email = None
