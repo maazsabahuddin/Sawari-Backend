@@ -275,6 +275,7 @@ class Register(RegisterCase, UserMixinMethods):
             # Sending OTP Via Phone
             if PHONE_VERIFICATION:
                 UserOTPMixin.send_otp_phone(phone_number, otp)
+                return True
 
         except TwilioEmailException as e:
             if e.status_code == 101:
@@ -790,24 +791,25 @@ class ChangePhoneNumber(generics.GenericAPIView, UserOTPMixin):
     @transaction.atomic
     def phone_send_otp(user_otp_obj, otp, **kwargs):
         try:
-            phone_number = kwargs.get('phone_number')
-            user_otp_obj = kwargs.get('user_otp_obj')
-            otp = kwargs.get('otp')
-
-            if not phone_number:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'Phone number not found.',
-                })
-
-            with transaction.atomic():
-                if PHONE_VERIFICATION:
-                    if not UserOTPMixin.send_otp_phone(phone_number, otp):
-                        return False
-
-                UserMixinMethods.user_otp_save(user_otp_obj, otp)
-                print(otp)
-                return True
+            pass
+            # phone_number = kwargs.get('phone_number')
+            # user_otp_obj = kwargs.get('user_otp_obj')
+            # otp = kwargs.get('otp')
+            #
+            # if not phone_number:
+            #     return JsonResponse({
+            #         'status': HTTP_404_NOT_FOUND,
+            #         'message': 'Phone number not found.',
+            #     })
+            #
+            # with transaction.atomic():
+            #     if PHONE_VERIFICATION:
+            #         if not UserOTPMixin.send_otp_phone(phone_number, otp):
+            #             return False
+            #
+            #     UserMixinMethods.user_otp_save(user_otp_obj, otp)
+            #     print(otp)
+            #     return True
 
         except Exception as e:
             print(str(e))
@@ -820,30 +822,40 @@ class ChangePhoneNumber(generics.GenericAPIView, UserOTPMixin):
             user = kwargs.get('user')
             phone_number = kwargs.get('phonenumber')
 
-            if not user:
+            with transaction.atomic():
+                if PHONE_VERIFICATION:
+                    otp = UserOTPMixin.generate_otp()
+                    print(otp)
+
+                    user_otp_obj = UserOtp.objects.filter(user=user).first()
+                    UserMixinMethods.user_otp_save(user_otp_obj, otp)
+
+                    if Register().phone_otp(otp, phone_number=phone_number):
+                        return JsonResponse({
+                            'status': HTTP_200_OK,
+                            'message': 'OTP has been successfully sent.',
+                        })
+
+                else:
+                    user.phone_number = phone_number
+                    user.save()
+                    return JsonResponse({
+                        'status': HTTP_200_OK,
+                        'message': 'Phone Number changed.',
+                    })
+
+        except UserException as e:
+            if e.status_code == 404:
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
-                    'message': "User not found."
+                    'message': "User not found.",
                 })
 
-            with transaction.atomic():
-                otp = UserOTPMixin.generate_otp()
-                user_otp_obj = UserOtp.objects.filter(user=user).first()
-                if not user_otp_obj:
-                    return JsonResponse({
-                        'status': HTTP_400_BAD_REQUEST,
-                        'message': "User not found."
-                    })
-                if not ChangePhoneNumber.phone_send_otp(user_otp_obj=user_otp_obj, otp=otp, phone_number=phone_number):
-                    return JsonResponse({
-                        'status': HTTP_404_NOT_FOUND,
-                        'message': 'OTP not sent.',
-                    })
-
-                print(otp)
+        except TwilioEmailException as e:
+            if e.status_code == 101:
                 return JsonResponse({
-                    'status': HTTP_200_OK,
-                    'message': 'OTP has been successfully sent.',
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': str(e.message),
                 })
 
         except Exception as e:
@@ -858,32 +870,38 @@ class ChangePhoneNumberOtpMatch(generics.GenericAPIView):
     @transaction.atomic
     @otp_verify
     def post(self, request, data=None):
+        try:
+            user = data['user']
+            otp = data['otp']
+            phone_number = request.data.get('phone_number')
 
-        user = data['user']
-        otp = data['otp']
-        phone_number = request.data.get('phone_number')
+            if not phone_number:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'Phone number required',
+                })
 
-        if not phone_number:
-            return JsonResponse({
-                'status': HTTP_404_NOT_FOUND,
-                'message': 'Phone number required',
-            })
+            verified = IsVerified.verify_otp(user, otp)
 
-        verified = IsVerified.verify_otp(user, otp)
+            if not verified:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'OTP not matched.',
+                })
 
-        if not verified:
+            user.phone_number = phone_number
+            user.save()
+
             return JsonResponse({
                 'status': HTTP_400_BAD_REQUEST,
-                'message': 'OTP not matched.',
+                'message': 'Phone Number successfully changed.',
             })
 
-        user.phone_number = phone_number
-        user.save()
-
-        return JsonResponse({
-            'status': HTTP_400_BAD_REQUEST,
-            'message': 'Phone Number successfully changed.',
-        })
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e),
+            })
 
 
 class PasswordChange(generics.GenericAPIView):

@@ -311,6 +311,20 @@ print(a)
 # print(time_now.date())
 # print(time_now.time())
 
-a = 'Maaz'
-a.isdigit()
+# a = 'Maaz'
+# a.isdigit()
 
+import inspect
+
+
+def f1():
+    f2()
+
+
+def f2():
+    print('caller name:', inspect.stack()[1][3])
+    print('caller name:', inspect.stack()[1].function)
+    print()
+
+
+f1()
