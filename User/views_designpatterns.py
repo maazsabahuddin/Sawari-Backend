@@ -18,11 +18,11 @@ from A.settings.base import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_C
     EMAIL_VERIFICATION, PHONE_VERIFICATION
 from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
 from User.decorators import login_credentials, otp_verify, login_decorator, register, password_reset_decorator, \
-    logout_decorator, resend_otp, phone_number_decorator
+    logout_decorator, resend_otp, phone_number_decorator, password_change_decorator
 from .models import User, Customer, UserOtp
 from User.otp_verify import UserOTPMixin
 
-from User.exceptions import TwilioEmailException, UserException, InvalidUsage
+from User.exceptions import TwilioEmailException, UserException, InvalidUsage, WrongPassword
 
 account_sid = TWILIO_ACCOUNT_SID
 auth_token = TWILIO_AUTH_TOKEN
@@ -903,42 +903,12 @@ class ChangePhoneNumberOtpMatch(generics.GenericAPIView):
 class PasswordChange(generics.GenericAPIView):
 
     @login_decorator
+    @password_change_decorator
     def post(self, request, data=None):
         try:
             user = data['user']
-            previous_pin = request.data.get('previous_pin')
-            new_pin = request.data.get('new_pin')
-            confirm_new_pin = request.data.get('confirm_new_pin')
-
-            if not user:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'No user found',
-                })
-
-            if not (previous_pin and new_pin and confirm_new_pin):
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Previous pin / new pin and confirm pin are required.',
-                })
-
-            if new_pin != confirm_new_pin:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Password Fields not matched.',
-                })
-
-            if new_pin == previous_pin:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'You cannot set old pin as new pin.',
-                })
-
-            if not user.check_password(previous_pin):
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Previous Pin not matched.',
-                })
+            previous_pin = data['previous_pin']
+            new_pin = data['new_pin']
 
             user.set_password(new_pin)
             user.save()
@@ -949,9 +919,6 @@ class PasswordChange(generics.GenericAPIView):
             })
 
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.info(e)
             return JsonResponse({
                 'status': HTTP_400_BAD_REQUEST,
                 'message': str(e),

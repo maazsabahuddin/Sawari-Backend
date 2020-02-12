@@ -25,3 +25,23 @@ class UserException(Exception):
     def __init__(self, status_code=status_code, message=message):
         self.status_code = status_code
         self.message = message
+
+
+class UserNotFound(UserException):
+    pass
+
+
+class PinNotMatched(UserException):
+    pass
+
+
+class MissingField(UserException):
+    pass
+
+
+class OldPin(UserException):
+    pass
+
+
+class WrongPassword(UserException):
+    pass

@@ -7,6 +7,7 @@ from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP
 from A.settings.base import PHONE_NUMBER_REGEX, EMAIL_REGEX, COUNTRY_CODE_PK
 from CustomAuthentication.backend_authentication import CustomUserCheck
 from User.models import UserOtp
+from User.exceptions import UserException, PinNotMatched, MissingField, UserNotFound, OldPin, InvalidUsage, WrongPassword
 # import dump
 # from User.views_designpatterns import UserMixinMethods
 
@@ -42,6 +43,36 @@ def login_decorator(f):
 
             data = {'user': user}
             return f(args[0], request, data)
+
+        except UserNotFound as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e.message),
+            })
+
+        except WrongPassword as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e.message),
+            })
+
+        except MissingField as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e.message),
+            })
+
+        except PinNotMatched as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e.message),
+            })
+
+        except OldPin as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e.message),
+            })
 
         except Exception as e:
             return JsonResponse({
@@ -359,7 +390,7 @@ def phone_number_decorator(f):
 
             # Checking Validation
             if phone_number:
-                print(phone_number[0])
+                # print(phone_number[0])
                 if phone_number[0] != ("0" or "+"):
                     return JsonResponse({
                         'status': HTTP_404_NOT_FOUND,
@@ -398,3 +429,58 @@ def phone_number_decorator(f):
             })
 
     return phone_number_function
+
+
+def password_change_decorator(f):
+
+    def password_change(*args):
+        try:
+            request = args[1]
+            user = args[2]['user']
+            previous_pin = request.data.get('previous_pin')
+            new_pin = request.data.get('new_pin')
+            confirm_new_pin = request.data.get('confirm_new_pin')
+
+            if not user.check_password(previous_pin):
+                raise UserException(status_code=401)
+
+            if not user:
+                raise UserException(status_code=404)
+
+            if not (previous_pin and new_pin and confirm_new_pin):
+                raise UserException(status_code=405)
+
+            if new_pin != confirm_new_pin:
+                raise UserException(status_code=406)
+
+            if new_pin == previous_pin:
+                raise UserException(status_code=407)
+
+            context = {
+                'user': user,
+                'previous_pin': previous_pin,
+                'new_pin': new_pin,
+                'confirm_new_pin': confirm_new_pin,
+            }
+
+            return f(args[0], request, context)
+
+        except UserException as e:
+            if e.status_code == 401:
+                raise WrongPassword(message='Previous pin is not correct.')
+            if e.status_code == 404:
+                raise UserNotFound(message="User not found.")
+            elif e.status_code == 405:
+                raise MissingField(message="Field missing.")
+            if e.status_code == 406:
+                raise PinNotMatched(message="Password Fields not matched.")
+            elif e.status_code == 407:
+                raise OldPin(message="You cannot set old pin as new pin.")
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e),
+            })
+
+    return password_change
