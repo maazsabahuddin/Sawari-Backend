@@ -225,7 +225,7 @@ EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
 EMAIL_VERIFICATION = False
 
 # Phone Verification
-PHONE_VERIFICATION = False
+PHONE_VERIFICATION = True
 
 # FIXED_FARE_PRICE = 50
 # KILOMETER_FARE_PRICE = 8.8

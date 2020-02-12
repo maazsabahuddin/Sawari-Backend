@@ -873,21 +873,10 @@ class ChangePhoneNumberOtpMatch(generics.GenericAPIView):
         try:
             user = data['user']
             otp = data['otp']
-            phone_number = request.data.get('phone_number')
+            phone_number = data['phone_number']
 
-            if not phone_number:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'Phone number required',
-                })
-
-            verified = IsVerified.verify_otp(user, otp)
-
-            if not verified:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'OTP not matched.',
-                })
+            if not IsVerified.verify_otp(user, otp):
+                raise InvalidUsage(status_code=401, message="OTP not matched.")
 
             user.phone_number = phone_number
             user.save()
@@ -896,6 +885,13 @@ class ChangePhoneNumberOtpMatch(generics.GenericAPIView):
                 'status': HTTP_400_BAD_REQUEST,
                 'message': 'Phone Number successfully changed.',
             })
+
+        except InvalidUsage as e:
+            if e.status_code == 401:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': str(e.message),
+                })
 
         except Exception as e:
             return JsonResponse({

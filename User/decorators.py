@@ -158,6 +158,16 @@ def otp_verify(f):
             request = args[1]
             token = request.headers.get('authorization')
             otp = request.data.get('otp')
+            phone_number = request.data.get('phone_number')
+
+            if not phone_number:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'Phone number required',
+                })
+
+            if phone_number[0] == "0":
+                phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
 
             if not otp:
                 return JsonResponse({
@@ -178,7 +188,7 @@ def otp_verify(f):
                     'message': 'Invalid Token.',
                 })
 
-            context = {'user': token_user.user, 'otp': otp}
+            context = {'user': token_user.user, 'otp': otp, 'phone_number': phone_number}
             return f(args[0], request, context)
 
         except Exception as e:

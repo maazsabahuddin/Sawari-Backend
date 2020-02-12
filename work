@@ -4,3 +4,9 @@ DONE
 2) sb sey nearest stop return krney hay user ko.. yeh kaam krna hay.
 
 3) Change phone number waley pr kaam krna hay ab..
+
+4) User Login / Logout /
+
+5) PasswordReset / PasswordResetCheck / SetNewPassword / PasswordResetResendOtp
+
+6) IsVerified API.
