@@ -45,3 +45,12 @@ class OldPin(UserException):
 
 class WrongPassword(UserException):
     pass
+
+
+class UserNotAuthorized(UserException):
+    pass
+
+
+class UserNotActive(UserException):
+    pass
+

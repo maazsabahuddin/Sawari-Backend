@@ -22,7 +22,8 @@ from User.decorators import login_credentials, otp_verify, login_decorator, regi
 from .models import User, Customer, UserOtp
 from User.otp_verify import UserOTPMixin
 
-from User.exceptions import TwilioEmailException, UserException, InvalidUsage, WrongPassword
+from User.exceptions import TwilioEmailException, UserException, InvalidUsage, WrongPassword, \
+     UserNotAuthorized, UserNotActive
 
 account_sid = TWILIO_ACCOUNT_SID
 auth_token = TWILIO_AUTH_TOKEN
@@ -426,6 +427,7 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
 
     @login_credentials
     def post(self, request, context=None):
+        token = ''
         try:
             email_or_phone = context['email_or_phone']
             password = context['password']
@@ -433,29 +435,38 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
             user = CustomAuthenticationBackend.authenticate(email_or_phone, password)
 
             if not user:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'Invalid credentials.',
-                })
+                raise WrongPassword(message="Invalid credentials.")
 
             if not user.is_customer:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Is customer field is false.',
-                })
+                raise UserNotAuthorized(message='Not authorized to login in the app.')
 
             token, _ = Token.objects.get_or_create(user=user)
             if not user.is_active:
-                return JsonResponse({
-                    'status': HTTP_200_OK,
-                    'token': token.key,
-                    'message': 'User not authenticated. Please verify first.',
-                })
+                raise UserNotActive(message="User not authenticated. Please verify first.")
 
             return JsonResponse({
                 'status': HTTP_200_OK,
                 'token': token.key,
                 'message': 'Login Successfully',
+            })
+
+        except WrongPassword as e:
+            return JsonResponse({
+                'status': HTTP_404_NOT_FOUND,
+                'message': str(e.message),
+            })
+
+        except UserNotAuthorized as e:
+            return JsonResponse({
+                'status': HTTP_404_NOT_FOUND,
+                'message': str(e.message),
+            })
+
+        except UserNotActive as e:
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'token': token.key,
+                'message': str(e.message),
             })
 
         except Exception as e:
