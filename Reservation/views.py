@@ -125,7 +125,7 @@ class RideBook(generics.GenericAPIView):
                     customer_id=customer_obj,
                     ride_id=ride_obj,
                     reservation_seats=req_seats,
-                    is_confirmed=False,
+                    is_confirmed=True,
                     created_date=date.today(),
                 )
                 reservation.save()
