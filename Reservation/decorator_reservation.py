@@ -122,11 +122,11 @@ def confirm_ride(f):
                     'message': 'Invalid reservation number.',
                 })
 
-            if reservation_number_obj.is_confirmed:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Ride already reserved.',
-                })
+            # if reservation_number_obj.is_confirmed:
+            #     return JsonResponse({
+            #         'status': HTTP_400_BAD_REQUEST,
+            #         'message': 'Ride already reserved.',
+            #     })
 
             print(reservation_number_obj.customer_id)
             customer = Customer.objects.filter(id=reservation_number_obj.customer_id.id).first()

@@ -125,7 +125,7 @@ class RideBook(generics.GenericAPIView):
                     customer_id=customer_obj,
                     ride_id=ride_obj,
                     reservation_seats=req_seats,
-                    is_confirmed=True,
+                    is_confirmed=False,
                     created_date=date.today(),
                 )
                 reservation.save()
@@ -435,7 +435,7 @@ class CancelRide(generics.GenericAPIView):
                 user_ride_detail_obj = UserRideDetail.objects.filter(reservation_id=reservation_number_obj.id).first()
                 ride_obj = Ride.objects.filter(id=user_ride_detail_obj.ride_id.id, is_complete=False).first()
 
-                if user_ride_detail_obj.ride_status == ("complete" or "COMPLETE" or "Complete"):
+                if user_ride_detail_obj.ride_status == ("completed" or "COMPLETED" or "Completed"):
                     return JsonResponse({
                         'status': HTTP_400_BAD_REQUEST,
                         'message': 'Ride completed.',
