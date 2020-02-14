@@ -9,7 +9,7 @@ from Reservation.models import Reservation, Ride
 # Create your models here.
 class UserRideDetail(models.Model):
     COLOR_CHOICES = (
-        ('complete', 'COMPLETE'),
+        ('complete', 'COMPLETED'),
         ('incomplete', 'INCOMPLETE'),
         ('cancelled', 'CANCELLED'),
         ('pending', 'PENDING'),
