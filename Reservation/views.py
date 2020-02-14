@@ -322,7 +322,7 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                                                         pick_up_point=user_ride_obj.pick_up_point,
                                                         drop_off_point=user_ride_obj.drop_off_point,
                                                         first_name=customer.user.first_name,
-                                                        arrival_time=user_ride_obj.ride_arrival_time,
+                                                        ride_arrival_time=user_ride_obj.ride_arrival_time,
                                                         booked_seats=reservation_number_obj.reservation_seats):
                     return JsonResponse({
                         'status': HTTP_400_BAD_REQUEST,
@@ -345,8 +345,8 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
         except InvalidUsage as e:
             if e.status_code == 1000:
                 return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': str(e.message),
+                    'status': HTTP_200_OK,
+                    'message': "Twilio ka balance khatam..",
                 })
         except Exception as e:
             JsonResponse({
