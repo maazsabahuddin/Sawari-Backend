@@ -454,7 +454,7 @@ class CancelRide(generics.GenericAPIView):
                     if datetime_now > datetime_db:
                         ride_obj.seats_left = ride_obj.seats_left + int(user_reservation_seats)
                         reservation_number_obj.is_confirmed = False
-                        user_ride_detail_obj.ride_status = "CANCELLED"
+                        user_ride_detail_obj.ride_status = "RIDE CANCELLED"
                         user_ride_detail_obj.save()
                         reservation_number_obj.save()
                         ride_obj.save()

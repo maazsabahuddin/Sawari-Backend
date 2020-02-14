@@ -28,7 +28,7 @@ class UserRideDetail(models.Model):
     # pick_up_time = models.TimeField(blank=True, null=True)
     drop_off_point = models.CharField(blank=True, max_length=256)
     # drop_off_time = models.TimeField(blank=True, null=True)
-    ride_status = models.CharField(max_length=10, default='ACTIVE')
+    ride_status = models.CharField(max_length=20, default='ACTIVE')
     ride_date = models.DateTimeField(blank=True, null=True)
     ride_arrival_time = models.TimeField(blank=True, null=True)
 
