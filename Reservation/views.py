@@ -298,6 +298,7 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
     @login_decorator
     @confirm_ride
     def post(self, request, **kwargs):
+        reservation_number_obj = ''
         try:
             customer = kwargs.get('customer_obj')
             reservation_number_obj = kwargs.get('reservation_number')
@@ -316,18 +317,14 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                     })
 
                 user_ride_obj = UserRideDetail.objects.filter(reservation_id=reservation_number_obj.id).first()
-                if not ConfirmRide.ride_confirm_message(phone_number=customer.user.phone_number,
-                                                        res_no=reservation_number_obj.reservation_number,
-                                                        vehicle_no_plate=vehicle_obj.vehicle_no_plate,
-                                                        pick_up_point=user_ride_obj.pick_up_point,
-                                                        drop_off_point=user_ride_obj.drop_off_point,
-                                                        first_name=customer.user.first_name,
-                                                        ride_arrival_time=user_ride_obj.ride_arrival_time,
-                                                        booked_seats=reservation_number_obj.reservation_seats):
-                    return JsonResponse({
-                        'status': HTTP_400_BAD_REQUEST,
-                        'message': 'Please verify this number on your twilio trial account.',
-                    })
+                ConfirmRide.ride_confirm_message(phone_number=customer.user.phone_number,
+                                                 res_no=reservation_number_obj.reservation_number,
+                                                 vehicle_no_plate=vehicle_obj.vehicle_no_plate,
+                                                 pick_up_point=user_ride_obj.pick_up_point,
+                                                 drop_off_point=user_ride_obj.drop_off_point,
+                                                 first_name=customer.user.first_name,
+                                                 ride_arrival_time=user_ride_obj.ride_arrival_time,
+                                                 booked_seats=reservation_number_obj.reservation_seats)
 
                 return JsonResponse({
                     'status': HTTP_200_OK,
@@ -344,10 +341,21 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
 
         except InvalidUsage as e:
             if e.status_code == 1000:
+                reservation_number_obj.is_confirmed = True
+                reservation_number_obj.save()
                 return JsonResponse({
                     'status': HTTP_200_OK,
-                    'message': "Twilio ka balance khatam..",
+                    'reservation Number': reservation_number_obj.reservation_number,
+                    'vehicle': vehicle_obj.vehicle_no_plate,
+                    'fare_per_person': float(user_ride_obj.fare) / int(reservation_number_obj.reservation_seats),
+                    'fare': float(user_ride_obj.fare),
+                    'price_per_km': user_ride_obj.price_per_km,
+                    'kilometer': user_ride_obj.kilometer,
+                    'pick-up-point': user_ride_obj.pick_up_point,
+                    'drop-off-point': user_ride_obj.drop_off_point,
+                    'message': 'Your ride is confirmed.'
                 })
+
         except Exception as e:
             JsonResponse({
                 'status': HTTP_404_NOT_FOUND,
