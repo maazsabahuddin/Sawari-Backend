@@ -141,7 +141,7 @@ class RideBook(generics.GenericAPIView):
                     fixed_fare=FIXED_FARE,
                     pick_up_point=pick_up_point,
                     drop_off_point=drop_off_point,
-                    ride_status="active",
+                    ride_status="ACTIVE",
                     ride_date=ride_start_time.date(),
                     ride_arrival_time=arrival_time,
                 )

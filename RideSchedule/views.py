@@ -202,6 +202,8 @@ class BusRoute(generics.GenericAPIView):
             stop_lon = request.data.get('stop_lon')
 
             available_rides = []
+            shortest_pick_ul = []
+            shortest_dropoff_ul = []
 
             start_lat_lon_ = {'lat': float(start_lat), 'lon': float(start_lon)}
             stop_lat_lon_ = {'lat': float(stop_lat), 'lon': float(stop_lon)}
@@ -226,8 +228,19 @@ class BusRoute(generics.GenericAPIView):
                                                            stop_longitude=stop_lat_lon_['lon'], )
 
                     pick_ul = ride.get('pick-up-location')
+                    shortest_pick_ul = sorted(pick_ul, key=lambda k: k["distance"])[0]
                     drop_ul = ride.get('drop-off-location')
+                    shortest_dropoff_ul = sorted(drop_ul, key=lambda k: k["distance"])[0]
+
                     if pick_ul and drop_ul:
+                        ride.pop('pick-up-location', None)
+                        ride.pop('drop-off-location', None)
+
+                        ride_pick_up_location = {'pick-up-location': shortest_pick_ul}
+                        ride_dropoff_location = {'drop-off-location': shortest_dropoff_ul}
+
+                        ride.update(ride_pick_up_location)
+                        ride.update(ride_dropoff_location)
                         available_rides.append(ride)
 
             return JsonResponse({

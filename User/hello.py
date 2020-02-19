@@ -317,14 +317,21 @@ print(a)
 import inspect
 
 
-def f1():
-    f2()
+# def f1():
+#     f2()
+#
+#
+# def f2():
+#     print('caller name:', inspect.stack()[1][3])
+#     print('caller name:', inspect.stack()[1].function)
+#     print()
+#
+#
+# f1()
 
 
-def f2():
-    print('caller name:', inspect.stack()[1][3])
-    print('caller name:', inspect.stack()[1].function)
-    print()
 
-
-f1()
+a = 1
+b = +1
+c = a+b
+print(c)
