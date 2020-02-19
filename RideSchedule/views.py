@@ -275,7 +275,7 @@ class BusRoute(generics.GenericAPIView):
                                                             stop_latitude=stop_lat_lon_['lat'],
                                                             stop_longitude=stop_lat_lon_['lon'], ))
 
-                    if ride_datetime < extended_datetime:
+                    if extended_datetime > ride_datetime > datetime_now:
                         available_rides.append(
                             BusRoute.append_available_rides(ride_obj=rides,
                                                             ride_date=ride_datetime.date(),
