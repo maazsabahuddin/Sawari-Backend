@@ -243,9 +243,9 @@ DISTANCE_KILOMETRE_LIMIT = 2.0
 STOP_WAIT_TIME = 1
 
 # Show rides for how many days?
-SHOW_RIDES_TODAY_ONLY = False
+SHOW_RIDES_TODAY_ONLY = True
 # if today is 01 - 01 - 2020 then show the rides of today and tomorrow both (+1) it all depends on show_ride_days.
-SHOW_RIDE_DAYS = +1
+SHOW_RIDE_DAYS = 3
 
 # LOGGING = {
 #     'version': 1,

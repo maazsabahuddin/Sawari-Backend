@@ -8,7 +8,8 @@ from django.utils import timezone
 from rest_framework import generics
 from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_200_OK, HTTP_400_BAD_REQUEST
 
-from A.settings.base import DISTANCE_KILOMETRE_LIMIT, gmaps, local_tz, STOP_WAIT_TIME
+from A.settings.base import DISTANCE_KILOMETRE_LIMIT, gmaps, local_tz, STOP_WAIT_TIME, SHOW_RIDES_TODAY_ONLY, \
+    SHOW_RIDE_DAYS
 
 from Reservation.models import Ride, Stop, Route
 from User.decorators import login_decorator
@@ -106,12 +107,7 @@ class BusRoute(generics.GenericAPIView):
             pick_up_lat_lon = kwargs.get('pick_up_lat_lon')
             drop_off_lat_lon = kwargs.get('drop_off_lat_lon')
             stops_obj = kwargs.get('stops_obj')
-
-            stops = []
-            for stop in stops_obj:
-                stops.append(
-                    (stop.latitude, stop.longitude)
-                )
+            stops = kwargs.get('stops')
 
             pick_up_result = gmaps.distance_matrix(stops, pick_up_lat_lon, mode='walking')
             drop_off_result = gmaps.distance_matrix(stops, drop_off_lat_lon, mode='walking')
@@ -142,6 +138,7 @@ class BusRoute(generics.GenericAPIView):
     def stop_to_stop_distance(**kwargs):
         try:
             stops_obj = kwargs.get('stops_obj')
+            stops = kwargs.get('stops')
 
             stops = []
             for stop in stops_obj:
@@ -193,6 +190,44 @@ class BusRoute(generics.GenericAPIView):
         ride_arrival_time = (ride_start_time_local + datetime.timedelta(0, duration*60)).time()
         return ride_arrival_time
 
+    @staticmethod
+    def append_available_rides(**kwargs):
+        try:
+            start_latitude = kwargs.get('start_latitude')
+            start_longitude = kwargs.get('start_longitude')
+            stop_latitude = kwargs.get('stop_latitude')
+            stop_longitude = kwargs.get('stop_longitude')
+            ride_obj = kwargs.get('ride_obj')
+            ride_date = kwargs.get('ride_date')
+
+            ride = BusRoute.return_stops_of_a_ride(ride_obj=ride_obj,
+                                                   ride_date=ride_date,
+                                                   start_latitude=start_latitude,
+                                                   start_longitude=start_longitude,
+                                                   stop_latitude=stop_latitude,
+                                                   stop_longitude=stop_longitude, )
+
+            pick_ul = ride.get('pick-up-location')
+            shortest_pick_ul = sorted(pick_ul, key=lambda k: k["distance"])[0]
+            drop_ul = ride.get('drop-off-location')
+            shortest_dropoff_ul = sorted(drop_ul, key=lambda k: k["distance"])[0]
+
+            if pick_ul and drop_ul:
+                ride.pop('pick-up-location', None)
+                ride.pop('drop-off-location', None)
+
+                ride_pick_up_location = {'pick-up-location': shortest_pick_ul}
+                ride_dropoff_location = {'drop-off-location': shortest_dropoff_ul}
+                ride_date_append = {'ride_date': ride_date}
+
+                ride.update(ride_pick_up_location)
+                ride.update(ride_dropoff_location)
+                ride.update(ride_date_append)
+                return ride
+
+        except:
+            pass
+
     @login_decorator
     def post(self, request, data=None):
         try:
@@ -202,8 +237,6 @@ class BusRoute(generics.GenericAPIView):
             stop_lon = request.data.get('stop_lon')
 
             available_rides = []
-            shortest_pick_ul = []
-            shortest_dropoff_ul = []
 
             start_lat_lon_ = {'lat': float(start_lat), 'lon': float(start_lon)}
             stop_lat_lon_ = {'lat': float(stop_lat), 'lon': float(stop_lon)}
@@ -215,33 +248,41 @@ class BusRoute(generics.GenericAPIView):
                     'message': 'No Ride Available.',
                 })
 
+            datetime_now = BusRoute.utc_to_local(timezone.now())
             for rides in ride_obj:
-                datetime_now = BusRoute.utc_to_local(timezone.now())
-                datetime_db = BusRoute.utc_to_local(rides.start_time)
+                ride_datetime = BusRoute.utc_to_local(rides.start_time)
 
-                if datetime_now < datetime_db:
-                    ride = BusRoute.return_stops_of_a_ride(ride_obj=rides,
-                                                           ride_date=datetime_db.date(),
-                                                           start_latitude=start_lat_lon_['lat'],
-                                                           start_longitude=start_lat_lon_['lon'],
-                                                           stop_latitude=stop_lat_lon_['lat'],
-                                                           stop_longitude=stop_lat_lon_['lon'], )
+                if SHOW_RIDES_TODAY_ONLY:
+                    if ride_datetime.date() == datetime_now.date() and datetime_now < ride_datetime:
+                        available_rides.append(
+                            BusRoute.append_available_rides(ride_obj=rides,
+                                                            ride_date=ride_datetime.date(),
+                                                            start_latitude=start_lat_lon_['lat'],
+                                                            start_longitude=start_lat_lon_['lon'],
+                                                            stop_latitude=stop_lat_lon_['lat'],
+                                                            stop_longitude=stop_lat_lon_['lon'],))
 
-                    pick_ul = ride.get('pick-up-location')
-                    shortest_pick_ul = sorted(pick_ul, key=lambda k: k["distance"])[0]
-                    drop_ul = ride.get('drop-off-location')
-                    shortest_dropoff_ul = sorted(drop_ul, key=lambda k: k["distance"])[0]
+                else:
+                    no_of_days = SHOW_RIDE_DAYS
+                    extended_datetime = datetime_now + datetime.timedelta(days=no_of_days-1)
 
-                    if pick_ul and drop_ul:
-                        ride.pop('pick-up-location', None)
-                        ride.pop('drop-off-location', None)
+                    if extended_datetime == datetime_now:
+                        available_rides.append(
+                            BusRoute.append_available_rides(ride_obj=rides,
+                                                            ride_date=ride_datetime.date(),
+                                                            start_latitude=start_lat_lon_['lat'],
+                                                            start_longitude=start_lat_lon_['lon'],
+                                                            stop_latitude=stop_lat_lon_['lat'],
+                                                            stop_longitude=stop_lat_lon_['lon'], ))
 
-                        ride_pick_up_location = {'pick-up-location': shortest_pick_ul}
-                        ride_dropoff_location = {'drop-off-location': shortest_dropoff_ul}
-
-                        ride.update(ride_pick_up_location)
-                        ride.update(ride_dropoff_location)
-                        available_rides.append(ride)
+                    if ride_datetime < extended_datetime:
+                        available_rides.append(
+                            BusRoute.append_available_rides(ride_obj=rides,
+                                                            ride_date=ride_datetime.date(),
+                                                            start_latitude=start_lat_lon_['lat'],
+                                                            start_longitude=start_lat_lon_['lon'],
+                                                            stop_latitude=stop_lat_lon_['lat'],
+                                                            stop_longitude=stop_lat_lon_['lon'], ))
 
             return JsonResponse({
                 'status': HTTP_200_OK,
@@ -275,7 +316,15 @@ class BusRoute(generics.GenericAPIView):
             route_obj = Route.objects.filter(ride_id=ride_obj.id).first()
             # stops_obj = Stop.objects.filter(route_ids=route_obj.id)
 
-            nearest_user_stops = BusRoute.distance_and_duration(stops_obj=route_obj.stop_ids.get_queryset(),
+            stops_lat_lng = []
+            stops_obj = route_obj.stop_ids.get_queryset()
+            for stop in stops_obj:
+                stops_lat_lng.append(
+                    (stop.latitude, stop.longitude)
+                )
+
+            nearest_user_stops = BusRoute.distance_and_duration(stops_obj=stops_obj,
+                                                                stops=stops_lat_lng,
                                                                 pick_up_lat_lon=(start_latitude, start_longitude),
                                                                 drop_off_lat_lon=(stop_latitude, stop_longitude),)
 
@@ -295,7 +344,7 @@ class BusRoute(generics.GenericAPIView):
                                 ride_obj=ride_obj,
                                 stop_name=nearest_user_stops[stops]['stop_name'],
                                 stops_duration=stops_duration, ),
-                            'date': ride_date,
+                            # 'date': ride_date,
                         })
                     else:
                         ride.update({
@@ -310,7 +359,7 @@ class BusRoute(generics.GenericAPIView):
                                     ride_obj=ride_obj,
                                     stop_name=nearest_user_stops[stops]['stop_name'],
                                     stops_duration=stops_duration,),
-                                'date': ride_date,
+                                # 'date': ride_date,
                             }]
                         })
 
@@ -327,7 +376,7 @@ class BusRoute(generics.GenericAPIView):
                                     ride_obj=ride_obj,
                                     stop_name=nearest_user_stops[stops]['stop_name'],
                                     stops_duration=stops_duration, ),
-                                'date': ride_date,
+                                # 'date': ride_date,
                             })
                     else:
                         ride.update({
@@ -342,7 +391,7 @@ class BusRoute(generics.GenericAPIView):
                                     ride_obj=ride_obj,
                                     stop_name=nearest_user_stops[stops]['stop_name'],
                                     stops_duration=stops_duration, ),
-                                'date': ride_date,
+                                # 'date': ride_date,
                             }],
                         })
 
