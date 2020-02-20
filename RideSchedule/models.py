@@ -25,12 +25,13 @@ class UserRideDetail(models.Model):
     fare = models.IntegerField(blank=False)
     fixed_fare = models.BooleanField(default=False)
     pick_up_point = models.CharField(blank=True, max_length=256)
-    # pick_up_time = models.TimeField(blank=True, null=True)
+    pick_up_time = models.TimeField(blank=True, null=True)
     drop_off_point = models.CharField(blank=True, max_length=256)
-    # drop_off_time = models.TimeField(blank=True, null=True)
+    drop_off_time = models.TimeField(blank=True, null=True)
     ride_status = models.CharField(max_length=20, default='ACTIVE')
     ride_date = models.DateTimeField(blank=True, null=True)
-    ride_arrival_time = models.TimeField(blank=True, null=True)
+    # ride_arrival_time = models.TimeField(blank=True, null=True)
+    # ride_departure_time = models.TimeField(blank=True, null=True)
 
     def __str__(self):
         return "{} - {}".format(self.reservation_id, self.ride_id)

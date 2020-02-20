@@ -18,6 +18,7 @@ def reserve_ride_decorator(f):
             # kilometer = request.data.get('kilometer')
             payment_method = request.data.get('payment_method')
             arrival_time = request.data.get('arrival_time')
+            departure_time = request.data.get('departure_time')
             ride_date = request.data.get('ride_date')
 
             if not (vehicle_no_plate or req_seats or pick_up_point_stop_id or drop_up_point_stop_id or arrival_time):
@@ -96,7 +97,9 @@ def reserve_ride_decorator(f):
 
             return f(args[0], request, user=user, customer=customer, vehicle_no_plate=vehicle_no_plate,
                      req_seats=req_seats, pick_up_point=pick_up_point, drop_up_point=drop_off_point,
-                     kilometer=kilometer, payment_method=payment_method, ride_date=ride_date, arrival_time=arrival_time)
+                     kilometer=kilometer, payment_method=payment_method, ride_date=ride_date,
+                     arrival_time=arrival_time, departure_time=departure_time)
+            # """, departure_time=departure_time"""
 
         except Exception as e:
             return JsonResponse({

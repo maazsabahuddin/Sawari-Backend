@@ -108,6 +108,7 @@ class RideBook(generics.GenericAPIView):
             fare_per_km = RideBook.price_per_km()
             ride_start_time = kwargs.get('ride_start_time')
             arrival_time = kwargs.get('arrival_time')
+            departure_time = kwargs.get('departure_time')
 
             with transaction.atomic():
 
@@ -143,7 +144,8 @@ class RideBook(generics.GenericAPIView):
                     drop_off_point=drop_off_point,
                     ride_status="ACTIVE",
                     ride_date=ride_start_time.date(),
-                    ride_arrival_time=arrival_time,
+                    pick_up_time=arrival_time,
+                    drop_off_time=departure_time,
                 )
                 user_ride.save()
 
@@ -157,7 +159,9 @@ class RideBook(generics.GenericAPIView):
                         'price_per_km': str(user_ride.price_per_km),
                         'kilometer': user_ride.kilometer,
                         'pick-up-point': user_ride.pick_up_point,
+                        'pick-up-time': user_ride.pick_up_time,
                         'drop-off-point': user_ride.drop_off_point,
+                        'drop-off-time': user_ride.drop_off_time,
                         'seats': req_seats,
                         'message': 'Ride booked, but not confirmed.',
                     })
@@ -166,13 +170,16 @@ class RideBook(generics.GenericAPIView):
                     'status': HTTP_200_OK,
                     'reservation_number': reservation.reservation_number,
                     'vehicle': vehicle_no_plate,
-                    'fare': float(fare_per_person) * float(req_seats),
-                    'fare_per_person': str(fare_per_person) + " x " + req_seats,
+                    # 'fare': float(fare_per_person) * float(reservation.reservation_seats),
+                    'fare': str(user_ride.fare),
+                    'fare_per_person': str(fare_per_person) + " x " + reservation.reservation_seats,
                     'price_per_km': "",
                     'kilometer': None,
                     'pick-up-point': user_ride.pick_up_point,
+                    'pick_up_time': user_ride.pick_up_time,
                     'drop-off-point': user_ride.drop_off_point,
-                    'seats': req_seats,
+                    'drop_off_time': user_ride.drop_off_time,
+                    'seats': reservation.reservation_seats,
                     'message': 'Ride booked, but not confirmed.',
                 })
         except Exception as e:
@@ -195,6 +202,7 @@ class RideBook(generics.GenericAPIView):
             payment_method = kwargs.get('payment_method')
             ride_date = kwargs.get('ride_date')
             arrival_time = kwargs.get('arrival_time')
+            departure_time = kwargs.get('departure_time')
 
             ride_obj = RideBook.get_ride_obj(vehicle_no_plate=vehicle_no_plate, ride_date=ride_date)
             if not ride_obj:
@@ -232,7 +240,7 @@ class RideBook(generics.GenericAPIView):
                                              ride_obj=ride_obj, drop_off_point=drop_up_point,
                                              kilometer=kilometer, fare_per_person=fare_per_person,
                                              payment_method=payment_method_obj, ride_start_time=ride_obj.start_time,
-                                             arrival_time=arrival_time)
+                                             arrival_time=arrival_time, departure_time=departure_time)
 
         except Exception as e:
             return JsonResponse({
@@ -418,9 +426,11 @@ class UserRides(generics.GenericAPIView):
             'pick_up_point': ride.pick_up_point,
             'pick_up_time': ride.ride_arrival_time,
             'drop_off_point': ride.drop_off_point,
+            # 'drop_off_time': ride.drop_off_point,
             'seats': user_reservation.reservation_seats,
             'ride_date': ride.ride_date.date(),
             'ride_status': ride.ride_status,
+            # 'amount':
         })
 
         return ride_details

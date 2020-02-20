@@ -2,7 +2,7 @@ import re
 from functools import wraps
 from django.http import JsonResponse
 from rest_framework.authtoken.models import Token
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_401_UNAUTHORIZED
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_401_UNAUTHORIZED, HTTP_200_OK
 
 from A.settings.base import PHONE_NUMBER_REGEX, EMAIL_REGEX, COUNTRY_CODE_PK
 from CustomAuthentication.backend_authentication import CustomUserCheck
@@ -326,7 +326,7 @@ def logout_decorator(f):
             if not user_token:
                 return JsonResponse({
                     'status': HTTP_200_OK,
-                    'message': 'gLogged out.',
+                    'message': 'Logged out.',
                 })
 
             return f(args[0], request, user=user_token)
