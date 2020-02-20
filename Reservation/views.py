@@ -310,11 +310,7 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                 ride_obj = Ride.objects.filter(id=reservation_number_obj.ride_id.id).first()
                 vehicle_obj = Vehicle.objects.filter(id=ride_obj.vehicle_id.id).first()
 
-                if not ConfirmRide.update_ride(vehicle_obj.vehicle_no_plate, reservation_number_obj.reservation_seats):
-                    return JsonResponse({
-                        'status': HTTP_400_BAD_REQUEST,
-                        'message': 'Error Updating ride.',
-                    })
+                ConfirmRide.update_ride(vehicle_obj.vehicle_no_plate, reservation_number_obj.reservation_seats)
 
                 user_ride_obj = UserRideDetail.objects.filter(reservation_id=reservation_number_obj.id).first()
                 ConfirmRide.ride_confirm_message(phone_number=customer.user.phone_number,
@@ -343,6 +339,8 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
             if e.status_code == 1000:
                 reservation_number_obj.is_confirmed = True
                 reservation_number_obj.save()
+                ride_obj = Ride.objects.filter(id=reservation_number_obj.ride_id.id).first()
+                vehicle_obj = Vehicle.objects.filter(id=ride_obj.vehicle_id.id).first()
                 return JsonResponse({
                     'status': HTTP_200_OK,
                     'reservation Number': reservation_number_obj.reservation_number,

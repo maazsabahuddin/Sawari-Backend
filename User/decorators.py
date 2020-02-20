@@ -325,8 +325,8 @@ def logout_decorator(f):
             user_token = Token.objects.filter(key=token).first()
             if not user_token:
                 return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Invalid Token.',
+                    'status': HTTP_200_OK,
+                    'message': 'gLogged out.',
                 })
 
             return f(args[0], request, user=user_token)
