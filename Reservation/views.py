@@ -424,13 +424,13 @@ class UserRides(generics.GenericAPIView):
         ride_details.update({
             'reservation_no': user_reservation.reservation_number,
             'pick_up_point': ride.pick_up_point,
-            'pick_up_time': ride.ride_arrival_time,
+            'pick_up_time': ride.pick_up_time,
             'drop_off_point': ride.drop_off_point,
-            # 'drop_off_time': ride.drop_off_point,
+            'drop_off_time': ride.drop_off_time,
             'seats': user_reservation.reservation_seats,
             'ride_date': ride.ride_date.date(),
             'ride_status': ride.ride_status,
-            # 'amount':
+            'fare': ride.fare,
         })
 
         return ride_details
