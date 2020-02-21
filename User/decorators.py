@@ -6,7 +6,7 @@ from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP
 
 from A.settings.base import PHONE_NUMBER_REGEX, EMAIL_REGEX, COUNTRY_CODE_PK
 from CustomAuthentication.backend_authentication import CustomUserCheck
-from User.models import UserOtp
+from User.models import UserOtp, User
 from User.exceptions import UserException, PinNotMatched, MissingField, UserNotFound, OldPin, InvalidUsage, WrongPassword
 # import dump
 # from User.views_designpatterns import UserMixinMethods
@@ -200,6 +200,8 @@ def otp_verify(f):
             if phone_number[0] == "0":
                 phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
 
+            phone_number_user = User.objects.filter(phone_number=phone_number).first()
+
             if not otp:
                 return JsonResponse({
                     'status': HTTP_404_NOT_FOUND,
@@ -217,6 +219,12 @@ def otp_verify(f):
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
                     'message': 'Invalid Token.',
+                })
+
+            if not token_user.user == phone_number_user:
+                return JsonResponse({
+                    'status': HTTP_401_UNAUTHORIZED,
+                    'message': 'duplicate user.',
                 })
 
             context = {'user': token_user.user, 'otp': otp, 'phone_number': phone_number}
