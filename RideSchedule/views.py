@@ -199,6 +199,7 @@ class BusRoute(generics.GenericAPIView):
             stop_longitude = kwargs.get('stop_longitude')
             ride_obj = kwargs.get('ride_obj')
             ride_date = kwargs.get('ride_date')
+            route_of_ride = kwargs.get('route_of_ride')
 
             ride = BusRoute.return_stops_of_a_ride(ride_obj=ride_obj,
                                                    ride_date=ride_date,
@@ -216,13 +217,15 @@ class BusRoute(generics.GenericAPIView):
                 ride.pop('pick-up-location', None)
                 ride.pop('drop-off-location', None)
 
+                route_id = {'route_id': route_of_ride}
                 ride_pick_up_location = {'pick-up-location': shortest_pick_ul}
                 ride_dropoff_location = {'drop-off-location': shortest_dropoff_ul}
                 ride_date_append = {'ride_date': ride_date}
 
+                ride.update(route_id)
+                ride.update(ride_date_append)
                 ride.update(ride_pick_up_location)
                 ride.update(ride_dropoff_location)
-                ride.update(ride_date_append)
                 return ride
 
         except:
@@ -251,6 +254,8 @@ class BusRoute(generics.GenericAPIView):
             datetime_now = BusRoute.utc_to_local(timezone.now())
             for rides in ride_obj:
                 ride_datetime = BusRoute.utc_to_local(rides.start_time)
+                route_obj = Route.objects.filter(ride_id=rides.id).first()
+                route_of_ride = route_obj.route_id
 
                 if SHOW_RIDES_TODAY_ONLY:
                     if ride_datetime.date() == datetime_now.date() and datetime_now < ride_datetime:
@@ -260,7 +265,8 @@ class BusRoute(generics.GenericAPIView):
                                                             start_latitude=start_lat_lon_['lat'],
                                                             start_longitude=start_lat_lon_['lon'],
                                                             stop_latitude=stop_lat_lon_['lat'],
-                                                            stop_longitude=stop_lat_lon_['lon'],))
+                                                            stop_longitude=stop_lat_lon_['lon'],
+                                                            route_of_ride=route_of_ride,))
 
                 else:
                     no_of_days = SHOW_RIDE_DAYS
@@ -273,7 +279,8 @@ class BusRoute(generics.GenericAPIView):
                                                             start_latitude=start_lat_lon_['lat'],
                                                             start_longitude=start_lat_lon_['lon'],
                                                             stop_latitude=stop_lat_lon_['lat'],
-                                                            stop_longitude=stop_lat_lon_['lon'], ))
+                                                            stop_longitude=stop_lat_lon_['lon'],
+                                                            route_of_ride=route_of_ride, ))
 
                     if extended_datetime > ride_datetime > datetime_now:
                         available_rides.append(
@@ -282,7 +289,8 @@ class BusRoute(generics.GenericAPIView):
                                                             start_latitude=start_lat_lon_['lat'],
                                                             start_longitude=start_lat_lon_['lon'],
                                                             stop_latitude=stop_lat_lon_['lat'],
-                                                            stop_longitude=stop_lat_lon_['lon'], ))
+                                                            stop_longitude=stop_lat_lon_['lon'],
+                                                            route_of_ride=route_of_ride, ))
 
             return JsonResponse({
                 'status': HTTP_200_OK,

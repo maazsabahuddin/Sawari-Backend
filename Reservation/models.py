@@ -55,7 +55,8 @@ class Stop(models.Model):
 class Route(models.Model):
     # A ride is a lap.
     # A ride can have only one route and a route can have multiple rides.
-    # route_id = models.ManyToManyField(Route, related_name='route_ride')
+    # route_id = models.ManyToManyField(Route, related_name='route_ride', blank=True, null=True)
+    route_id = models.CharField(max_length=10, null=True, blank=True)
     ride_id = models.ForeignKey(Ride, related_name='ride_route', on_delete=models.CASCADE)
     stop_ids = models.ManyToManyField(Stop, related_name='route_stops')
     start_name = models.CharField(blank=False, max_length=50)
