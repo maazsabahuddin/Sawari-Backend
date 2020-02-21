@@ -245,11 +245,6 @@ class BusRoute(generics.GenericAPIView):
             stop_lat_lon_ = {'lat': float(stop_lat), 'lon': float(stop_lon)}
 
             ride_obj = Ride.objects.filter(is_complete=False)
-            # if not ride_obj:
-            #     return JsonResponse({
-            #         'status': HTTP_400_BAD_REQUEST,
-            #         'message': 'No Ride Available.',
-            #     })
 
             datetime_now = BusRoute.utc_to_local(timezone.now())
             for rides in ride_obj:

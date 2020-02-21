@@ -6,7 +6,7 @@
 *.pyc
 
 #migrations
-*/migrations/
+#*/migrations/
 
 /queries.txt
 /A/config.py
