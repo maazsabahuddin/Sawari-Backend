@@ -337,6 +337,12 @@ import inspect
 # print(c)
 
 
-a = 'maazsabahuddin@gmail.com '
-# a = a.strip()
-print(len(a))
+# a = 'maazsabahuddin@gmail.com '
+# # a = a.strip()
+# print(len(a))
+
+from datetime import datetime
+curr_time = datetime.now().time()
+print(curr_time)
+curr_time_plus = curr_time + datetime.timedelta()
+
