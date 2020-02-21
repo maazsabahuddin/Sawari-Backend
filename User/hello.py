@@ -330,8 +330,13 @@ import inspect
 # f1()
 
 
+#
+# a = 1
+# b = +1
+# c = a+b
+# print(c)
 
-a = 1
-b = +1
-c = a+b
-print(c)
+
+a = 'maazsabahuddin@gmail.com '
+# a = a.strip()
+print(len(a))

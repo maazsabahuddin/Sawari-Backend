@@ -93,6 +93,9 @@ def password_reset_decorator(f):
             password_uuid = request.GET.get('password_uuid')
             email_or_phone = request.data.get('email_or_phone')
 
+            email_or_phone = email_or_phone.strip()
+            password_uuid = password_uuid.strip()
+
             if not email_or_phone:
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
@@ -155,6 +158,7 @@ def login_credentials(f):
             email_or_phone = request.data.get("email_or_phone")
             password = request.data.get('password')
 
+            email_or_phone = email_or_phone.strip()
             if not password:
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
@@ -197,6 +201,7 @@ def otp_verify(f):
             token = request.headers.get('authorization')
             otp = request.data.get('otp')
             email_or_phone = request.data.get('email_or_phone')
+            email_or_phone = email_or_phone.strip()
 
             if not email_or_phone:
                 return JsonResponse({
@@ -258,6 +263,9 @@ def register(f):
         password = data('password')
         confirm_password = data('confirm_password')
         is_customer = data('is_customer')
+
+        email = email.strip()
+        phone_number = phone_number.strip()
 
         if not phone_number:
             return JsonResponse({
@@ -397,6 +405,7 @@ def phone_number_decorator(f):
             request = args[1]
             user = args[2]['user']
             phone_number = request.data.get('phonenumber')
+            phone_number = phone_number.strip()
 
             if not phone_number:
                 return JsonResponse({
@@ -456,6 +465,10 @@ def password_change_decorator(f):
             previous_pin = request.data.get('previous_pin')
             new_pin = request.data.get('new_pin')
             confirm_new_pin = request.data.get('confirm_new_pin')
+
+            previous_pin = previous_pin.strip()
+            new_pin = new_pin.strip()
+            confirm_new_pin = confirm_new_pin.strip()
 
             if not user.check_password(previous_pin):
                 raise UserException(status_code=401)
