@@ -428,6 +428,7 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
     @login_credentials
     def post(self, request, context=None):
         token = ''
+        user = ''
         try:
             email_or_phone = context['email_or_phone']
             password = context['password']
@@ -463,9 +464,25 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
             })
 
         except UserNotActive as e:
+            try:
+                otp = UserOTPMixin.generate_otp()
+                print(otp)
+                # FACTORY PATTERN it delegates the decision to the get_serializer method and
+                # return the object of concrete/implementation method
+                serializer = UserMixinMethods.get_serializer_object_register(user.email, user.phone_number)
+                serializer(otp, email=user.email, phone_number=user.phone_number)
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'token': token.key,
+                    'message1': "OTP has been successfully sent.",
+                    'message': str(e.message),
+                })
+            except Exception as e:
+                raise TwilioEmailException(message=user.phone_number + " is not verified on your Twilio trial account.")
+
+        except TwilioEmailException as e:
             return JsonResponse({
-                'status': HTTP_200_OK,
-                'token': token.key,
+                'status': HTTP_404_NOT_FOUND,
                 'message': str(e.message),
             })
 

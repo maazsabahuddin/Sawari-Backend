@@ -7,7 +7,8 @@ from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP
 from A.settings.base import PHONE_NUMBER_REGEX, EMAIL_REGEX, COUNTRY_CODE_PK
 from CustomAuthentication.backend_authentication import CustomUserCheck
 from User.models import UserOtp, User
-from User.exceptions import UserException, PinNotMatched, MissingField, UserNotFound, OldPin, InvalidUsage, WrongPassword
+from User.exceptions import UserException, PinNotMatched, MissingField, UserNotFound, OldPin,\
+    TwilioEmailException, InvalidUsage, WrongPassword
 # import dump
 # from User.views_designpatterns import UserMixinMethods
 
@@ -171,6 +172,12 @@ def login_credentials(f):
 
             context = {'email_or_phone': email_or_phone, 'password': password}
             return f(args[0], request, context)
+
+        except TwilioEmailException as e:
+            return JsonResponse({
+                'status': HTTP_404_NOT_FOUND,
+                'message': str(e.message),
+            })
 
         except Exception as e:
             return JsonResponse({
