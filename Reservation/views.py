@@ -457,23 +457,24 @@ class CancelRide(generics.GenericAPIView):
                 user_ride_detail_obj = UserRideDetail.objects.filter(reservation_id=reservation_number_obj.id).first()
                 ride_obj = Ride.objects.filter(id=user_ride_detail_obj.ride_id.id, is_complete=False).first()
 
-                if user_ride_detail_obj.ride_status == ("completed" or "COMPLETED" or "Completed"):
+                if user_ride_detail_obj.ride_status == 'COMPLETED':
                     return JsonResponse({
                         'status': HTTP_400_BAD_REQUEST,
                         'message': 'Ride completed.',
                     })
 
-                if user_ride_detail_obj.ride_status == ("cancelled" or "Cancelled" or "CANCELLED"):
+                if user_ride_detail_obj.ride_status == 'RIDE CANCELLED':
                     return JsonResponse({
                         'status': HTTP_400_BAD_REQUEST,
                         'message': 'Ride already cancelled.',
                     })
 
-                if user_ride_detail_obj.ride_status == ("active" or "Active" or "ACTIVE"):
+                if "ACTIVE" == user_ride_detail_obj.ride_status:
                     datetime_now = BusRoute.utc_to_local(timezone.now())
+                    ride_start_datetime = BusRoute.utc_to_local(ride_obj.start_time)
                     datetime_db = BusRoute.utc_to_local(user_ride_detail_obj.ride_date)
 
-                    if datetime_now > datetime_db:
+                    if datetime_now < ride_start_datetime:
                         ride_obj.seats_left = ride_obj.seats_left + int(user_reservation_seats)
                         reservation_number_obj.is_confirmed = False
                         user_ride_detail_obj.ride_status = "RIDE CANCELLED"
@@ -487,8 +488,8 @@ class CancelRide(generics.GenericAPIView):
                         })
 
                 return JsonResponse({
-                    'status': HTTP_200_OK,
-                    'message': 'You can\'t cancel ride now.',
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'You cannot cancel ride now.',
                 })
 
         except Exception as e:
