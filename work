@@ -3,22 +3,29 @@ DONE
 
 2) sb sey nearest stop return krney hay user ko.. yeh kaam krna hay.
 
-3) Change phone number waley pr kaam krna hay ab..
-DONE
+3) Change phone number waley pr kaam krna hay ab.. DONE
 
-4) User Login / Logout /
-DONE
-
-5) PasswordReset / PasswordResetCheck / SetNewPassword / PasswordResetResendOtp
-
+4) User Login / Logout / DONE
 
 6) IsVerified API. DONE
 
-7) ride seats_update bug fix.
-8) Route_id add kru ride waley table mae cross check krney k liye yeh van us date ko is route pr chal b rahi hay ya nahi?
+7) ride seats_update bug fix. DONE
+
 9) is_verified pr kaam kru. DONE
+
 10) User not authenticated. Please verify first. ispr verification code bhjdu. DONE
 
 11) Email space wala bug fix kru. DONE
 
 12) First reservation bug fix kru.. DONE
+
+
+PENDING:
+13) Work on decorators exception handling.
+
+8) Route_id add kru ride waley table mae cross check krney k liye yeh van us date ko is route pr chal b rahi hay ya nahi?
+    There should be a ride who are moving on different routes in a single day.
+
+5) PasswordReset / PasswordResetCheck / SetNewPassword / PasswordResetResendOtp
+
+7) Work on another front end SAWARI.
