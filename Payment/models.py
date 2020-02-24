@@ -15,7 +15,7 @@ class PaymentMethod(models.Model):
 
 class Pricing(models.Model):
     # Auth-User added for check pricing Updating details by a particular admin-user
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE, blank=False, null=False)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     price_per_km = models.FloatField(blank=False, null=False, max_length=5)
     fixed_fare = models.FloatField(blank=False, null=False, max_length=5)
     updated_timestamp = models.DateTimeField(auto_now_add=True)
