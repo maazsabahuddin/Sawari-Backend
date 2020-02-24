@@ -170,7 +170,6 @@ class RideBook(generics.GenericAPIView):
                     'status': HTTP_200_OK,
                     'reservation_number': reservation.reservation_number,
                     'vehicle': vehicle_no_plate,
-                    # 'fare': float(fare_per_person) * float(reservation.reservation_seats),
                     'fare': str(user_ride.fare),
                     'fare_per_person': str(fare_per_person) + " x " + reservation.reservation_seats,
                     'price_per_km': "",
@@ -259,8 +258,9 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
             res_no = kwargs.get('res_no')
             vehicle_no_plate = kwargs.get('vehicle_no_plate')
             pick_up_point = kwargs.get('pick_up_point')
-            pick_up_time = kwargs.get('ride_arrival_time')
+            pick_up_time = kwargs.get('ride_pickup_time')
             drop_off_point = kwargs.get('drop_off_point')
+            drop_off_time = kwargs.get('ride_drop_off_time')
             booked_seats = kwargs.get('booked_seats')
 
             sawaari_message = "RIDE WITH SAWAARI\n"
@@ -269,9 +269,13 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                                              'Vehicle - {}\n' \
                                              'Seats: {}\n' \
                                              'Pick-up-point: {} at {}\n' \
-                                             'Drop-off-point: {}'.format(first_name, res_no, vehicle_no_plate,
-                                                                         booked_seats, pick_up_point,
-                                                                         pick_up_time, drop_off_point)
+                                             'Drop-off-point: {} at approximately {}'.format(first_name, res_no,
+                                                                                             vehicle_no_plate,
+                                                                                             booked_seats,
+                                                                                             pick_up_point,
+                                                                                             pick_up_time,
+                                                                                             drop_off_point,
+                                                                                             drop_off_time)
 
             from User.twilio_verify import client
 
@@ -327,12 +331,13 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                                                  pick_up_point=user_ride_obj.pick_up_point,
                                                  drop_off_point=user_ride_obj.drop_off_point,
                                                  first_name=customer.user.first_name,
-                                                 ride_arrival_time=user_ride_obj.ride_arrival_time,
+                                                 ride_pickup_time=user_ride_obj.pick_up_time,
+                                                 ride_drop_off_time=user_ride_obj.drop_off_time,
                                                  booked_seats=reservation_number_obj.reservation_seats)
 
                 return JsonResponse({
                     'status': HTTP_200_OK,
-                    'reservation Number': reservation_number_obj.reservation_number,
+                    'reservation_number': reservation_number_obj.reservation_number,
                     'vehicle': vehicle_obj.vehicle_no_plate,
                     'fare_per_person': float(user_ride_obj.fare) / int(reservation_number_obj.reservation_seats),
                     'fare': float(user_ride_obj.fare),
@@ -349,9 +354,10 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                 reservation_number_obj.save()
                 ride_obj = Ride.objects.filter(id=reservation_number_obj.ride_id.id).first()
                 vehicle_obj = Vehicle.objects.filter(id=ride_obj.vehicle_id.id).first()
+                ConfirmRide.update_ride(vehicle_obj.vehicle_no_plate, reservation_number_obj.reservation_seats)
                 return JsonResponse({
                     'status': HTTP_200_OK,
-                    'reservation Number': reservation_number_obj.reservation_number,
+                    'reservation_number': reservation_number_obj.reservation_number,
                     'vehicle': vehicle_obj.vehicle_no_plate,
                     'fare_per_person': float(user_ride_obj.fare) / int(reservation_number_obj.reservation_seats),
                     'fare': float(user_ride_obj.fare),
