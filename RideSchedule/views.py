@@ -140,11 +140,11 @@ class BusRoute(generics.GenericAPIView):
             stops_obj = kwargs.get('stops_obj')
             stops = kwargs.get('stops')
 
-            stops = []
-            for stop in stops_obj:
-                stops.append(
-                    (stop.latitude, stop.longitude)
-                )
+            # stops = []
+            # for stop in stops_obj:
+            #     stops.append(
+            #         (stop.latitude, stop.longitude)
+            #     )
 
             # calculating duration from stop 1 to each stop.
             first_stop = stops[0]
@@ -310,11 +310,11 @@ class BusRoute(generics.GenericAPIView):
 
             ride = {}
 
-            if not ride_obj:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'No Ride Available.',
-                })
+            # if not ride_obj:
+            #     return JsonResponse({
+            #         'status': HTTP_400_BAD_REQUEST,
+            #         'message': 'No Ride Available.',
+            #     })
 
             route_obj = Route.objects.filter(ride_id=ride_obj.id).first()
             # stops_obj = Stop.objects.filter(route_ids=route_obj.id)
@@ -331,7 +331,8 @@ class BusRoute(generics.GenericAPIView):
                                                                 pick_up_lat_lon=(start_latitude, start_longitude),
                                                                 drop_off_lat_lon=(stop_latitude, stop_longitude),)
 
-            stops_duration = BusRoute.stop_to_stop_distance(stops_obj=route_obj.stop_ids.get_queryset(),)
+            stops_duration = BusRoute.stop_to_stop_distance(stops_obj=route_obj.stop_ids.get_queryset(),
+                                                            stops=stops_lat_lng)
 
             for stops in range(len(nearest_user_stops)):
                 if nearest_user_stops[stops]['pick-up-location-distance'] < DISTANCE_KILOMETRE_LIMIT:
