@@ -11,8 +11,9 @@ class ReservationNumber:
     @staticmethod
     def generate_new_reservation_number():
         try:
-            reservation_obj = Reservation.objects.latest('id')
-            if not reservation_obj:
+            try:
+                reservation_obj = Reservation.objects.latest('id')
+            except:
                 return "RES-000001-{}{}".format(str(today.month), str(today.year))
 
             # Get the reservation id from the model.
