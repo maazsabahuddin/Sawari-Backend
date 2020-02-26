@@ -35,10 +35,10 @@ class Route(models.Model):
     stop_ids = models.ManyToManyField(Stop, related_name='route_stops')
     start_name = models.CharField(blank=False, max_length=50)
     stop_name = models.CharField(blank=False, max_length=50)
-    created_date = models.DateTimeField(auto_now_add=True)
+    created_date = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
-        return "{} - Ride {} - {}".format(self.id, self.start_name, self.stop_name)
+        return "{} - Route {} = {} - {}".format(self.id, self.route_id, self.start_name, self.stop_name)
 
 
 class Ride(models.Model):

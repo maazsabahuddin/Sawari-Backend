@@ -20,6 +20,7 @@ def reserve_ride_decorator(f):
             arrival_time = request.data.get('arrival_time')
             departure_time = request.data.get('departure_time')
             ride_date = request.data.get('ride_date')
+            route_id = request.data.get('route_id')
 
             if not (vehicle_no_plate or req_seats or pick_up_point_stop_id or drop_up_point_stop_id or arrival_time):
                 return JsonResponse({
@@ -47,7 +48,9 @@ def reserve_ride_decorator(f):
                 })
 
             vehicle_obj = Vehicle.objects.filter(vehicle_no_plate=vehicle_no_plate).first()
-            ride_obj = Ride.objects.filter(vehicle_id=vehicle_obj.id, is_complete=False).first()
+            route_obj = Route.objects.filter(route_id=route_id).first()
+            ride_obj = Ride.objects.filter(vehicle_id=vehicle_obj.id, is_complete=False,
+                                           route_id=route_obj.id).first()
 
             if not ride_obj:
                 return JsonResponse({
