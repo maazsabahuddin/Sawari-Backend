@@ -149,6 +149,10 @@ class RideBook(generics.GenericAPIView):
                 )
                 user_ride.save()
 
+                ride_seats_update = int(ride_obj.seats_left) - int(reservation.reservation_seats)
+                ride_obj.seats_left = ride_seats_update
+                ride_obj.save()
+
                 if KILOMETER_FARE:
                     return JsonResponse({
                         'status': HTTP_200_OK,
@@ -339,12 +343,15 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                     'status': HTTP_200_OK,
                     'reservation_number': reservation_number_obj.reservation_number,
                     'vehicle': vehicle_obj.vehicle_no_plate,
+                    'seats': reservation_number_obj.reservation_seats,
                     'fare_per_person': float(user_ride_obj.fare) / int(reservation_number_obj.reservation_seats),
                     'fare': float(user_ride_obj.fare),
                     'price_per_km': user_ride_obj.price_per_km,
                     'kilometer': user_ride_obj.kilometer,
                     'pick-up-point': user_ride_obj.pick_up_point,
+                    'pick_up_time': user_ride_obj.pick_up_time,
                     'drop-off-point': user_ride_obj.drop_off_point,
+                    'drop_off_time': user_ride_obj.drop_off_time,
                     'message': 'Your ride is confirmed.'
                 })
 
@@ -359,12 +366,15 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
                     'status': HTTP_200_OK,
                     'reservation_number': reservation_number_obj.reservation_number,
                     'vehicle': vehicle_obj.vehicle_no_plate,
+                    'seats': reservation_number_obj.reservation_seats,
                     'fare_per_person': float(user_ride_obj.fare) / int(reservation_number_obj.reservation_seats),
                     'fare': float(user_ride_obj.fare),
                     'price_per_km': user_ride_obj.price_per_km,
                     'kilometer': user_ride_obj.kilometer,
                     'pick-up-point': user_ride_obj.pick_up_point,
+                    'pick_up_time': user_ride_obj.pick_up_time,
                     'drop-off-point': user_ride_obj.drop_off_point,
+                    'drop_off_time': user_ride_obj.drop_off_time,
                     'message': 'Your ride is confirmed.'
                 })
 
