@@ -154,6 +154,7 @@ class RideBook(generics.GenericAPIView):
                         'status': HTTP_200_OK,
                         'reservation_number': reservation.reservation_number,
                         'vehicle': vehicle_no_plate,
+                        'seats': req_seats,
                         'fare_per_person': str(fare_per_person) + " x " + req_seats,
                         'fare': str(user_ride.fare),
                         'price_per_km': str(user_ride.price_per_km),
@@ -162,7 +163,6 @@ class RideBook(generics.GenericAPIView):
                         'pick-up-time': user_ride.pick_up_time,
                         'drop-off-point': user_ride.drop_off_point,
                         'drop-off-time': user_ride.drop_off_time,
-                        'seats': req_seats,
                         'message': 'Ride booked, but not confirmed.',
                     })
 
@@ -170,15 +170,15 @@ class RideBook(generics.GenericAPIView):
                     'status': HTTP_200_OK,
                     'reservation_number': reservation.reservation_number,
                     'vehicle': vehicle_no_plate,
-                    'fare': str(user_ride.fare),
+                    'seats': reservation.reservation_seats,
                     'fare_per_person': str(fare_per_person) + " x " + reservation.reservation_seats,
+                    'fare': str(user_ride.fare),
                     'price_per_km': "",
                     'kilometer': None,
                     'pick-up-point': user_ride.pick_up_point,
                     'pick_up_time': user_ride.pick_up_time,
                     'drop-off-point': user_ride.drop_off_point,
                     'drop_off_time': user_ride.drop_off_time,
-                    'seats': reservation.reservation_seats,
                     'message': 'Ride booked, but not confirmed.',
                 })
         except Exception as e:
@@ -204,11 +204,11 @@ class RideBook(generics.GenericAPIView):
             departure_time = kwargs.get('departure_time')
 
             ride_obj = RideBook.get_ride_obj(vehicle_no_plate=vehicle_no_plate, ride_date=ride_date)
-            if not ride_obj:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'No Ride Available.'
-                })
+            # if not ride_obj:
+            #     return JsonResponse({
+            #         'status': HTTP_400_BAD_REQUEST,
+            #         'message': 'No Ride Available.'
+            #     })
 
             payment_method_obj = PaymentMethod.objects.filter(payment_method=payment_method).first()
             if not payment_method_obj:

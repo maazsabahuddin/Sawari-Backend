@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
 
 from Reservation.models import Reservation, Route, Ride, Vehicle, Stop
 from User.models import Customer
@@ -61,7 +61,8 @@ def reserve_ride_decorator(f):
                     'message': req_seats + " seats are not available.",
                 })
 
-            route_obj = Route.objects.filter(ride_id=ride_obj.id).first()
+            # route_obj = Route.objects.filter(ride_id=ride_obj.id).first()
+            route_obj = ride_obj.route_id
             stops_obj = route_obj.stop_ids.get_queryset()
 
             pick_up_point = ''
@@ -84,6 +85,12 @@ def reserve_ride_decorator(f):
                 elif stop.id == int(drop_up_point_stop_id):
                     drop_off_point = stop.name
                     drop_off_stop = (stop.latitude, stop.longitude)
+
+            if not (pick_up_point and pick_up_stop) or not (drop_off_point and drop_off_stop):
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'message': [],
+                })
 
             from A.settings.base import gmaps
             result = gmaps.distance_matrix(pick_up_stop, drop_off_stop, mode='driving')
@@ -125,11 +132,11 @@ def confirm_ride(f):
                     'message': 'Invalid reservation number.',
                 })
 
-            # if reservation_number_obj.is_confirmed:
-            #     return JsonResponse({
-            #         'status': HTTP_400_BAD_REQUEST,
-            #         'message': 'Ride already reserved.',
-            #     })
+            if reservation_number_obj.is_confirmed:
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'message': 'Ride is confirmed.',
+                })
 
             print(reservation_number_obj.customer_id)
             customer = Customer.objects.filter(id=reservation_number_obj.customer_id.id).first()
