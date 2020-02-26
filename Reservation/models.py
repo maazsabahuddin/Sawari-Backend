@@ -26,7 +26,7 @@ class Ride(models.Model):
     is_complete = models.BooleanField(default=False)
 
     def __str__(self):
-        return "Ride {} - {}".format(self.id, self.vehicle_id.vehicle_no_plate)
+        return "Ride {} - {} - {}".format(self.id, self.vehicle_id.vehicle_no_plate, self.start_time)
 
 
 class Reservation(models.Model):

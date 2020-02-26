@@ -8,6 +8,8 @@
 #migrations
 #*/migrations/
 
+/aws_db.sqlite3
+
 /queries.txt
 /A/config.py
 
