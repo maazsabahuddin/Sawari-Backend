@@ -6,7 +6,7 @@
 *.pyc
 
 #migrations
-#*/migrations/
+*/migrations/
 
 /aws_db.sqlite3
 

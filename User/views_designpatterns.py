@@ -433,14 +433,14 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
             email_or_phone = context['email_or_phone']
             password = context['password']
 
-            user = CustomAuthenticationBackend.authenticate(email_or_phone, password)
-
-            if not user:
-                raise WrongPassword(message="Invalid credentials.")
-
-            if not user.is_customer:
+            # Check if user exist or not.
+            user_check = CustomUserCheck.check_user(email_or_phone)
+            if not user_check:
+                raise WrongPassword(message="User not exist.")
+            if not user_check.is_customer:
                 raise UserNotAuthorized(message='Not authorized to login in the app.')
 
+            user = CustomAuthenticationBackend.authenticate(email_or_phone, password)
             token, _ = Token.objects.get_or_create(user=user)
             if not user.is_active:
                 raise UserNotActive(message="User not authenticated. Please verify first.")
