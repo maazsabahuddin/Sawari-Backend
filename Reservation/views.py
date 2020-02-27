@@ -437,8 +437,11 @@ class UserRides(generics.GenericAPIView):
         if not ride:
             return ride_details
 
+        reservation_number = user_reservation.reservation_number
+        reservation_id = reservation_number.replace('RES-', '').replace('-', '')
+
         ride_details.update({
-            'reservation_no': user_reservation.reservation_number,
+            'reservation_no': reservation_id,
             'pick_up_point': ride.pick_up_point,
             'pick_up_time': ride.pick_up_time,
             'drop_off_point': ride.drop_off_point,

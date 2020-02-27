@@ -341,8 +341,13 @@ import inspect
 # # a = a.strip()
 # print(len(a))
 
-from datetime import datetime
-curr_time = datetime.now().time()
-print(curr_time)
-curr_time_plus = curr_time + datetime.timedelta()
+# from datetime import datetime
+# curr_time = datetime.now().time()
+# print(curr_time)
+# curr_time_plus = curr_time + datetime.timedelta()
 
+
+a = 'RES-000001-22020'
+# b = a.replace('-', '')
+c = a.replace('RES-', '').replace('-', '')
+print(c)
