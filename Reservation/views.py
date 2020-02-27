@@ -441,7 +441,7 @@ class UserRides(generics.GenericAPIView):
         reservation_id = reservation_number.replace('RES-', '').replace('-', '')
 
         ride_details.update({
-            'reservation_no': reservation_id,
+            'booking_id': reservation_id,
             'pick_up_point': ride.pick_up_point,
             'pick_up_time': ride.pick_up_time,
             'drop_off_point': ride.drop_off_point,
