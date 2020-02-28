@@ -10,7 +10,7 @@ from django_twilio.client import Client
 from rest_framework import generics
 
 from rest_framework.permissions import AllowAny
-from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_200_OK, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 
@@ -441,6 +441,8 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
                 raise UserNotAuthorized(message='Not authorized to login in the app.')
 
             user = CustomAuthenticationBackend.authenticate(email_or_phone, password)
+            if not user:
+                raise WrongPassword(message="Invalid Credentials.")
             token, _ = Token.objects.get_or_create(user=user)
             if not user.is_active:
                 raise UserNotActive(message="User not authenticated. Please verify first.")
@@ -453,7 +455,7 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
 
         except WrongPassword as e:
             return JsonResponse({
-                'status': HTTP_404_NOT_FOUND,
+                'status': HTTP_401_UNAUTHORIZED,
                 'message': str(e.message),
             })
 
@@ -489,7 +491,7 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
         except Exception as e:
             return JsonResponse({
                 'status': HTTP_400_BAD_REQUEST,
-                'message': 'Server down' + str(e),
+                'message': 'Error: ' + str(e),
             })
 
 
