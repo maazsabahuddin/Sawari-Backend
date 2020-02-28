@@ -182,6 +182,7 @@ local_tz = pytz.timezone(TIME_ZONE)
 USE_I18N = True
 
 USE_L10N = True
+# DATE_FORMAT = "M d, Y"
 
 USE_TZ = True
 
@@ -245,7 +246,7 @@ DISTANCE_KILOMETRE_LIMIT = 2.0
 STOP_WAIT_TIME = 1
 
 # Show rides for how many days?
-SHOW_RIDES_TODAY_ONLY = True
+SHOW_RIDES_TODAY_ONLY = False
 # if today is 01 - 01 - 2020 then show the rides of today and tomorrow both (+1) it all depends on show_ride_days.
 SHOW_RIDE_DAYS = 3
 

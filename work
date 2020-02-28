@@ -19,12 +19,11 @@ DONE
 
 12) First reservation bug fix kru.. DONE
 
+8) Route_id add kru ride waley table mae cross check krney k liye yeh van us date ko is route pr chal b rahi hay ya nahi?
+    There should be a ride who are moving on different routes in a single day. DONE
 
 PENDING:
 13) Work on decorators exception handling.
-
-8) Route_id add kru ride waley table mae cross check krney k liye yeh van us date ko is route pr chal b rahi hay ya nahi?
-    There should be a ride who are moving on different routes in a single day.
 
 5) PasswordReset / PasswordResetCheck / SetNewPassword / PasswordResetResendOtp
 
@@ -34,3 +33,9 @@ PENDING:
 
 15) DB mae number +923442713545 hu ya phr 03442713545 hu dono cases mae check huna chaiye. on the other hand kabhi bhi
     0344 aese exist nahi krega but you have to explicitly handle it bro.
+
+16) bht bara bhund pakra gaya hay poppin.. Ride Jauhar sey Clifton jari hay. ya phr clifton sey jauhar jari hay..
+    is mae farq distinguish krna hay or phr stops ushi hisaaab sey jaengy is mae.. or phr time b sahi show krey.
+
+17) Date Format problem Mar 23, 2020
+18)
