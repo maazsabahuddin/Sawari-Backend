@@ -442,6 +442,7 @@ class UserRides(generics.GenericAPIView):
 
         ride_details.update({
             'booking_id': int(reservation_id),
+            'vehicle_no_plate': ride.ride_id.vehicle_id.vehicle_no_plate,
             'pick_up_point': ride.pick_up_point,
             'pick_up_time': ride.pick_up_time,
             'drop_off_point': ride.drop_off_point,
