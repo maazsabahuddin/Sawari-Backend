@@ -1,5 +1,6 @@
 import datetime
 
+from sortedm2m.fields import SortedManyToManyField
 from django.db import models
 from User.models import Captain, Customer
 
@@ -22,8 +23,11 @@ class Stop(models.Model):
     latitude = models.FloatField(blank=False, max_length=100)
     longitude = models.FloatField(blank=False, max_length=100)
 
+    # def __str__(self):
+    #     return "{} - {} - Latitude {}, Longitude {}".format(self.id, self.name, self.latitude, self.longitude)
+
     def __str__(self):
-        return "{} - {} - Latitude {}, Longitude {}".format(self.id, self.name, self.latitude, self.longitude)
+        return "{} - {}".format(self.id, self.name)
 
 
 class Route(models.Model):
@@ -32,7 +36,7 @@ class Route(models.Model):
     # route_id = models.ManyToManyField(Route, related_name='route_ride', blank=True, null=True)
     route_id = models.CharField(max_length=10, null=True, blank=True)
     # ride_id = models.ForeignKey(Ride, related_name='ride_route', on_delete=models.CASCADE)
-    stop_ids = models.ManyToManyField(Stop, related_name='route_stops')
+    stop_ids = SortedManyToManyField(Stop, related_name='route_stops')
     start_name = models.CharField(blank=False, max_length=50)
     stop_name = models.CharField(blank=False, max_length=50)
     created_date = models.DateTimeField(blank=True, null=True)
