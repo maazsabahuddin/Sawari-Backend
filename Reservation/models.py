@@ -23,6 +23,7 @@ class Stop(models.Model):
     latitude = models.FloatField(blank=False, max_length=100)
     longitude = models.FloatField(blank=False, max_length=100)
 
+    # SORT_VALUE_FIELD_NAME = 'sort_value'
     # def __str__(self):
     #     return "{} - {} - Latitude {}, Longitude {}".format(self.id, self.name, self.latitude, self.longitude)
 
@@ -33,16 +34,27 @@ class Stop(models.Model):
 class Route(models.Model):
     # A ride is a lap.
     # A ride can have only one route and a route can have multiple rides.
-    # route_id = models.ManyToManyField(Route, related_name='route_ride', blank=True, null=True)
+
+    # SORT_VALUE_FIELD_NAME = 'sort_value'
+
     route_id = models.CharField(max_length=10, null=True, blank=True)
-    # ride_id = models.ForeignKey(Ride, related_name='ride_route', on_delete=models.CASCADE)
-    stop_ids = SortedManyToManyField(Stop, related_name='route_stops')
+    # stop_ids = SortedManyToManyField(Stop, sorted=False)
+    stop_ids = models.ManyToManyField(Stop, through='RouteStops')
     start_name = models.CharField(blank=False, max_length=50)
     stop_name = models.CharField(blank=False, max_length=50)
     created_date = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return "{} - Route {} = {} - {}".format(self.id, self.route_id, self.start_name, self.stop_name)
+
+
+class RouteStops(models.Model):
+    stop_id = models.ForeignKey(Stop, on_delete=models.CASCADE)
+    route_id = models.ForeignKey(Route, on_delete=models.CASCADE)
+    sort_value = models.PositiveSmallIntegerField()
+
+    def __str__(self):
+        return "Route-id {} - {} - Sort-value {}".format(self.route_id.id, self.stop_id.id, self.sort_value)
 
 
 class Ride(models.Model):

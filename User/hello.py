@@ -347,7 +347,16 @@ import inspect
 # curr_time_plus = curr_time + datetime.timedelta()
 
 
-a = 'RES-000001-22020'
-# b = a.replace('-', '')
-c = a.replace('RES-', '').replace('-', '')
+# a = 'RES-000001-22020'
+# # b = a.replace('-', '')
+# c = a.replace('RES-', '').replace('-', '')
+# print(c)
+
+
+a = {
+    'loc': {'a': 1, 'b': 2}
+}
+
+c = a.get('loc').get('a')
 print(c)
+
