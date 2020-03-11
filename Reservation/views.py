@@ -149,9 +149,9 @@ class RideBook(generics.GenericAPIView):
                 )
                 user_ride.save()
 
-                ride_seats_update = int(ride_obj.seats_left) - int(reservation.reservation_seats)
-                ride_obj.seats_left = ride_seats_update
-                ride_obj.save()
+                # ride_seats_update = int(ride_obj.seats_left) - int(reservation.reservation_seats)
+                # ride_obj.seats_left = ride_seats_update
+                # ride_obj.save()
 
                 if KILOMETER_FARE:
                     return JsonResponse({
