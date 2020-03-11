@@ -53,4 +53,3 @@ class UserNotAuthorized(UserException):
 
 class UserNotActive(UserException):
     pass
-

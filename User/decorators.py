@@ -75,6 +75,30 @@ def login_decorator(f):
                 'message': str(e.message),
             })
 
+        except RideNotAvailable as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': str(e.message),
+            })
+
+        except NotEnoughSeats as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': str(e.message),
+            })
+
+        except FieldMissing as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': str(e.message),
+            })
+
+        except PaymentMethod as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': str(e.message),
+            })
+
         except Exception as e:
             return JsonResponse({
                 'status': HTTP_400_BAD_REQUEST,

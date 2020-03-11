@@ -40,3 +40,6 @@ PENDING:
 17) Date Format problem Mar 23, 2020
 
 18) Ride date and route_name bhi return krna hay confirm ride book api mae.
+
+            # Yeh cross check krna hay k yeh stop is ride k stops mae lie krta b hay ya nahi..
+            # just bool true or false make a method.
