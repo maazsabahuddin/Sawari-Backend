@@ -9,7 +9,7 @@ from rest_framework import generics
 from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_200_OK, HTTP_400_BAD_REQUEST
 
 from A.settings.base import DISTANCE_KILOMETRE_LIMIT, gmaps, local_tz, STOP_WAIT_TIME, SHOW_RIDES_TODAY_ONLY, \
-    SHOW_RIDE_DAYS
+    SHOW_RIDE_DAYS, FIXED_FARE, KILOMETER_FARE
 
 from Reservation.models import Ride, Stop, Route, RouteStops
 from User.decorators import login_decorator
@@ -209,18 +209,35 @@ class BusRoute(generics.GenericAPIView):
             shortest_dropoff_ul = sorted(drop_ul, key=lambda k: k["distance"])[0]
 
             if pick_ul and drop_ul:
+
+                pick_up_stop_lat_long = ride.get('pick_up_stop_lat_long')
+                drop_off_stop_lat_long = ride.get('drop_off_stop_lat_long')
+
+                result = gmaps.distance_matrix(pick_up_stop_lat_long, drop_off_stop_lat_long, mode='driving')
+                kilometer = result['rows'][0]['elements'][0]['distance']['text']
+
+                from Reservation.views import fare_object
+                fare_object_price = fare_object(FIXED_FARE, KILOMETER_FARE)
+                fare_per_person = fare_object_price(req_seats=1, kilometer=float(kilometer.split(' ')[0]))
+
                 ride.pop('pick-up-location', None)
                 ride.pop('drop-off-location', None)
+                ride.pop('pick_up_stop_lat_long', None)
+                ride.pop('drop_off_stop_lat_long', None)
 
                 route_name_append = {'route_name': route_name}
                 ride_pick_up_location = {'pick-up-location': shortest_pick_ul}
                 ride_dropoff_location = {'drop-off-location': shortest_dropoff_ul}
                 ride_date_append = {'ride_date': ride_date}
                 ride_start_time_append = {'ride_start_time': ride_start_time}
+                fare_per_person_append = {'fare_per_person': fare_per_person}
+                kilometer_append = {'trip_distance': kilometer}
 
                 ride.update(route_name_append)
                 ride.update(ride_date_append)
                 ride.update(ride_start_time_append)
+                ride.update(fare_per_person_append)
+                ride.update(kilometer_append)
                 ride.update(ride_pick_up_location)
                 ride.update(ride_dropoff_location)
 
@@ -236,8 +253,8 @@ class BusRoute(generics.GenericAPIView):
                     return ride
                 return
 
-        except:
-            pass
+        except Exception as e:
+            print(str(e))
 
     @login_decorator
     def post(self, request, data=None):
@@ -324,6 +341,9 @@ class BusRoute(generics.GenericAPIView):
             ride_obj = kwargs.get('ride_obj')
             # ride_date = kwargs.get('ride_date')
 
+            pick_up_stop_lat_long = (start_latitude, start_longitude)
+            drop_off_stop_lat_long = (stop_latitude, stop_longitude)
+
             ride = {}
             stops_lat_lng = []
 
@@ -341,6 +361,9 @@ class BusRoute(generics.GenericAPIView):
 
             stops_duration = BusRoute.stop_to_stop_distance(stops_obj=route_obj.stop_ids.get_queryset(),
                                                             stops=stops_lat_lng)
+
+            ride.update({'pick_up_stop_lat_long': pick_up_stop_lat_long})
+            ride.update({'drop_off_stop_lat_long': drop_off_stop_lat_long})
 
             for stops in range(len(nearest_user_stops)):
                 if nearest_user_stops[stops]['pick-up-location-distance'] < DISTANCE_KILOMETRE_LIMIT:

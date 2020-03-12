@@ -84,8 +84,8 @@ def reserve_ride_decorator(f):
 
             return f(args[0], request, user=user, customer=customer, vehicle_no_plate=vehicle_no_plate,
                      req_seats=req_seats, pick_up_stop_name=pick_up_stop_name, drop_off_stop_name=drop_off_stop_name,
-                     kilometer=kilometer, ride_obj=ride_obj, ride_date=ride_date, arrival_time=arrival_time, departure_time=departure_time,
-                     payment_method_obj=payment_method_obj)
+                     kilometer=kilometer, ride_obj=ride_obj[0], arrival_time=arrival_time,
+                     departure_time=departure_time, payment_method_obj=payment_method_obj)
 
         except RideException as e:
             if e.status_code == 404:
