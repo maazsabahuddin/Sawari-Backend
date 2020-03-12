@@ -1,10 +1,12 @@
 from django.http import JsonResponse
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
 
+import RideSchedule
+from Payment.models import PaymentMethod
 from Reservation.models import Reservation, Route, Ride, Vehicle, Stop
-from RideSchedule.exceptions import RideNotAvailable, RideException, NotEnoughSeats, FieldMissing
+from RideSchedule.exceptions import RideNotAvailable, RideException, NotEnoughSeats, FieldMissing, StopNotExist
 from User.exceptions import UserNotFound, UserException
-from Payment.exceptions import PaymentMethod, Payment
+from Payment.exceptions import Payment, PaymentMethodException
 from User.models import Customer
 
 
@@ -16,47 +18,63 @@ def reserve_ride_decorator(f):
             user = args[2]['user']
             vehicle_no_plate = request.data.get('vehicle_no_plate')
             req_seats = request.data.get('req_seats')
-            pick_up_point_stop_id = request.data.get('pick_up_point_stop_id')
-            drop_up_point_stop_id = request.data.get('drop_up_point_stop_id')
+            pick_up_point_stop_id = request.data.get('pick_up_stop_id')
+            drop_off_point_stop_id = request.data.get('drop_off_stop_id')
             payment_method = request.data.get('payment_method')
             arrival_time = request.data.get('arrival_time')
             departure_time = request.data.get('departure_time')
             ride_date = request.data.get('ride_date')
+            ride_start_time = request.data.get('ride_start_time')
             route_id = request.data.get('route_id')
 
-            if not (vehicle_no_plate or req_seats or pick_up_point_stop_id or drop_up_point_stop_id or arrival_time
+            if not (vehicle_no_plate or req_seats or pick_up_point_stop_id or drop_off_point_stop_id or arrival_time
                     or ride_date):
                 raise RideException(status_code=405)
 
-            if payment_method == "Foree":
+            payment_method_obj = PaymentMethod.objects.filter(payment_method=payment_method).first()
+            if not payment_method_obj:
+                raise Payment(status_code=501)
+
+            if payment_method != "Cash":
                 raise Payment(status_code=501)
 
             customer = Customer.objects.filter(user=user).first()
             if not customer:
                 raise UserException(status_code=404)
 
-            vehicle_obj = Vehicle.objects.filter(vehicle_no_plate=vehicle_no_plate).first()
-            route_obj = Route.objects.filter(route_id=route_id).first()
-            ride_obj = Ride.objects.filter(vehicle_id=vehicle_obj.id, is_complete=False,
-                                           route_id=route_obj.id).first()
-
+            from datetime import date, time
+            # field hard coded sey hatani hay.
+            ride_obj = Ride.objects.filter(vehicle_id__vehicle_no_plate='XYZ-756', route_id__route_id='JC-121',
+                                           start_time__date=date(2020, 3, 12), start_time__time=time(20, 50, 00),
+                                           is_complete=False)
             if not ride_obj:
                 raise RideException(status_code=404)
 
-            if ride_obj.seats_left < int(req_seats):
+            if ride_obj[0].seats_left < int(req_seats):
                 raise RideException(status_code=400)
 
-            route_obj = ride_obj.route_id
-            stops_obj = route_obj.stop_ids.get_queryset()
+            if ride_obj[0].seats_left == 0:
+                raise RideException(status_code=416)
 
-            # Yeh cross check krna hay k yeh stop is ride k stops mae lie krta b hay ya nahi..
-            # just bool true or false make a method.
+            route_obj = ride_obj[0].route_id
+
+            from RideSchedule.tests import ride_stops_check
+            result = ride_stops_check(ride_stops=route_obj.stop_ids.get_queryset(),
+                                      pick_up_stop_id=int(pick_up_point_stop_id),
+                                      drop_off_stop_id=int(drop_off_point_stop_id) )
+
+            if not result:
+                raise RideException(status_code=410)
 
             pick_up_stop_obj = Stop.objects.filter(id=pick_up_point_stop_id).first()
+            drop_off_stop_obj = Stop.objects.filter(id=drop_off_point_stop_id).first()
+
+            if not (pick_up_stop_obj or drop_off_stop_obj):
+                raise RideException(status_code=410)
+
             pick_up_stop_name = pick_up_stop_obj.name
             pick_up_stop_lat_long = (pick_up_stop_obj.latitude, pick_up_stop_obj.longitude)
 
-            drop_off_stop_obj = Stop.objects.filter(id=drop_up_point_stop_id).first()
             drop_off_stop_name = drop_off_stop_obj.name
             drop_off_stop_lat_long = (drop_off_stop_obj.latitude, drop_off_stop_obj.longitude)
 
@@ -65,9 +83,9 @@ def reserve_ride_decorator(f):
             kilometer = float(result['rows'][0]['elements'][0]['distance']['text'].split(' ')[0])
 
             return f(args[0], request, user=user, customer=customer, vehicle_no_plate=vehicle_no_plate,
-                     req_seats=req_seats, pick_up_point=pick_up_stop_name, drop_up_point=drop_off_stop_name,
-                     kilometer=kilometer, payment_method=payment_method, ride_date=ride_date,
-                     arrival_time=arrival_time, departure_time=departure_time)
+                     req_seats=req_seats, pick_up_stop_name=pick_up_stop_name, drop_off_stop_name=drop_off_stop_name,
+                     kilometer=kilometer, ride_obj=ride_obj, ride_date=ride_date, arrival_time=arrival_time, departure_time=departure_time,
+                     payment_method_obj=payment_method_obj)
 
         except RideException as e:
             if e.status_code == 404:
@@ -75,11 +93,16 @@ def reserve_ride_decorator(f):
             if e.status_code == 400:
                 raise NotEnoughSeats(status_code=400, message="Not enough seats.")
             if e.status_code == 405:
-                raise FieldMissing(status_code=400, message="Field Missing")
+                raise NotEnoughSeats(status_code=416, message="Fully booked.")
+            if e.status_code == 405:
+                raise FieldMissing(status_code=400, message="Field Missing.")
+            if e.status_code == 410:
+                raise StopNotExist(status_code=400, message="No stops exist.",
+                                   dev_message="such stops not exist in ride.")
 
         except Payment as e:
             if e.status_code == 501:
-                raise PaymentMethod(status_code=501, message="Not Implemented")
+                raise PaymentMethodException(status_code=501, message="Not Implemented")
 
         except UserException as e:
             if e.status_code == 404:

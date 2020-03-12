@@ -353,10 +353,15 @@ import inspect
 # print(c)
 
 
-a = {
-    'loc': {'a': 1, 'b': 2}
-}
+# a = {
+#     'loc': {'a': 1, 'b': 2}
+# }
+#
+# c = a.get('loc').get('a')
+# print(c)
 
-c = a.get('loc').get('a')
-print(c)
+a = [1, 2, 3]
+b = [2, 3]
 
+result = all(values in a for values in b)
+print(result)

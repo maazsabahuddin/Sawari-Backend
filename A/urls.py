@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path
 # from User.views import ResendOtpRegister, PasswordReset, PasswordResetCheck, \
 #     PasswordChange, SetNewPassword, ChangePhoneNumber
-from Reservation.views import RideBook, ConfirmRide, UserRides, CancelRide
+from Reservation.views import RideBook, ConfirmRide, UserRides, CancelRide, BookRide
 from User.views_designpatterns import RegisterCase, IsVerified, UserLogin, UserLogout, ResendOtpRegister, \
     PasswordReset, PasswordResetCheck, SetNewPassword, PasswordResetResendOtp, PasswordChange, ChangePhoneNumber, \
     ChangePhoneNumberOtpMatch, UpdateName, UserDetails

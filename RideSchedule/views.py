@@ -139,12 +139,6 @@ class BusRoute(generics.GenericAPIView):
             stops_obj = kwargs.get('stops_obj')
             stops = kwargs.get('stops')
 
-            # stops = []
-            # for stop in stops_obj:
-            #     stops.append(
-            #         (stop.latitude, stop.longitude)
-            #     )
-
             # calculating duration from stop 1 to each stop.
             first_stop = stops[0]
             result = gmaps.distance_matrix(first_stop, stops, mode='driving')
@@ -198,6 +192,7 @@ class BusRoute(generics.GenericAPIView):
             stop_longitude = kwargs.get('stop_longitude')
             ride_obj = kwargs.get('ride_obj')
             ride_date = kwargs.get('ride_date')
+            ride_start_time = kwargs.get('ride_start_time')
             route_name = kwargs.get('route_name')
             route_id = kwargs.get('route_id')
 
@@ -221,9 +216,11 @@ class BusRoute(generics.GenericAPIView):
                 ride_pick_up_location = {'pick-up-location': shortest_pick_ul}
                 ride_dropoff_location = {'drop-off-location': shortest_dropoff_ul}
                 ride_date_append = {'ride_date': ride_date}
+                ride_start_time_append = {'ride_start_time': ride_start_time}
 
                 ride.update(route_name_append)
                 ride.update(ride_date_append)
+                ride.update(ride_start_time_append)
                 ride.update(ride_pick_up_location)
                 ride.update(ride_dropoff_location)
 
@@ -269,6 +266,7 @@ class BusRoute(generics.GenericAPIView):
                             BusRoute.append_available_rides(ride_obj=rides,
                                                             route_id=route_obj.id,
                                                             ride_date=ride_datetime.date(),
+                                                            ride_start_time=ride_datetime.time(),
                                                             start_latitude=start_lat_lon_['lat'],
                                                             start_longitude=start_lat_lon_['lon'],
                                                             stop_latitude=stop_lat_lon_['lat'],
@@ -284,6 +282,7 @@ class BusRoute(generics.GenericAPIView):
                             BusRoute.append_available_rides(ride_obj=rides,
                                                             route_id=route_obj.id,
                                                             ride_date=ride_datetime.date(),
+                                                            ride_start_time=ride_datetime.time(),
                                                             start_latitude=start_lat_lon_['lat'],
                                                             start_longitude=start_lat_lon_['lon'],
                                                             stop_latitude=stop_lat_lon_['lat'],
@@ -295,6 +294,7 @@ class BusRoute(generics.GenericAPIView):
                             BusRoute.append_available_rides(ride_obj=rides,
                                                             route_id=route_obj.id,
                                                             ride_date=ride_datetime.date(),
+                                                            ride_start_time=ride_datetime.time(),
                                                             start_latitude=start_lat_lon_['lat'],
                                                             start_longitude=start_lat_lon_['lon'],
                                                             stop_latitude=stop_lat_lon_['lat'],

@@ -30,359 +30,359 @@ def fare_object(fixed_fare, kilometer_fare):
         return False
 
 
-# class RideBook(generics.GenericAPIView):
-#
-#     @staticmethod
-#     def db_price():
-#         try:
-#             price_obj = Pricing.objects.filter().first()
-#             if price_obj:
-#                 if KILOMETER_FARE:
-#                     return float(price_obj.price_per_km)
-#                 if FIXED_FARE:
-#                     return float(price_obj.fixed_fare)
-#
-#         except TypeError:
-#             return False
-#
-#     @staticmethod
-#     def price_per_km():
-#         price_obj = Pricing.objects.filter().first()
-#         if price_obj:
-#             return float(price_obj.price_per_km)
-#
-#     @staticmethod
-#     def get_ride_obj(**kwargs):
-#         try:
-#             vehicle_no_plate = kwargs.get('vehicle_no_plate')
-#             ride_date = kwargs.get('ride_date')
-#
-#             ride_obj = Ride.objects.filter(
-#                 vehicle_id__vehicle_no_plate=vehicle_no_plate,
-#                 start_time__date=ride_date).first()
-#             if ride_obj:
-#                 return ride_obj
-#
-#             return None
-#
-#         except TypeError:
-#             return False
-#
-#     @staticmethod
-#     def fare_kilometer(**kwargs):
-#         try:
-#             total_seats = kwargs.get('req_seats')
-#             kilometer = kwargs.get('kilometer')
-#
-#             fare_per_person = RideBook.db_price() * float(kilometer)
-#             # total_fare = fare_per_person * float(total_seats)
-#             return float(round(fare_per_person))
-#
-#         except TypeError:
-#             return False
-#
-#     @staticmethod
-#     def fare_fixed(**kwargs):
-#         try:
-#             total_seats = kwargs.get('req_seats')
-#             fare_per_person = RideBook.db_price()
-#             # total_fare = RideBook.db_price() * int(total_seats)
-#             return float(round(fare_per_person))
-#
-#         except TypeError:
-#             return False
-#
-#     @staticmethod
-#     @transaction.atomic
-#     def reserve_ride(**kwargs):
-#         try:
-#             customer_obj = kwargs.get('customer')
-#             ride_obj = kwargs.get('ride_obj')
-#             req_seats = kwargs.get('req_seats')
-#             pick_up_point = kwargs.get('pick_up_point')
-#             drop_off_point = kwargs.get('drop_off_point')
-#             kilometer = kwargs.get('kilometer')
-#             fare_per_person = kwargs.get('fare_per_person')
-#             vehicle_no_plate = kwargs.get('vehicle_no_plate')
-#             payment_method_obj = kwargs.get('payment_method')
-#             fare_per_km = RideBook.price_per_km()
-#             ride_start_time = kwargs.get('ride_start_time')
-#             arrival_time = kwargs.get('arrival_time')
-#             departure_time = kwargs.get('departure_time')
-#
-#             with transaction.atomic():
-#
-#                 total_fare = fare_per_person * int(req_seats)
-#                 reservation_number = ReservationNumber.generate_new_reservation_number()
-#
-#                 if not reservation_number:
-#                     return JsonResponse({
-#                         'status': HTTP_404_NOT_FOUND,
-#                         'message': "Reservation Number Error.",
-#                     })
-#
-#                 reservation = Reservation.objects.create(
-#                     reservation_number=reservation_number,
-#                     customer_id=customer_obj,
-#                     ride_id=ride_obj,
-#                     reservation_seats=req_seats,
-#                     is_confirmed=False,
-#                     created_date=date.today(),
-#                 )
-#                 reservation.save()
-#
-#                 user_ride = UserRideDetail.objects.create(
-#                     ride_id=ride_obj,
-#                     reservation_id=reservation,
-#                     kilometer=kilometer,
-#                     price_per_km=fare_per_km,
-#                     payment_method_id=payment_method_obj,
-#                     payment_status=False,
-#                     fare=total_fare,
-#                     fixed_fare=FIXED_FARE,
-#                     pick_up_point=pick_up_point,
-#                     drop_off_point=drop_off_point,
-#                     ride_status="ACTIVE",
-#                     ride_date=ride_start_time.date(),
-#                     pick_up_time=arrival_time,
-#                     drop_off_time=departure_time,
-#                 )
-#                 user_ride.save()
-#
-#                 # ride_seats_update = int(ride_obj.seats_left) - int(reservation.reservation_seats)
-#                 # ride_obj.seats_left = ride_seats_update
-#                 # ride_obj.save()
-#
-#                 if KILOMETER_FARE:
-#                     return JsonResponse({
-#                         'status': HTTP_200_OK,
-#                         'reservation_number': reservation.reservation_number,
-#                         'vehicle': vehicle_no_plate,
-#                         'seats': req_seats,
-#                         'fare_per_person': str(fare_per_person) + " x " + req_seats,
-#                         'fare': str(user_ride.fare),
-#                         'price_per_km': str(user_ride.price_per_km),
-#                         'kilometer': user_ride.kilometer,
-#                         'pick-up-point': user_ride.pick_up_point,
-#                         'pick-up-time': user_ride.pick_up_time,
-#                         'drop-off-point': user_ride.drop_off_point,
-#                         'drop-off-time': user_ride.drop_off_time,
-#                         'message': 'Ride booked, but not confirmed.',
-#                     })
-#
-#                 return JsonResponse({
-#                     'status': HTTP_200_OK,
-#                     'reservation_number': reservation.reservation_number,
-#                     'vehicle': vehicle_no_plate,
-#                     'seats': reservation.reservation_seats,
-#                     'fare_per_person': str(fare_per_person) + " x " + reservation.reservation_seats,
-#                     'fare': str(user_ride.fare),
-#                     'price_per_km': "",
-#                     'kilometer': None,
-#                     'pick-up-point': user_ride.pick_up_point,
-#                     'pick_up_time': user_ride.pick_up_time,
-#                     'drop-off-point': user_ride.drop_off_point,
-#                     'drop_off_time': user_ride.drop_off_time,
-#                     'message': 'Ride booked, but not confirmed.',
-#                 })
-#         except Exception as e:
-#             return JsonResponse({
-#                 'status': HTTP_400_BAD_REQUEST,
-#                 'message': str(e),
-#             })
-#
-#     @login_decorator
-#     @reserve_ride_decorator
-#     def post(self, request, **kwargs):
-#         try:
-#             vehicle_no_plate = kwargs.get('vehicle_no_plate')
-#             req_seats = kwargs.get('req_seats')
-#             pick_up_point = kwargs.get('pick_up_point')
-#             drop_up_point = kwargs.get('drop_up_point')
-#             kilometer = kwargs.get('kilometer')
-#             user = kwargs.get('user')
-#             customer = kwargs.get('customer')
-#             payment_method = kwargs.get('payment_method')
-#             ride_date = kwargs.get('ride_date')
-#             arrival_time = kwargs.get('arrival_time')
-#             departure_time = kwargs.get('departure_time')
-#
-#             ride_obj = RideBook.get_ride_obj(vehicle_no_plate=vehicle_no_plate, ride_date=ride_date)
-#             # if not ride_obj:
-#             #     return JsonResponse({
-#             #         'status': HTTP_400_BAD_REQUEST,
-#             #         'message': 'No Ride Available.'
-#             #     })
-#
-#             payment_method_obj = PaymentMethod.objects.filter(payment_method=payment_method).first()
-#             if not payment_method_obj:
-#                 return JsonResponse({
-#                     'status': HTTP_400_BAD_REQUEST,
-#                     'message': 'Payment Method not exist.'
-#                 })
-#
-#             vehicle_seats = ride_obj.seats_left
-#             if vehicle_seats == 0:
-#                 return JsonResponse({
-#                     'status': HTTP_400_BAD_REQUEST,
-#                     'message': 'Fully booked.'
-#                 })
-#
-#             if int(vehicle_seats) < int(req_seats):
-#                 return JsonResponse({
-#                     'status': HTTP_400_BAD_REQUEST,
-#                     'message': 'Not enough seats in the bus'
-#                 })
-#
-#             with transaction.atomic():
-#                 fare_object_price = fare_object(FIXED_FARE, KILOMETER_FARE)
-#                 fare_per_person = fare_object_price(req_seats=req_seats, kilometer=kilometer)
-#
-#                 return RideBook.reserve_ride(user=user, customer=customer, vehicle_no_plate=vehicle_no_plate,
-#                                              req_seats=req_seats, pick_up_point=pick_up_point,
-#                                              ride_obj=ride_obj, drop_off_point=drop_up_point,
-#                                              kilometer=kilometer, fare_per_person=fare_per_person,
-#                                              payment_method=payment_method_obj, ride_start_time=ride_obj.start_time,
-#                                              arrival_time=arrival_time, departure_time=departure_time)
-#
-#         except Exception as e:
-#             return JsonResponse({
-#                 'status': HTTP_404_NOT_FOUND,
-#                 'messsage': str(e),
-#             })
+class RideBook(generics.GenericAPIView):
+
+    @staticmethod
+    def db_price():
+        try:
+            price_obj = Pricing.objects.filter().first()
+            if price_obj:
+                if KILOMETER_FARE:
+                    return float(price_obj.price_per_km)
+                if FIXED_FARE:
+                    return float(price_obj.fixed_fare)
+
+        except TypeError:
+            return False
+
+    @staticmethod
+    def price_per_km():
+        price_obj = Pricing.objects.filter().first()
+        if price_obj:
+            return float(price_obj.price_per_km)
+
+    @staticmethod
+    def get_ride_obj(**kwargs):
+        try:
+            vehicle_no_plate = kwargs.get('vehicle_no_plate')
+            ride_date = kwargs.get('ride_date')
+
+            ride_obj = Ride.objects.filter(
+                vehicle_id__vehicle_no_plate=vehicle_no_plate,
+                start_time__date=ride_date).first()
+            if ride_obj:
+                return ride_obj
+
+            return None
+
+        except TypeError:
+            return False
+
+    @staticmethod
+    def fare_kilometer(**kwargs):
+        try:
+            total_seats = kwargs.get('req_seats')
+            kilometer = kwargs.get('kilometer')
+
+            fare_per_person = RideBook.db_price() * float(kilometer)
+            # total_fare = fare_per_person * float(total_seats)
+            return float(round(fare_per_person))
+
+        except TypeError:
+            return False
+
+    @staticmethod
+    def fare_fixed(**kwargs):
+        try:
+            total_seats = kwargs.get('req_seats')
+            fare_per_person = RideBook.db_price()
+            # total_fare = RideBook.db_price() * int(total_seats)
+            return float(round(fare_per_person))
+
+        except TypeError:
+            return False
+
+    @staticmethod
+    @transaction.atomic
+    def reserve_ride(**kwargs):
+        try:
+            customer_obj = kwargs.get('customer')
+            ride_obj = kwargs.get('ride_obj')
+            req_seats = kwargs.get('req_seats')
+            pick_up_point = kwargs.get('pick_up_point')
+            drop_off_point = kwargs.get('drop_off_point')
+            kilometer = kwargs.get('kilometer')
+            fare_per_person = kwargs.get('fare_per_person')
+            vehicle_no_plate = kwargs.get('vehicle_no_plate')
+            payment_method_obj = kwargs.get('payment_method')
+            fare_per_km = RideBook.price_per_km()
+            ride_start_time = kwargs.get('ride_start_time')
+            arrival_time = kwargs.get('arrival_time')
+            departure_time = kwargs.get('departure_time')
+
+            with transaction.atomic():
+
+                total_fare = fare_per_person * int(req_seats)
+                reservation_number = ReservationNumber.generate_new_reservation_number()
+
+                if not reservation_number:
+                    return JsonResponse({
+                        'status': HTTP_404_NOT_FOUND,
+                        'message': "Reservation Number Error.",
+                    })
+
+                reservation = Reservation.objects.create(
+                    reservation_number=reservation_number,
+                    customer_id=customer_obj,
+                    ride_id=ride_obj,
+                    reservation_seats=req_seats,
+                    is_confirmed=False,
+                    created_date=date.today(),
+                )
+                reservation.save()
+
+                user_ride = UserRideDetail.objects.create(
+                    ride_id=ride_obj,
+                    reservation_id=reservation,
+                    kilometer=kilometer,
+                    price_per_km=fare_per_km,
+                    payment_method_id=payment_method_obj,
+                    payment_status=False,
+                    fare=total_fare,
+                    fixed_fare=FIXED_FARE,
+                    pick_up_point=pick_up_point,
+                    drop_off_point=drop_off_point,
+                    ride_status="ACTIVE",
+                    ride_date=ride_start_time.date(),
+                    pick_up_time=arrival_time,
+                    drop_off_time=departure_time,
+                )
+                user_ride.save()
+
+                # ride_seats_update = int(ride_obj.seats_left) - int(reservation.reservation_seats)
+                # ride_obj.seats_left = ride_seats_update
+                # ride_obj.save()
+
+                if KILOMETER_FARE:
+                    return JsonResponse({
+                        'status': HTTP_200_OK,
+                        'reservation_number': reservation.reservation_number,
+                        'vehicle': vehicle_no_plate,
+                        'seats': req_seats,
+                        'fare_per_person': str(fare_per_person) + " x " + req_seats,
+                        'fare': str(user_ride.fare),
+                        'price_per_km': str(user_ride.price_per_km),
+                        'kilometer': user_ride.kilometer,
+                        'pick-up-point': user_ride.pick_up_point,
+                        'pick-up-time': user_ride.pick_up_time,
+                        'drop-off-point': user_ride.drop_off_point,
+                        'drop-off-time': user_ride.drop_off_time,
+                        'message': 'Ride booked, but not confirmed.',
+                    })
+
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'reservation_number': reservation.reservation_number,
+                    'vehicle': vehicle_no_plate,
+                    'seats': reservation.reservation_seats,
+                    'fare_per_person': str(fare_per_person) + " x " + reservation.reservation_seats,
+                    'fare': str(user_ride.fare),
+                    'price_per_km': "",
+                    'kilometer': None,
+                    'pick-up-point': user_ride.pick_up_point,
+                    'pick_up_time': user_ride.pick_up_time,
+                    'drop-off-point': user_ride.drop_off_point,
+                    'drop_off_time': user_ride.drop_off_time,
+                    'message': 'Ride booked, but not confirmed.',
+                })
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e),
+            })
+
+    @login_decorator
+    @reserve_ride_decorator
+    def post(self, request, **kwargs):
+        try:
+            vehicle_no_plate = kwargs.get('vehicle_no_plate')
+            req_seats = kwargs.get('req_seats')
+            pick_up_point = kwargs.get('pick_up_point')
+            drop_up_point = kwargs.get('drop_up_point')
+            kilometer = kwargs.get('kilometer')
+            user = kwargs.get('user')
+            customer = kwargs.get('customer')
+            payment_method = kwargs.get('payment_method')
+            ride_date = kwargs.get('ride_date')
+            arrival_time = kwargs.get('arrival_time')
+            departure_time = kwargs.get('departure_time')
+
+            ride_obj = RideBook.get_ride_obj(vehicle_no_plate=vehicle_no_plate, ride_date=ride_date)
+            # if not ride_obj:
+            #     return JsonResponse({
+            #         'status': HTTP_400_BAD_REQUEST,
+            #         'message': 'No Ride Available.'
+            #     })
+
+            payment_method_obj = PaymentMethod.objects.filter(payment_method=payment_method).first()
+            if not payment_method_obj:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Payment Method not exist.'
+                })
+
+            vehicle_seats = ride_obj.seats_left
+            if vehicle_seats == 0:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Fully booked.'
+                })
+
+            if int(vehicle_seats) < int(req_seats):
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Not enough seats in the bus'
+                })
+
+            with transaction.atomic():
+                fare_object_price = fare_object(FIXED_FARE, KILOMETER_FARE)
+                fare_per_person = fare_object_price(req_seats=req_seats, kilometer=kilometer)
+
+                return RideBook.reserve_ride(user=user, customer=customer, vehicle_no_plate=vehicle_no_plate,
+                                             req_seats=req_seats, pick_up_point=pick_up_point,
+                                             ride_obj=ride_obj, drop_off_point=drop_up_point,
+                                             kilometer=kilometer, fare_per_person=fare_per_person,
+                                             payment_method=payment_method_obj, ride_start_time=ride_obj.start_time,
+                                             arrival_time=arrival_time, departure_time=departure_time)
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_404_NOT_FOUND,
+                'messsage': str(e),
+            })
 
 
-# class ConfirmRide(RideBook, generics.GenericAPIView):
-#
-#     @staticmethod
-#     def ride_confirm_message(**kwargs):
-#         try:
-#             first_name = kwargs.get('first_name')
-#             phone_number = kwargs.get('phone_number')
-#             res_no = kwargs.get('res_no')
-#             vehicle_no_plate = kwargs.get('vehicle_no_plate')
-#             pick_up_point = kwargs.get('pick_up_point')
-#             pick_up_time = kwargs.get('ride_pickup_time')
-#             drop_off_point = kwargs.get('drop_off_point')
-#             drop_off_time = kwargs.get('ride_drop_off_time')
-#             booked_seats = kwargs.get('booked_seats')
-#
-#             sawaari_message = "RIDE WITH SAWAARI\n"
-#             message_body = sawaari_message + 'Hi {}, your ride is confirmed.\n' \
-#                                              'Reservation Number - {}\n' \
-#                                              'Vehicle - {}\n' \
-#                                              'Seats: {}\n' \
-#                                              'Pick-up-point: {} at {}\n' \
-#                                              'Drop-off-point: {} at approximately {}'.format(first_name, res_no,
-#                                                                                              vehicle_no_plate,
-#                                                                                              booked_seats,
-#                                                                                              pick_up_point,
-#                                                                                              pick_up_time,
-#                                                                                              drop_off_point,
-#                                                                                              drop_off_time)
-#
-#             from User.twilio_verify import client
-#
-#             client.messages.create(
-#                 from_=SENDER_PHONE_NUMBER,
-#                 body=message_body,
-#                 to=phone_number,
-#             )
-#             return True
-#
-#         except Exception as e:
-#             raise InvalidUsage(status_code=1000, message=str(e))
-#
-#     @staticmethod
-#     @transaction.atomic
-#     def update_ride(vehicle_no_plate, seats_booked: int):
-#         try:
-#             with transaction.atomic():
-#                 ride_obj = Ride.objects.filter(vehicle_id__vehicle_no_plate=vehicle_no_plate).first()
-#                 if ride_obj:
-#                     seats_left = ride_obj.seats_left - int(seats_booked)
-#                     ride_obj.seats_left = seats_left
-#                     ride_obj.save()
-#                     return True
-#                 return False
-#
-#         except Exception as e:
-#             print(str(e))
-#             return False
-#
-#     @transaction.atomic
-#     @login_decorator
-#     @confirm_ride
-#     def post(self, request, **kwargs):
-#         reservation_number_obj = ''
-#         try:
-#             customer = kwargs.get('customer_obj')
-#             reservation_number_obj = kwargs.get('reservation_number')
-#
-#             with transaction.atomic():
-#                 reservation_number_obj.is_confirmed = True
-#                 reservation_number_obj.save()
-#
-#                 ride_obj = Ride.objects.filter(id=reservation_number_obj.ride_id.id).first()
-#                 vehicle_obj = Vehicle.objects.filter(id=ride_obj.vehicle_id.id).first()
-#
-#                 ConfirmRide.update_ride(vehicle_obj.vehicle_no_plate, reservation_number_obj.reservation_seats)
-#
-#                 user_ride_obj = UserRideDetail.objects.filter(reservation_id=reservation_number_obj.id).first()
-#                 ConfirmRide.ride_confirm_message(phone_number=customer.user.phone_number,
-#                                                  res_no=reservation_number_obj.reservation_number,
-#                                                  vehicle_no_plate=vehicle_obj.vehicle_no_plate,
-#                                                  pick_up_point=user_ride_obj.pick_up_point,
-#                                                  drop_off_point=user_ride_obj.drop_off_point,
-#                                                  first_name=customer.user.first_name,
-#                                                  ride_pickup_time=user_ride_obj.pick_up_time,
-#                                                  ride_drop_off_time=user_ride_obj.drop_off_time,
-#                                                  booked_seats=reservation_number_obj.reservation_seats)
-#
-#                 return JsonResponse({
-#                     'status': HTTP_200_OK,
-#                     'reservation_number': reservation_number_obj.reservation_number,
-#                     'vehicle': vehicle_obj.vehicle_no_plate,
-#                     'seats': reservation_number_obj.reservation_seats,
-#                     'fare_per_person': float(user_ride_obj.fare) / int(reservation_number_obj.reservation_seats),
-#                     'fare': float(user_ride_obj.fare),
-#                     'price_per_km': user_ride_obj.price_per_km,
-#                     'kilometer': user_ride_obj.kilometer,
-#                     'pick-up-point': user_ride_obj.pick_up_point,
-#                     'pick_up_time': user_ride_obj.pick_up_time,
-#                     'drop-off-point': user_ride_obj.drop_off_point,
-#                     'drop_off_time': user_ride_obj.drop_off_time,
-#                     'message': 'Your ride is confirmed.'
-#                 })
-#
-#         except InvalidUsage as e:
-#             if e.status_code == 1000:
-#                 reservation_number_obj.is_confirmed = True
-#                 reservation_number_obj.save()
-#                 ride_obj = Ride.objects.filter(id=reservation_number_obj.ride_id.id).first()
-#                 vehicle_obj = Vehicle.objects.filter(id=ride_obj.vehicle_id.id).first()
-#                 ConfirmRide.update_ride(vehicle_obj.vehicle_no_plate, reservation_number_obj.reservation_seats)
-#                 return JsonResponse({
-#                     'status': HTTP_200_OK,
-#                     'reservation_number': reservation_number_obj.reservation_number,
-#                     'vehicle': vehicle_obj.vehicle_no_plate,
-#                     'seats': reservation_number_obj.reservation_seats,
-#                     'fare_per_person': float(user_ride_obj.fare) / int(reservation_number_obj.reservation_seats),
-#                     'fare': float(user_ride_obj.fare),
-#                     'price_per_km': user_ride_obj.price_per_km,
-#                     'kilometer': user_ride_obj.kilometer,
-#                     'pick-up-point': user_ride_obj.pick_up_point,
-#                     'pick_up_time': user_ride_obj.pick_up_time,
-#                     'drop-off-point': user_ride_obj.drop_off_point,
-#                     'drop_off_time': user_ride_obj.drop_off_time,
-#                     'message': 'Your ride is confirmed.'
-#                 })
-#
-#         except Exception as e:
-#             JsonResponse({
-#                 'status': HTTP_404_NOT_FOUND,
-#                 'message': str(e),
-#             })
+class ConfirmRide(RideBook, generics.GenericAPIView):
+
+    @staticmethod
+    def ride_confirm_message(**kwargs):
+        try:
+            first_name = kwargs.get('first_name')
+            phone_number = kwargs.get('phone_number')
+            res_no = kwargs.get('res_no')
+            vehicle_no_plate = kwargs.get('vehicle_no_plate')
+            pick_up_point = kwargs.get('pick_up_point')
+            pick_up_time = kwargs.get('ride_pickup_time')
+            drop_off_point = kwargs.get('drop_off_point')
+            drop_off_time = kwargs.get('ride_drop_off_time')
+            booked_seats = kwargs.get('booked_seats')
+
+            sawaari_message = "RIDE WITH SAWAARI\n"
+            message_body = sawaari_message + 'Hi {}, your ride is confirmed.\n' \
+                                             'Reservation Number - {}\n' \
+                                             'Vehicle - {}\n' \
+                                             'Seats: {}\n' \
+                                             'Pick-up-point: {} at {}\n' \
+                                             'Drop-off-point: {} at approximately {}'.format(first_name, res_no,
+                                                                                             vehicle_no_plate,
+                                                                                             booked_seats,
+                                                                                             pick_up_point,
+                                                                                             pick_up_time,
+                                                                                             drop_off_point,
+                                                                                             drop_off_time)
+
+            from User.twilio_verify import client
+
+            client.messages.create(
+                from_=SENDER_PHONE_NUMBER,
+                body=message_body,
+                to=phone_number,
+            )
+            return True
+
+        except Exception as e:
+            raise InvalidUsage(status_code=1000, message=str(e))
+
+    @staticmethod
+    @transaction.atomic
+    def update_ride(vehicle_no_plate, seats_booked: int):
+        try:
+            with transaction.atomic():
+                ride_obj = Ride.objects.filter(vehicle_id__vehicle_no_plate=vehicle_no_plate).first()
+                if ride_obj:
+                    seats_left = ride_obj.seats_left - int(seats_booked)
+                    ride_obj.seats_left = seats_left
+                    ride_obj.save()
+                    return True
+                return False
+
+        except Exception as e:
+            print(str(e))
+            return False
+
+    @transaction.atomic
+    @login_decorator
+    @confirm_ride
+    def post(self, request, **kwargs):
+        reservation_number_obj = ''
+        try:
+            customer = kwargs.get('customer_obj')
+            reservation_number_obj = kwargs.get('reservation_number')
+
+            with transaction.atomic():
+                reservation_number_obj.is_confirmed = True
+                reservation_number_obj.save()
+
+                ride_obj = Ride.objects.filter(id=reservation_number_obj.ride_id.id).first()
+                vehicle_obj = Vehicle.objects.filter(id=ride_obj.vehicle_id.id).first()
+
+                ConfirmRide.update_ride(vehicle_obj.vehicle_no_plate, reservation_number_obj.reservation_seats)
+
+                user_ride_obj = UserRideDetail.objects.filter(reservation_id=reservation_number_obj.id).first()
+                ConfirmRide.ride_confirm_message(phone_number=customer.user.phone_number,
+                                                 res_no=reservation_number_obj.reservation_number,
+                                                 vehicle_no_plate=vehicle_obj.vehicle_no_plate,
+                                                 pick_up_point=user_ride_obj.pick_up_point,
+                                                 drop_off_point=user_ride_obj.drop_off_point,
+                                                 first_name=customer.user.first_name,
+                                                 ride_pickup_time=user_ride_obj.pick_up_time,
+                                                 ride_drop_off_time=user_ride_obj.drop_off_time,
+                                                 booked_seats=reservation_number_obj.reservation_seats)
+
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'reservation_number': reservation_number_obj.reservation_number,
+                    'vehicle': vehicle_obj.vehicle_no_plate,
+                    'seats': reservation_number_obj.reservation_seats,
+                    'fare_per_person': float(user_ride_obj.fare) / int(reservation_number_obj.reservation_seats),
+                    'fare': float(user_ride_obj.fare),
+                    'price_per_km': user_ride_obj.price_per_km,
+                    'kilometer': user_ride_obj.kilometer,
+                    'pick-up-point': user_ride_obj.pick_up_point,
+                    'pick_up_time': user_ride_obj.pick_up_time,
+                    'drop-off-point': user_ride_obj.drop_off_point,
+                    'drop_off_time': user_ride_obj.drop_off_time,
+                    'message': 'Your ride is confirmed.'
+                })
+
+        except InvalidUsage as e:
+            if e.status_code == 1000:
+                reservation_number_obj.is_confirmed = True
+                reservation_number_obj.save()
+                ride_obj = Ride.objects.filter(id=reservation_number_obj.ride_id.id).first()
+                vehicle_obj = Vehicle.objects.filter(id=ride_obj.vehicle_id.id).first()
+                ConfirmRide.update_ride(vehicle_obj.vehicle_no_plate, reservation_number_obj.reservation_seats)
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'reservation_number': reservation_number_obj.reservation_number,
+                    'vehicle': vehicle_obj.vehicle_no_plate,
+                    'seats': reservation_number_obj.reservation_seats,
+                    'fare_per_person': float(user_ride_obj.fare) / int(reservation_number_obj.reservation_seats),
+                    'fare': float(user_ride_obj.fare),
+                    'price_per_km': user_ride_obj.price_per_km,
+                    'kilometer': user_ride_obj.kilometer,
+                    'pick-up-point': user_ride_obj.pick_up_point,
+                    'pick_up_time': user_ride_obj.pick_up_time,
+                    'drop-off-point': user_ride_obj.drop_off_point,
+                    'drop_off_time': user_ride_obj.drop_off_time,
+                    'message': 'Your ride is confirmed.'
+                })
+
+        except Exception as e:
+            JsonResponse({
+                'status': HTTP_404_NOT_FOUND,
+                'message': str(e),
+            })
 
 
 class UserRides(generics.GenericAPIView):
@@ -678,26 +678,19 @@ class BookRide(generics.GenericAPIView):
     @reserve_ride_decorator
     def post(self, request, **kwargs):
         try:
-            vehicle_no_plate = kwargs.get('vehicle_no_plate')
-            req_seats = kwargs.get('req_seats')
-            pick_up_point = kwargs.get('pick_up_point')
-            drop_up_point = kwargs.get('drop_up_point')
-            kilometer = kwargs.get('kilometer')
             user = kwargs.get('user')
             customer = kwargs.get('customer')
-            payment_method = kwargs.get('payment_method')
+            vehicle_no_plate = kwargs.get('vehicle_no_plate')
+            req_seats = kwargs.get('req_seats')
+            pick_up_stop_name = kwargs.get('pick_up_stop_name')
+            drop_off_stop_name = kwargs.get('drop_off_stop_name')
+            kilometer = kwargs.get('kilometer')
             ride_date = kwargs.get('ride_date')
             arrival_time = kwargs.get('arrival_time')
             departure_time = kwargs.get('departure_time')
+            payment_method_obj = kwargs.get('payment_method_obj')
 
             ride_obj = BookRide.get_ride_obj(vehicle_no_plate=vehicle_no_plate, ride_date=ride_date)
-
-            payment_method_obj = PaymentMethod.objects.filter(payment_method=payment_method).first()
-            if not payment_method_obj:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Payment Method not exist.'
-                })
 
             vehicle_seats = ride_obj.seats_left
             if vehicle_seats == 0:
@@ -717,8 +710,8 @@ class BookRide(generics.GenericAPIView):
                 fare_per_person = fare_object_price(req_seats=req_seats, kilometer=kilometer)
 
                 return BookRide.reserve_ride(user=user, customer=customer, vehicle_no_plate=vehicle_no_plate,
-                                             req_seats=req_seats, pick_up_point=pick_up_point,
-                                             ride_obj=ride_obj, drop_off_point=drop_up_point,
+                                             req_seats=req_seats, pick_up_stop_name=pick_up_stop_name,
+                                             ride_obj=ride_obj, drop_off_stop_name=drop_off_stop_name,
                                              kilometer=kilometer, fare_per_person=fare_per_person,
                                              payment_method=payment_method_obj, ride_start_time=ride_obj.start_time,
                                              arrival_time=arrival_time, departure_time=departure_time)

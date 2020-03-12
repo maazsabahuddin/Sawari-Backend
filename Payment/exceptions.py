@@ -8,5 +8,5 @@ class Payment(Exception):
         self.message = message
 
 
-class PaymentMethod(Payment):
+class PaymentMethodException(Payment):
     pass
