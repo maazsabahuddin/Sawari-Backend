@@ -6,12 +6,12 @@ from rest_framework import generics
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
 
 from A.settings.base import FIXED_FARE, KILOMETER_FARE, SENDER_PHONE_NUMBER
+from Payment.exceptions import PaymentException
 
 from Payment.models import Pricing, PaymentMethod
 # from Payment.views import PaymentMixin
 from Reservation.decorator_reservation import reserve_ride_decorator, confirm_ride, cancel_ride
 from RideSchedule.models import UserRideDetail
-from RideSchedule.views import BusRoute
 from User.decorators import login_decorator
 from User.models import Customer
 from User.exceptions import InvalidUsage
@@ -485,6 +485,7 @@ class CancelRide(generics.GenericAPIView):
                     })
 
                 if "ACTIVE" == user_ride_detail_obj.ride_status:
+                    from RideSchedule.views import BusRoute
                     datetime_now = BusRoute.utc_to_local(timezone.now())
                     ride_start_datetime = BusRoute.utc_to_local(ride_obj.start_time)
                     datetime_db = BusRoute.utc_to_local(user_ride_detail_obj.ride_date)
@@ -557,10 +558,11 @@ class BookRide(generics.GenericAPIView):
         try:
             total_seats = kwargs.get('req_seats')
             kilometer = kwargs.get('kilometer')
+            fare_per_km = kwargs.get('fare_per_km')
 
-            fare_per_person = BookRide.db_price() * float(kilometer)
-            # total_fare = fare_per_person * float(total_seats)
-            return float(round(fare_per_person))
+            fare_per_person = float(fare_per_km) * float(kilometer)
+            total_fare = float(round(fare_per_person)) * int(total_seats)
+            return float(round(total_fare))
 
         except TypeError:
             return False
@@ -569,9 +571,9 @@ class BookRide(generics.GenericAPIView):
     def fare_fixed(**kwargs):
         try:
             total_seats = kwargs.get('req_seats')
-            fare_per_person = BookRide.db_price()
-            # total_fare = RideBook.db_price() * int(total_seats)
-            return float(round(fare_per_person))
+            # fare_per_person = BookRide.db_price()
+            total_fare = RideBook.db_price() * int(total_seats)
+            return float(round(total_fare))
 
         except TypeError:
             return False
@@ -690,12 +692,20 @@ class BookRide(generics.GenericAPIView):
             arrival_time = kwargs.get('arrival_time')
             departure_time = kwargs.get('departure_time')
             payment_method_obj = kwargs.get('payment_method_obj')
+            fare_per_person = kwargs.get('fare_per_person')
+            total_fare = kwargs.get('total_fare')
+            fare_per_km = kwargs.get('fare_per_km')
 
             with transaction.atomic():
                 fare_object_price = fare_object(FIXED_FARE, KILOMETER_FARE)
-                fare_per_person = fare_object_price(req_seats=req_seats, kilometer=kilometer)
+                total_fare_internal = fare_object_price(req_seats=req_seats, kilometer=kilometer,
+                                                        fare_per_km=fare_per_km)
 
-                total_fare = fare_per_person * int(req_seats)
+                # total_fare_internal = fare_per_person_internal
+                if not total_fare == total_fare_internal:
+                    raise PaymentException(status_code=500, message="Fare not equal exception",
+                                           dev_message="Fare not equal")
+
                 reservation_number = ReservationNumber.generate_new_reservation_number()
 
                 if not reservation_number:
@@ -713,7 +723,6 @@ class BookRide(generics.GenericAPIView):
                 reservation.save()
 
                 ride_status = "ACTIVE"
-                fare_per_km = BookRide.price_per_km()
                 user_ride = UserRideDetail.objects.create(
                     ride_id=ride_obj,
                     reservation_id=reservation,
@@ -726,7 +735,7 @@ class BookRide(generics.GenericAPIView):
                     pick_up_point=pick_up_stop_name,
                     drop_off_point=drop_off_stop_name,
                     ride_status=ride_status,
-                    ride_date=ride_obj.ride_start_time.date(),
+                    ride_date=ride_obj.start_time.date(),
                     pick_up_time=arrival_time,
                     drop_off_time=departure_time,
                 )
@@ -750,7 +759,7 @@ class BookRide(generics.GenericAPIView):
                         'pick-up-time': user_ride.pick_up_time,
                         'drop-off-point': user_ride.drop_off_point,
                         'drop-off-time': user_ride.drop_off_time,
-                        'message': 'Ride booked, but not confirmed.',
+                        'message': 'Ride booked.',
                     })
 
                 return JsonResponse({
@@ -760,13 +769,13 @@ class BookRide(generics.GenericAPIView):
                     'seats': reservation.reservation_seats,
                     'fare_per_person': str(fare_per_person) + " x " + reservation.reservation_seats,
                     'fare': str(user_ride.fare),
-                    'price_per_km': "",
+                    'price_per_km': None,
                     'kilometer': None,
                     'pick-up-point': user_ride.pick_up_point,
                     'pick_up_time': user_ride.pick_up_time,
                     'drop-off-point': user_ride.drop_off_point,
                     'drop_off_time': user_ride.drop_off_time,
-                    'message': 'Ride booked, but not confirmed.',
+                    'message': 'Ride booked.',
                 })
 
                 # return BookRide.reserve_ride(user=user, customer=customer, vehicle_no_plate=vehicle_no_plate,
@@ -777,6 +786,13 @@ class BookRide(generics.GenericAPIView):
                 #                              arrival_time=arrival_time, departure_time=departure_time)
 
         except ReservationException as e:
+            if e.status_code == 500:
+                return JsonResponse({
+                    'status': e.status_code,
+                    'message': e.message,
+                })
+
+        except PaymentException as e:
             if e.status_code == 500:
                 return JsonResponse({
                     'status': e.status_code,

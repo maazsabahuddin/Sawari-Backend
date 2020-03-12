@@ -12,6 +12,7 @@ from A.settings.base import DISTANCE_KILOMETRE_LIMIT, gmaps, local_tz, STOP_WAIT
     SHOW_RIDE_DAYS, FIXED_FARE, KILOMETER_FARE
 
 from Reservation.models import Ride, Stop, Route, RouteStops
+from Reservation.views import BookRide
 from User.decorators import login_decorator
 
 from math import cos, asin, sqrt
@@ -217,8 +218,10 @@ class BusRoute(generics.GenericAPIView):
                 kilometer = result['rows'][0]['elements'][0]['distance']['text']
 
                 from Reservation.views import fare_object
+                fare_per_km = BookRide.price_per_km()
                 fare_object_price = fare_object(FIXED_FARE, KILOMETER_FARE)
-                fare_per_person = fare_object_price(req_seats=1, kilometer=float(kilometer.split(' ')[0]))
+                fare_per_person = fare_object_price(req_seats=1, kilometer=float(kilometer.split(' ')[0]),
+                                                    fare_per_km=fare_per_km)
 
                 ride.pop('pick-up-location', None)
                 ride.pop('drop-off-location', None)
@@ -231,13 +234,15 @@ class BusRoute(generics.GenericAPIView):
                 ride_date_append = {'ride_date': ride_date}
                 ride_start_time_append = {'ride_start_time': ride_start_time}
                 fare_per_person_append = {'fare_per_person': fare_per_person}
-                kilometer_append = {'trip_distance': kilometer}
+                kilometer_append = {'kilometer': kilometer}
+                fare_per_km = {'fare_per_km': BookRide.price_per_km()}
 
                 ride.update(route_name_append)
                 ride.update(ride_date_append)
                 ride.update(ride_start_time_append)
                 ride.update(fare_per_person_append)
                 ride.update(kilometer_append)
+                ride.update(fare_per_km)
                 ride.update(ride_pick_up_location)
                 ride.update(ride_dropoff_location)
 

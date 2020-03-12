@@ -105,6 +105,12 @@ def login_decorator(f):
                 'message': str(e.message),
             })
 
+        except PaymentMethodException as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': str(e.message),
+            })
+
         except Exception as e:
             return JsonResponse({
                 'status': HTTP_400_BAD_REQUEST,

@@ -6,7 +6,7 @@ from Payment.models import PaymentMethod
 from Reservation.models import Reservation, Route, Ride, Vehicle, Stop
 from RideSchedule.exceptions import RideNotAvailable, RideException, NotEnoughSeats, FieldMissing, StopNotExist
 from User.exceptions import UserNotFound, UserException
-from Payment.exceptions import Payment, PaymentMethodException
+from Payment.exceptions import PaymentException, PaymentMethodException, Fare
 from User.models import Customer
 
 
@@ -26,17 +26,21 @@ def reserve_ride_decorator(f):
             ride_date = request.data.get('ride_date')
             ride_start_time = request.data.get('ride_start_time')
             route_id = request.data.get('route_id')
+            fare_per_person = request.data.get('fare_per_person')
+            kilometer = request.data.get('kilometer')
+            total_fare = request.data.get('total_fare')
+            fare_per_km = request.data.get('fare_per_km')
 
             if not (vehicle_no_plate or req_seats or pick_up_point_stop_id or drop_off_point_stop_id or arrival_time
-                    or ride_date):
+                    or ride_date or fare_per_person, kilometer or total_fare or fare_per_km):
                 raise RideException(status_code=405)
 
             payment_method_obj = PaymentMethod.objects.filter(payment_method=payment_method).first()
             if not payment_method_obj:
-                raise Payment(status_code=501)
+                raise PaymentException(status_code=501)
 
             if payment_method != "Cash":
-                raise Payment(status_code=501)
+                raise PaymentException(status_code=501)
 
             customer = Customer.objects.filter(user=user).first()
             if not customer:
@@ -61,10 +65,15 @@ def reserve_ride_decorator(f):
             from RideSchedule.tests import ride_stops_check
             result = ride_stops_check(ride_stops=route_obj.stop_ids.get_queryset(),
                                       pick_up_stop_id=int(pick_up_point_stop_id),
-                                      drop_off_stop_id=int(drop_off_point_stop_id) )
+                                      drop_off_stop_id=int(drop_off_point_stop_id))
 
             if not result:
                 raise RideException(status_code=410)
+
+            from RideSchedule.views import BookRide
+            fare_per_km_db = BookRide.price_per_km()
+            if float(fare_per_km) != fare_per_km_db:
+                raise PaymentException(status_code=502)
 
             pick_up_stop_obj = Stop.objects.filter(id=pick_up_point_stop_id).first()
             drop_off_stop_obj = Stop.objects.filter(id=drop_off_point_stop_id).first()
@@ -78,14 +87,15 @@ def reserve_ride_decorator(f):
             drop_off_stop_name = drop_off_stop_obj.name
             drop_off_stop_lat_long = (drop_off_stop_obj.latitude, drop_off_stop_obj.longitude)
 
-            from A.settings.base import gmaps
-            result = gmaps.distance_matrix(pick_up_stop_lat_long, drop_off_stop_lat_long, mode='driving')
-            kilometer = float(result['rows'][0]['elements'][0]['distance']['text'].split(' ')[0])
+            # from A.settings.base import gmaps
+            # result = gmaps.distance_matrix(pick_up_stop_lat_long, drop_off_stop_lat_long, mode='driving')
+            # kilometer = float(result['rows'][0]['elements'][0]['distance']['text'].split(' ')[0])
 
             return f(args[0], request, user=user, customer=customer, vehicle_no_plate=vehicle_no_plate,
                      req_seats=req_seats, pick_up_stop_name=pick_up_stop_name, drop_off_stop_name=drop_off_stop_name,
                      kilometer=kilometer, ride_obj=ride_obj[0], arrival_time=arrival_time,
-                     departure_time=departure_time, payment_method_obj=payment_method_obj)
+                     departure_time=departure_time, fare_per_person=float(fare_per_person), total_fare=float(total_fare),
+                     fare_per_km=float(fare_per_km), payment_method_obj=payment_method_obj)
 
         except RideException as e:
             if e.status_code == 404:
@@ -100,9 +110,11 @@ def reserve_ride_decorator(f):
                 raise StopNotExist(status_code=400, message="No stops exist.",
                                    dev_message="such stops not exist in ride.")
 
-        except Payment as e:
+        except PaymentException as e:
             if e.status_code == 501:
                 raise PaymentMethodException(status_code=501, message="Not Implemented")
+            if e.status_code == 502:
+                raise Fare(status_code=502, message="Fare Exception")
 
         except UserException as e:
             if e.status_code == 404:
