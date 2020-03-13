@@ -21,7 +21,7 @@ from Reservation.views import UserRides, CancelRide, BookRide
 from User.views_designpatterns import RegisterCase, IsVerified, UserLogin, UserLogout, ResendOtpRegister, \
     PasswordReset, PasswordResetCheck, SetNewPassword, PasswordResetResendOtp, PasswordChange, ChangePhoneNumber, \
     ChangePhoneNumberOtpMatch, UpdateName, UserDetails
-from RideSchedule.views import VehicleRoute, BusRoute
+from RideSchedule.views import VehicleRoute, BusRoute, CalculateFare
 
 # from Reservation.views import BusRoute, BookingDetails, BookRide
 
@@ -44,6 +44,7 @@ urlpatterns = [
     # path('confirm_ride/', ConfirmRide.as_view(), name='reserve_ride'),
     path('cancel_ride/', CancelRide.as_view(), name='cancel_ride'),
 
+    path('calculate/fare/', CalculateFare.as_view(), name='calculate_fare'),
     path('confirm/book/ride', BookRide.as_view(), name='book_a_ride'),
 
     # # Reset your password

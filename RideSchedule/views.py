@@ -1,6 +1,7 @@
 import datetime
 
 import pytz
+from django.db import transaction
 from django.http import JsonResponse
 from django.utils import timezone
 
@@ -13,6 +14,7 @@ from A.settings.base import DISTANCE_KILOMETRE_LIMIT, gmaps, local_tz, STOP_WAIT
 
 from Reservation.models import Ride, Stop, Route, RouteStops
 from Reservation.views import BookRide
+from RideSchedule.exceptions import RideFare
 from User.decorators import login_decorator
 
 from math import cos, asin, sqrt
@@ -440,3 +442,40 @@ class BusRoute(generics.GenericAPIView):
         except Exception as e:
             print(str(e))
             return False
+
+
+class CalculateFare(generics.GenericAPIView):
+
+    @login_decorator
+    def get(self, request, data=None):
+        try:
+            req_seats = request.data.get('total_seats')
+            kilometer = request.data.get('kilometer')
+            fare_per_km = BookRide.price_per_km()
+
+            if not (req_seats or kilometer):
+                raise RideFare(status_code=500, message="Fare Calculation Error.")
+
+            with transaction.atomic():
+                from Reservation.views import fare_object
+                fare_object_price = fare_object(FIXED_FARE, KILOMETER_FARE)
+                total_fare = fare_object_price(req_seats=req_seats, kilometer=kilometer,
+                                               fare_per_km=fare_per_km)
+
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'total_fare': total_fare,
+                })
+
+        except RideFare as e:
+            if e.status_code == 500:
+                return JsonResponse({
+                    'status': e.status_code,
+                    'total_fare': e.message,
+                })
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'total_fare': total_fare,
+            })

@@ -9,6 +9,9 @@ from CustomAuthentication.backend_authentication import CustomUserCheck
 from User.models import UserOtp, User
 from User.exceptions import UserException, PinNotMatched, MissingField, UserNotFound, OldPin,\
     TwilioEmailException, InvalidUsage, WrongPassword
+from RideSchedule.exceptions import RideFare, RideException, RideNotAvailable, FieldMissing, NotEnoughSeats, \
+    StopNotExist
+from Payment.exceptions import PaymentException, PaymentMethodException, Fare
 # import dump
 # from User.views_designpatterns import UserMixinMethods
 
@@ -93,11 +96,11 @@ def login_decorator(f):
                 'message': str(e.message),
             })
 
-        except PaymentMethod as e:
-            return JsonResponse({
-                'status': e.status_code,
-                'message': str(e.message),
-            })
+        # except PaymentMethodException as e:
+        #     return JsonResponse({
+        #         'status': e.status_code,
+        #         'message': str(e.message),
+        #     })
 
         except StopNotExist as e:
             return JsonResponse({

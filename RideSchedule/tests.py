@@ -21,4 +21,3 @@ def ride_stops_check(**kwargs):
     if result:
         return True
     return False
-

@@ -24,3 +24,7 @@ class FieldMissing(RideException):
 
 class StopNotExist(RideException):
     pass
+
+
+class RideFare(RideException):
+    pass
