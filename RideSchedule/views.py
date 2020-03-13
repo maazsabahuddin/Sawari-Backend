@@ -453,7 +453,8 @@ class CalculateFare(generics.GenericAPIView):
             kilometer = request.data.get('kilometer')
             fare_per_km = BookRide.price_per_km()
 
-            if not (req_seats or kilometer):
+            # Yeh puchna hay.
+            if not (req_seats and kilometer):
                 raise RideFare(status_code=500, message="Fare Calculation Error.")
 
             with transaction.atomic():

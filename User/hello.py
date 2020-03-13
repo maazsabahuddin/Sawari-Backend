@@ -360,8 +360,39 @@ import inspect
 # c = a.get('loc').get('a')
 # print(c)
 
-a = [1, 2, 3]
-b = [2, 3]
+# a = [1, 2, 3]
+# b = [2, 3]
+#
+# result = all(values in a for values in b)
+# print(result)
 
-result = all(values in a for values in b)
-print(result)
+# importing the requests library
+import requests
+
+# api-endpoint
+URL = "http://djangoworld.com/calculate/fare/"
+
+# # location given here
+# location = "delhi technological university"
+
+# defining a params dict for the parameters to be sent to the API
+PARAMS = {'total_seats': 2, 'kilometer': 13.3}
+TOKEN = {'Authorization': 'd213aa54e1b4aec003d3c8db9bb4952ef487b221'}
+
+# sending get request and saving the response as response object
+r = requests.get(url=URL, params=PARAMS, headers=TOKEN)
+
+# extracting data in json format
+data = r.json()
+
+
+# extracting latitude, longitude and formatted address
+# of the first matching location
+# latitude = data['results'][0]['geometry']['location']['lat']
+# longitude = data['results'][0]['geometry']['location']['lng']
+# formatted_address = data['results'][0]['formatted_address']
+a = 10
+# printing the output
+# print("Latitude:%s\nLongitude:%s\nFormatted Address:%s"
+# 	%(latitude, longitude,formatted_address))
+
