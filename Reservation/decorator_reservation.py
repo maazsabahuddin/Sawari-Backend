@@ -28,6 +28,7 @@ def reserve_ride_decorator(f):
             route_id = request.data.get('route_id')
             fare_per_person = request.data.get('fare_per_person')
             kilometer = request.data.get('kilometer')
+            kilometer = kilometer.strip(' ')[0]
             total_fare = request.data.get('total_fare')
             fare_per_km = request.data.get('fare_per_km')
 
