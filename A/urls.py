@@ -45,7 +45,7 @@ urlpatterns = [
     path('cancel_ride/', CancelRide.as_view(), name='cancel_ride'),
 
     path('calculate/fare/', CalculateFare.as_view(), name='calculate_fare'),
-    path('confirm/book/ride', BookRide.as_view(), name='book_a_ride'),
+    path('confirm/book/ride/', BookRide.as_view(), name='book_a_ride'),
 
     # # Reset your password
     path('password/reset/', PasswordReset.as_view(), name='password_reset'),
