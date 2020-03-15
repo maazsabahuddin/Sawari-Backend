@@ -643,6 +643,7 @@ class BookRide(generics.GenericAPIView):
                     return JsonResponse({
                         'status': HTTP_200_OK,
                         'reservation_number': reservation.reservation_number,
+                        'ride_status': user_ride.ride_status,
                         'vehicle': vehicle_no_plate,
                         'seats': req_seats,
                         'fare_per_person': str(fare_per_person) + " x " + req_seats,
@@ -659,6 +660,7 @@ class BookRide(generics.GenericAPIView):
                 return JsonResponse({
                     'status': HTTP_200_OK,
                     'reservation_number': reservation.reservation_number,
+                    'ride_status': user_ride.ride_status,
                     'vehicle': vehicle_no_plate,
                     'seats': reservation.reservation_seats,
                     'fare_per_person': str(fare_per_person) + " x " + reservation.reservation_seats,
@@ -749,6 +751,7 @@ class BookRide(generics.GenericAPIView):
                     return JsonResponse({
                         'status': HTTP_200_OK,
                         'reservation_number': reservation.reservation_number,
+                        'ride_status': user_ride.ride_status,
                         'vehicle_no_plate': vehicle_no_plate,
                         'route_id': ride_obj.route_id.route_id,
                         'ride_date': ride_obj.start_time.date(),
@@ -767,6 +770,7 @@ class BookRide(generics.GenericAPIView):
                 return JsonResponse({
                     'status': HTTP_200_OK,
                     'reservation_number': reservation.reservation_number,
+                    'ride_status': user_ride.ride_status,
                     'vehicle_no_plate': vehicle_no_plate,
                     'route_id': ride_obj.route_id.route_id,
                     'ride_date': ride_obj.start_time.date(),
