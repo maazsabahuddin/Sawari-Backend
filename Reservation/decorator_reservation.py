@@ -28,9 +28,17 @@ def reserve_ride_decorator(f):
             route_id = request.data.get('route_id')
             fare_per_person = request.data.get('fare_per_person')
             kilometer = request.data.get('kilometer')
-            kilometer = kilometer.strip(' ')[0]
+            kilometer = float(kilometer.strip(' ')[0])
             total_fare = request.data.get('total_fare')
             fare_per_km = request.data.get('fare_per_km')
+
+            year = int(ride_date.split('-')[0])
+            month = int(ride_date.split('-')[1])
+            day = int(ride_date.split('-')[2])
+
+            hour = int(ride_start_time.split(':')[0])
+            minutes = int(ride_start_time.split(':')[1])
+            seconds = int(ride_start_time.split(':')[2])
 
             if not (vehicle_no_plate or req_seats or pick_up_point_stop_id or drop_off_point_stop_id or arrival_time
                     or ride_date or fare_per_person, kilometer or total_fare or fare_per_km):
@@ -49,9 +57,10 @@ def reserve_ride_decorator(f):
 
             from datetime import date, time
             # field hard coded sey hatani hay.
-            ride_obj = Ride.objects.filter(vehicle_id__vehicle_no_plate='XYZ-756', route_id__route_id='JC-121',
-                                           start_time__date=date(2020, 3, 12), start_time__time=time(20, 50, 00),
-                                           is_complete=False)
+            ride_obj = Ride.objects.filter(vehicle_id__vehicle_no_plate=vehicle_no_plate, route_id__route_id=route_id,
+                                           start_time__date=date(year, month, day),
+                                           start_time__time=time(hour, minutes, seconds), is_complete=False)
+
             if not ride_obj:
                 raise RideException(status_code=404)
 
