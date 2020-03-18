@@ -25,21 +25,22 @@ DONE
             # Yeh cross check krna hay k yeh stop is ride k stops mae lie krta b hay ya nahi..
             # just bool true or false make a method. DONE
 
+16) bht bara bhund pakra gaya hay poppin.. Ride Jauhar sey Clifton jari hay. ya phr clifton sey jauhar jari hay..
+    is mae farq distinguish krna hay or phr stops ushi hisaaab sey jaengy is mae.. or phr time b sahi show krey. DONE
+
+14) Check agr pick_up_stop_id matches drop_off_stop_id WRONG CASE
+
 PENDING:
 13) Work on decorators exception handling.
-
-5) PasswordReset / PasswordResetCheck / SetNewPassword / PasswordResetResendOtp
+    PasswordReset / PasswordResetCheck / SetNewPassword / PasswordResetResendOtp
 
 7) Work on another front end SAWARI.
-
-14) Check agr pick_up_stop_id matches drop_off_stop_id
 
 15) DB mae number +923442713545 hu ya phr 03442713545 hu dono cases mae check huna chaiye. on the other hand kabhi bhi
     0344 aese exist nahi krega but you have to explicitly handle it bro.
 
-16) bht bara bhund pakra gaya hay poppin.. Ride Jauhar sey Clifton jari hay. ya phr clifton sey jauhar jari hay..
-    is mae farq distinguish krna hay or phr stops ushi hisaaab sey jaengy is mae.. or phr time b sahi show krey.
-
 17) Date Format problem Mar 23, 2020
 
 18) Ride date and route_name bhi return krna hay confirm ride book api mae.
+
+19) Data and Time ka bohat bara koi bhund hay bhaee app mae woh cheez check krni hay..

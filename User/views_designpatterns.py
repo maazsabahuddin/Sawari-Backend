@@ -946,9 +946,9 @@ class PasswordChange(generics.GenericAPIView):
     @password_change_decorator
     def post(self, request, data=None):
         try:
-            user = data['user']
-            previous_pin = data['previous_pin']
-            new_pin = data['new_pin']
+            user = data.get('user')
+            # previous_pin = data.get('previous_pin')
+            new_pin = data.get('new_pin')
 
             user.set_password(new_pin)
             user.save()
@@ -963,6 +963,36 @@ class PasswordChange(generics.GenericAPIView):
                 'status': HTTP_400_BAD_REQUEST,
                 'message': str(e),
             })
+
+
+class PasswordCheck(generics.GenericAPIView):
+
+    @login_decorator
+    def post(self, request, data=None):
+        try:
+            user = data.get('user')
+            password = request.data.get('password')
+
+            if not user.check_password(password):
+                raise UserException(status_code=401)
+
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'message': 'Password Verified.',
+            })
+
+        except UserException as e:
+            return JsonResponse({
+                'status': 401,
+                'message': 'Invalid password.',
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e),
+            })
+
 
 
 class UserDetails(generics.GenericAPIView):

@@ -501,34 +501,37 @@ def password_change_decorator(f):
         try:
             request = args[1]
             user = args[2]['user']
-            previous_pin = request.data.get('previous_pin')
-            new_pin = request.data.get('new_pin')
-            confirm_new_pin = request.data.get('confirm_new_pin')
+            # previous_pin = request.data.get('previous_pin')
+            pin = request.data.get('pin')
+            confirm_pin = request.data.get('confirm_pin')
 
-            previous_pin = previous_pin.strip()
-            new_pin = new_pin.strip()
-            confirm_new_pin = confirm_new_pin.strip()
+            # previous_pin = previous_pin.strip()
+            pin = pin.strip()
+            confirm_pin = confirm_pin.strip()
 
-            if not user.check_password(previous_pin):
-                raise UserException(status_code=401)
+            # if not user.check_password(previous_pin):
+            #     raise UserException(status_code=401)
 
             if not user:
                 raise UserException(status_code=404)
 
-            if not (previous_pin and new_pin and confirm_new_pin):
+            if not (pin and confirm_pin):
                 raise UserException(status_code=405)
 
-            if new_pin != confirm_new_pin:
+            if pin != confirm_pin:
                 raise UserException(status_code=406)
 
-            if new_pin == previous_pin:
+            from django.contrib.auth.hashers import make_password
+            if user.password == make_password(pin):
                 raise UserException(status_code=407)
+
+            # if new_pin == previous_pin:
+            #     raise UserException(status_code=407)
 
             context = {
                 'user': user,
-                'previous_pin': previous_pin,
-                'new_pin': new_pin,
-                'confirm_new_pin': confirm_new_pin,
+                'new_pin': pin,
+                'confirm_new_pin': confirm_pin,
             }
 
             return f(args[0], request, context)
