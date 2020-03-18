@@ -800,6 +800,8 @@ class UpdateName(generics.GenericAPIView):
 
                 return JsonResponse({
                     'status': HTTP_200_OK,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
                     'message': "Your name successfully updated.",
                 })
 
