@@ -366,6 +366,10 @@ import inspect
 # result = all(values in a for values in b)
 # print(result)
 
+
+
+"""
+
 # importing the requests library
 import requests
 
@@ -396,3 +400,15 @@ a = 10
 # print("Latitude:%s\nLongitude:%s\nFormatted Address:%s"
 # 	%(latitude, longitude,formatted_address))
 
+"""
+
+# a = '3442713545'
+#
+# if a[0] == ('0' or '+'):
+#     print("Invalid number")
+
+a = ""
+b = ""
+
+if not (a or b):
+    print("True")

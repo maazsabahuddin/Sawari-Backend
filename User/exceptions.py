@@ -53,3 +53,7 @@ class UserNotAuthorized(UserException):
 
 class UserNotActive(UserException):
     pass
+
+
+class NameException(UserException):
+    pass

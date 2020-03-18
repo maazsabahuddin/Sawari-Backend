@@ -776,27 +776,22 @@ class UpdateName(generics.GenericAPIView):
     @login_decorator
     def post(self, request, data=None):
         try:
-            user = data['user']
-            if not user:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': "User not found.",
-                })
+            user = data.get('user')
 
             first_name = request.data.get('first_name')
             last_name = request.data.get('last_name')
 
-            if UpdateName.check_string_for_numbers(first_name=first_name, last_name=last_name):
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Name cannot contain digits.',
-                })
+            if not (first_name or last_name):
+                raise UserException(status_code=404)
 
             if not first_name:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'First Name is required.',
-                })
+                first_name = user.first_name
+
+            if not last_name:
+                last_name = user.last_name
+
+            if UpdateName.check_string_for_numbers(first_name=first_name, last_name=last_name):
+                raise UserException(status_code=400)
 
             with transaction.atomic():
                 user.first_name = first_name
@@ -806,6 +801,18 @@ class UpdateName(generics.GenericAPIView):
                 return JsonResponse({
                     'status': HTTP_200_OK,
                     'message': "Your name successfully updated.",
+                })
+
+        except UserException as e:
+            if e.status_code == 404:
+                return JsonResponse({
+                    'status': e.status_code,
+                    'message': 'Field cannot be empty.',
+                })
+            if e.status_code == 400:
+                return JsonResponse({
+                    'status': e.status_code,
+                    'message': 'Name cannot contain digits.',
                 })
 
         except Exception as e:
@@ -857,6 +864,7 @@ class ChangePhoneNumber(generics.GenericAPIView, UserOTPMixin):
                     otp = UserOTPMixin.generate_otp()
                     print(otp)
 
+                    # Is current user ki saari cheezen new number waly user pr transfer hungy..
                     user_otp_obj = UserOtp.objects.filter(user=user).first()
                     UserMixinMethods.user_otp_save(user_otp_obj, otp)
 
