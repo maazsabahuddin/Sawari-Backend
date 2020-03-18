@@ -509,9 +509,6 @@ def password_change_decorator(f):
             pin = pin.strip()
             confirm_pin = confirm_pin.strip()
 
-            # if not user.check_password(previous_pin):
-            #     raise UserException(status_code=401)
-
             if not user:
                 raise UserException(status_code=404)
 
@@ -521,9 +518,13 @@ def password_change_decorator(f):
             if pin != confirm_pin:
                 raise UserException(status_code=406)
 
-            from django.contrib.auth.hashers import make_password
-            if user.password == make_password(pin):
+            if user.check_password(pin):
                 raise UserException(status_code=407)
+
+            # from django.contrib.auth.hashers import make_password
+            # pin = make_password(pin)
+            # if user.password == pin:
+            #     raise UserException(status_code=407)
 
             # if new_pin == previous_pin:
             #     raise UserException(status_code=407)
