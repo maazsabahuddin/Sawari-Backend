@@ -994,18 +994,14 @@ class PasswordCheck(generics.GenericAPIView):
             })
 
 
-
 class UserDetails(generics.GenericAPIView):
 
     @login_decorator
     def get(self, request, data=None):
         try:
-            user = data['user']
+            user = data.get('user')
             if not user:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'User not found.',
-                })
+                raise UserException(status_code=404)
 
             if not user.email:
                 user.email = ""
@@ -1021,8 +1017,44 @@ class UserDetails(generics.GenericAPIView):
                 'phone_number': user.phone_number,
             })
 
+        except UserException as e:
+            if e.status_code == 404:
+                return JsonResponse({
+                    'status': e.status_code,
+                    'message': 'User not found.',
+                })
+
         except Exception as e:
             return JsonResponse({
                 'status': HTTP_400_BAD_REQUEST,
                 'message': str(e),
             })
+
+
+class DeleteUser(generics.GenericAPIView):
+
+    @login_decorator
+    def get(self, request, data=None):
+        try:
+            user = data.get('user')
+            if not user:
+                raise UserException(status_code=404)
+
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'message': 'User account successfully deleted.',
+            })
+
+        except UserException as e:
+            if e.status_code == 404:
+                return JsonResponse({
+                    'status': e.status_code,
+                    'message': 'User not found.',
+                })
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e),
+            })
+
