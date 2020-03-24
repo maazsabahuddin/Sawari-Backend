@@ -452,24 +452,21 @@ def phone_number_decorator(f):
                     'message': "Phone Number required."
                 })
 
-            # Checking Validation
-            if phone_number:
-                # print(phone_number[0])
-                if phone_number[0] != ("0" or "+"):
-                    return JsonResponse({
-                        'status': HTTP_404_NOT_FOUND,
-                        'message': 'Invalid Phonenumber',
-                    })
+            if not (not (phone_number[0] != "0") or not (phone_number[0] != "+")):
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'Invalid Phonenumber',
+                })
 
-                if phone_number[0] == "0":
-                    phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
+            if phone_number[0] == "0":
+                phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
 
-                from User.views_designpatterns import UserMixinMethods
-                if not UserMixinMethods.validate_phone(phone_number):
-                    return JsonResponse({
-                        'status': HTTP_400_BAD_REQUEST,
-                        'message': 'Invalid Phone Number',
-                    })
+            from User.views_designpatterns import UserMixinMethods
+            if not UserMixinMethods.validate_phone(phone_number):
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Invalid Phone Number',
+                })
 
             if phone_number == user.phone_number:
                 return JsonResponse({
@@ -485,6 +482,12 @@ def phone_number_decorator(f):
                 })
 
             return f(args[0], request, user=user, phonenumber=phone_number)
+
+        # except UserException as e:
+        #     return JsonResponse({
+        #         'status': HTTP_400_BAD_REQUEST,
+        #         'message': 'Server problem' + str(e),
+        #     })
 
         except Exception as e:
             return JsonResponse({

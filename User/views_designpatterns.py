@@ -911,9 +911,9 @@ class ChangePhoneNumberOtpMatch(generics.GenericAPIView):
     @otp_verify
     def post(self, request, data=None):
         try:
-            user = data['user']
-            otp = data['otp']
-            phone_number = data['phone_number']
+            user = data.get('user')
+            otp = data.get('otp')
+            phone_number = data.get('email_or_phone')
 
             if not IsVerified.verify_otp(user, otp):
                 raise InvalidUsage(status_code=401, message="OTP not matched.")
@@ -922,7 +922,7 @@ class ChangePhoneNumberOtpMatch(generics.GenericAPIView):
             user.save()
 
             return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
+                'status': HTTP_200_OK,
                 'message': 'Phone Number successfully changed.',
             })
 
