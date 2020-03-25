@@ -455,7 +455,7 @@ def resend_otp_change_phone_number(f):
 
             if not (not (phone_number[0] != "0") or not (phone_number[0] != "+")):
                 return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
+                    'status': HTTP_400_BAD_REQUEST,
                     'message': 'Invalid Phonenumber',
                 })
 
