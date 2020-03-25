@@ -437,6 +437,56 @@ def resend_otp(f):
     return resend_otp_function
 
 
+def resend_otp_change_phone_number(f):
+
+    def resend_otp_function(*args):
+        try:
+            request = args[1]
+            user = args[2]['user']
+            phone_number = request.data.get('phone_number')
+
+            phone_number = phone_number.strip()
+
+            if not phone_number:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': "Phone Number required."
+                })
+
+            if not (not (phone_number[0] != "0") or not (phone_number[0] != "+")):
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'Invalid Phonenumber',
+                })
+
+            if phone_number[0] == "0":
+                phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
+
+            from User.views_designpatterns import UserMixinMethods
+            if not UserMixinMethods.validate_phone(phone_number):
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Invalid Phone Number',
+                })
+
+            if not user:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'User not found.',
+                })
+
+            data = {'user': user, 'phone_number': phone_number}
+            return f(args[0], request, data)
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'Server problem' + str(e),
+            })
+
+    return resend_otp_function
+
+
 def phone_number_decorator(f):
 
     def phone_number_function(*args):

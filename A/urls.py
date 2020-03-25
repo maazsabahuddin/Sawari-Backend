@@ -20,7 +20,7 @@ from django.urls import path
 from Reservation.views import UserRides, CancelRide, BookRide
 from User.views_designpatterns import RegisterCase, IsVerified, UserLogin, UserLogout, ResendOtpRegister, \
     PasswordReset, PasswordResetCheck, SetNewPassword, PasswordResetResendOtp, PasswordChange, ChangePhoneNumber, \
-    ChangePhoneNumberOtpMatch, UpdateName, UserDetails, PasswordCheck, DeleteUser
+    ChangePhoneNumberOtpMatch, UpdateName, UserDetails, PasswordCheck, DeleteUser, PasswordChangeResendOtp
 from RideSchedule.views import VehicleRoute, BusRoute, CalculateFare
 
 # from Reservation.views import BusRoute, BookingDetails, BookRide
@@ -60,6 +60,7 @@ urlpatterns = [
     # Update user phone number.
     path('change/phonenumber/', ChangePhoneNumber.as_view(), name='change_phone_number'),
     path('verify/phonenumber/', ChangePhoneNumberOtpMatch.as_view(), name='change_phone_number_verify'),
+    path('phonenumber/change/resend_otp/', PasswordChangeResendOtp.as_view(), name='presend_otp'),
 
     # Update Name.
     path('update/name/', UpdateName.as_view(), name='update_name'),

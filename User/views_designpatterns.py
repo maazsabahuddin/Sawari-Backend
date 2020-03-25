@@ -18,7 +18,7 @@ from A.settings.base import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_C
     EMAIL_VERIFICATION, PHONE_VERIFICATION
 from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
 from User.decorators import login_credentials, otp_verify, login_decorator, register, password_reset_decorator, \
-    logout_decorator, resend_otp, phone_number_decorator, password_change_decorator
+    logout_decorator, resend_otp, phone_number_decorator, password_change_decorator, resend_otp_change_phone_number
 from .models import User, Customer, UserOtp
 from User.otp_verify import UserOTPMixin
 
@@ -175,14 +175,9 @@ class ResendOtpRegister(UserMixinMethods, generics.GenericAPIView):
 
     @transaction.atomic
     @resend_otp
-    def post(self, request, context=None):
+    def post(self, request, data=None):
         try:
-            user = context['user']
-            if not user:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'User not exist',
-                })
+            user = data.get('user')
 
             user_otp_obj = UserOtp.objects.filter(user=user).first()
             with transaction.atomic():
@@ -1056,5 +1051,60 @@ class DeleteUser(generics.GenericAPIView):
             return JsonResponse({
                 'status': HTTP_400_BAD_REQUEST,
                 'message': str(e),
+            })
+
+
+class PasswordChangeResendOtp(generics.GenericAPIView):
+
+    @transaction.atomic
+    @login_decorator
+    @resend_otp_change_phone_number
+    def post(self, request, data=None):
+        try:
+            user = data.get('user')
+            phone_number = data.get('phone_number')
+
+            user_otp_obj = UserOtp.objects.filter(user=user).first()
+            with transaction.atomic():
+
+                otp = UserOTPMixin.generate_otp()
+                UserMixinMethods.user_otp_save(user_otp_obj, otp)
+                Register().phone_otp(otp, phone_number=phone_number)
+
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'message': 'OTP has been successfully resent.',
+                })
+
+        except InvalidUsage as e:
+            if e.status_code == 100:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': str(e.message),
+                })
+
+        except UserException as e:
+            if e.status_code == 404:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': str(e.message),
+                })
+
+        except TwilioEmailException as e:
+            if e.status_code == 101:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': str(e.message),
+                })
+            if e.status_code == 101:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': str(e.message),
+                })
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': "Server Error. " + str(e),
             })
 
