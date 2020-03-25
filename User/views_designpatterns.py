@@ -18,7 +18,8 @@ from A.settings.base import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_C
     EMAIL_VERIFICATION, PHONE_VERIFICATION
 from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
 from User.decorators import login_credentials, otp_verify, login_decorator, register, password_reset_decorator, \
-    logout_decorator, resend_otp, phone_number_decorator, password_change_decorator, resend_otp_change_phone_number
+    logout_decorator, resend_otp, phone_number_decorator, password_change_decorator, resend_otp_change_phone_number, \
+    change_phone_number_otp_verify
 from .models import User, Customer, UserOtp
 from User.otp_verify import UserOTPMixin
 
@@ -903,12 +904,13 @@ class ChangePhoneNumber(generics.GenericAPIView, UserOTPMixin):
 class ChangePhoneNumberOtpMatch(generics.GenericAPIView):
 
     @transaction.atomic
-    @otp_verify
+    @login_decorator
+    @change_phone_number_otp_verify
     def post(self, request, data=None):
         try:
             user = data.get('user')
             otp = data.get('otp')
-            phone_number = data.get('email_or_phone')
+            phone_number = data.get('phone_number')
 
             if not IsVerified.verify_otp(user, otp):
                 raise InvalidUsage(status_code=401, message="OTP not matched.")

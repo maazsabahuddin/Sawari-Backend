@@ -291,6 +291,44 @@ def otp_verify(f):
     return token_decorator
 
 
+def change_phone_number_otp_verify(f):
+
+    @wraps(f)
+    def token_decorator(*args):
+        try:
+            request = args[1]
+            user = args[2]['user']
+            otp = request.data.get('otp')
+            phone_number = request.data.get('phone_number')
+            phone_number = phone_number.strip()
+
+            if not phone_number:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'Phone number required',
+                })
+
+            if phone_number[0] == "0":
+                phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
+
+            if not otp:
+                return JsonResponse({
+                    'status': HTTP_404_NOT_FOUND,
+                    'message': 'otp required',
+                })
+
+            context = {'user': user, 'otp': otp, 'phone_number': phone_number}
+            return f(args[0], request, context)
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'Server problem' + str(e),
+            })
+
+    return token_decorator
+
+
 def register(f):
 
     @wraps(f)
