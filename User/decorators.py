@@ -541,7 +541,7 @@ def phone_number_decorator(f):
             if phone_number[0] == "0":
                 phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
 
-            if len(phone_number != 13):
+            if len(phone_number) != 13:
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
                     'message': 'Invalid Phone Number',
