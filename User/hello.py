@@ -316,7 +316,6 @@ print(a)
 
 import inspect
 
-
 # def f1():
 #     f2()
 #
@@ -367,7 +366,6 @@ import inspect
 # print(result)
 
 
-
 """
 
 # importing the requests library
@@ -407,8 +405,18 @@ a = 10
 # if a[0] == ('0' or '+'):
 #     print("Invalid number")
 
-a = ""
-b = ""
+# a = ""
+# b = ""
+#
+# if not (a or b):
+#     print("True")
+#
 
-if not (a or b):
-    print("True")
+
+import re
+
+phonenumber = "+923442713545asdada"
+regex = r"\+" + "92" + r"3\d{9}"
+
+if len(phonenumber) != 13:
+    print("Invalid")

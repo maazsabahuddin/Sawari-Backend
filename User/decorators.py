@@ -7,17 +7,18 @@ from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP
 from A.settings.base import PHONE_NUMBER_REGEX, EMAIL_REGEX, COUNTRY_CODE_PK
 from CustomAuthentication.backend_authentication import CustomUserCheck
 from User.models import UserOtp, User
-from User.exceptions import UserException, PinNotMatched, MissingField, UserNotFound, OldPin,\
+from User.exceptions import UserException, PinNotMatched, MissingField, UserNotFound, OldPin, \
     TwilioEmailException, InvalidUsage, WrongPassword
 from RideSchedule.exceptions import RideFare, RideException, RideNotAvailable, FieldMissing, NotEnoughSeats, \
     StopNotExist
 from Payment.exceptions import PaymentException, PaymentMethodException, Fare
+
+
 # import dump
 # from User.views_designpatterns import UserMixinMethods
 
 
 def login_decorator(f):
-
     @wraps(f)
     def decorated_function(*args):
         try:
@@ -124,7 +125,6 @@ def login_decorator(f):
 
 
 def password_reset_decorator(f):
-
     @wraps(f)
     def match_uuid(*args):
         try:
@@ -189,7 +189,6 @@ def password_reset_decorator(f):
 
 
 def login_credentials(f):
-
     @wraps(f)
     def decorated_function(*args):
         try:
@@ -232,7 +231,6 @@ def login_credentials(f):
 
 
 def otp_verify(f):
-
     @wraps(f)
     def token_decorator(*args):
         try:
@@ -292,7 +290,6 @@ def otp_verify(f):
 
 
 def change_phone_number_otp_verify(f):
-
     @wraps(f)
     def token_decorator(*args):
         try:
@@ -330,7 +327,6 @@ def change_phone_number_otp_verify(f):
 
 
 def register(f):
-
     @wraps(f)
     def register_decorator(*args):
         request = args[1]
@@ -410,7 +406,6 @@ def register(f):
 
 
 def logout_decorator(f):
-
     @wraps(f)
     def decorated_function(*args):
         try:
@@ -442,7 +437,6 @@ def logout_decorator(f):
 
 
 def resend_otp(f):
-
     def resend_otp_function(*args):
         try:
             request = args[1]
@@ -476,7 +470,6 @@ def resend_otp(f):
 
 
 def resend_otp_change_phone_number(f):
-
     def resend_otp_function(*args):
         try:
             request = args[1]
@@ -526,7 +519,6 @@ def resend_otp_change_phone_number(f):
 
 
 def phone_number_decorator(f):
-
     def phone_number_function(*args):
         try:
             request = args[1]
@@ -548,6 +540,12 @@ def phone_number_decorator(f):
 
             if phone_number[0] == "0":
                 phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
+
+            if len(phone_number != 13):
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Invalid Phone Number',
+                })
 
             from User.views_designpatterns import UserMixinMethods
             if not UserMixinMethods.validate_phone(phone_number):
@@ -587,7 +585,6 @@ def phone_number_decorator(f):
 
 
 def password_change_decorator(f):
-
     def password_change(*args):
         try:
             request = args[1]
