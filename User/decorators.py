@@ -414,7 +414,7 @@ def logout_decorator(f):
 
             if not token:
                 return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
+                    'status': HTTP_200_OK,
                     'message': 'Token required for authentication.',
                 })
 
