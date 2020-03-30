@@ -9,6 +9,7 @@
 */migrations/
 
 /aws_db.sqlite3
+Documents
 
 /queries.txt
 /A/config.py
