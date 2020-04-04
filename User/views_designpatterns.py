@@ -1110,3 +1110,39 @@ class PasswordChangeResendOtp(generics.GenericAPIView):
                 'message': "Server Error. " + str(e),
             })
 
+
+class UpdateEmail(generics.GenericAPIView):
+
+    @login_decorator
+    def post(self, request, data=None):
+        user = data.get('user')
+        email = request.data.get('email')
+
+        if not email:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': "Email value missing."
+            })
+
+        if user.email == email:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': email + " already set to your account."
+            })
+
+        if not UserMixinMethods.validate_email(email):
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'Invalid Email.',
+            })
+
+        with transaction.atomic():
+            user.email = email
+            user.save()
+
+        return JsonResponse({
+            'status': HTTP_200_OK,
+            'message': "Email updated successfully."
+        })
+
+
