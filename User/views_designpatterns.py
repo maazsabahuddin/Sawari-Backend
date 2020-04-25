@@ -20,7 +20,7 @@ from CustomAuthentication.backend_authentication import CustomAuthenticationBack
 from User.decorators import login_credentials, otp_verify, login_decorator, register, password_reset_decorator, \
     logout_decorator, resend_otp, phone_number_decorator, password_change_decorator, resend_otp_change_phone_number, \
     change_phone_number_otp_verify
-from .models import User, Customer, UserOtp
+from .models import User, Customer, UserOtp, Place, PlaceDetail
 from User.otp_verify import UserOTPMixin
 
 from User.exceptions import TwilioEmailException, UserException, InvalidUsage, WrongPassword, \
@@ -1146,3 +1146,110 @@ class UpdateEmail(generics.GenericAPIView):
         })
 
 
+class AddUserPlace(generics.GenericAPIView):
+
+    @login_decorator
+    def post(self, request, data=None):
+        try:
+            user = data.get('user')
+            place_id = request.data.get('place_id')
+            place_name = request.data.get('place_name')
+            latitude = request.data.get('latitude')
+            longitude = request.data.get('longitude')
+            place_type = request.data.get('place_type')
+
+            if not (place_id and latitude and longitude and place_name and place_type):
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': "Value missing."
+                })
+
+            place_detail = PlaceDetail.objects.filter(place_id=place_id).first()
+            if not place_detail:
+                place_detail = PlaceDetail.objects.create(
+                    place_id=place_id,
+                    place_name=place_name,
+                    latitude=latitude,
+                    longitude=longitude,
+                    place_type=place_type,
+                )
+                place_detail.save()
+
+            with transaction.atomic():
+
+                user_place = Place.objects.filter(user=user.id).first()
+                if not user_place:
+                    user_place = Place.objects.create(user=user)
+                    user_place.save()
+                    user_place.place_id.add(place_detail)
+
+                else:
+                    flag = False
+                    for place in user_place.place_id.get_queryset():
+                        if place.place_id == place_id:
+                            flag = True
+                            break
+
+                    if not flag:
+                        user_place.place_id.add(place_detail)
+                    else:
+                        return JsonResponse({
+                            'status': HTTP_200_OK,
+                            'message': "Place already saved."
+                        })
+
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'message': "User Place saved."
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e),
+            })
+
+
+class UpdateUserPlace(generics.GenericAPIView):
+
+    @login_decorator
+    def post(self, request, data=None):
+        try:
+            user = data.get('user')
+            place_id = request.data.get('place_id')
+            place_name = request.data.get('place_name')
+            latitude = request.data.get('latitude')
+            longitude = request.data.get('longitude')
+            place_type = request.data.get('place_type')
+
+            if not (place_id or latitude or longitude or place_name or place_type):
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': "Value missing."
+                })
+
+            with transaction.atomic():
+                place_details = PlaceDetail.objects.create(
+                    place_id=place_id,
+                    place_name=place_name,
+                    latitude=latitude,
+                    longitude=longitude,
+                    place_type=place_type,
+                )
+                place = Place.objects.create(
+                    user=user,
+                    place_id=place_details,
+                )
+                place_details.save()
+                place.save()
+
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'message': "User Place saved."
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e),
+            })
