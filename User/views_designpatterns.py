@@ -1164,6 +1164,13 @@ class AddUserPlace(generics.GenericAPIView):
                     'message': "Value missing."
                 })
 
+            user_place_type_obj = Place.objects.filter(user=user.id, place_type=place_type).first()
+            if user_place_type_obj and user_place_type_obj.place_type != "Other":
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': "{} Place already saved.".format(user_place_type_obj.place_type)
+                })
+
             place_detail = PlaceDetail.objects.filter(place_id=place_id).first()
             if not place_detail:
                 place_detail = PlaceDetail.objects.create(
@@ -1171,36 +1178,23 @@ class AddUserPlace(generics.GenericAPIView):
                     place_name=place_name,
                     latitude=latitude,
                     longitude=longitude,
-                    place_type=place_type,
                 )
                 place_detail.save()
 
+            user_place = Place.objects.filter(user=user.id, place_id=place_detail.id, place_type=place_type).first()
+            if user_place:
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'message': "Place already saved."
+                })
+
             with transaction.atomic():
-
-                user_place = Place.objects.filter(user=user.id).first()
-                if not user_place:
-                    user_place = Place.objects.create(user=user)
-                    user_place.save()
-                    user_place.place_id.add(place_detail)
-
-                else:
-                    flag = False
-                    for place in user_place.place_id.get_queryset():
-                        if place.place_id == place_id:
-                            flag = True
-                            break
-
-                    if not flag:
-                        user_place.place_id.add(place_detail)
-                    else:
-                        return JsonResponse({
-                            'status': HTTP_200_OK,
-                            'message': "Place already saved."
-                        })
+                user_place_obj = Place.objects.create(user=user, place_id=place_detail, place_type=place_type)
+                user_place_obj.save()
 
             return JsonResponse({
-                'status': HTTP_200_OK,
-                'message': "User Place saved."
+                'status': HTTP_400_BAD_REQUEST,
+                'message': "User {} Place saved.".format(place_type)
             })
 
         except Exception as e:
@@ -1222,31 +1216,39 @@ class UpdateUserPlace(generics.GenericAPIView):
             longitude = request.data.get('longitude')
             place_type = request.data.get('place_type')
 
-            if not (place_id or latitude or longitude or place_name or place_type):
+            if not (place_id and latitude and longitude and place_name and place_type):
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
                     'message': "Value missing."
                 })
 
             with transaction.atomic():
-                place_details = PlaceDetail.objects.create(
-                    place_id=place_id,
-                    place_name=place_name,
-                    latitude=latitude,
-                    longitude=longitude,
-                    place_type=place_type,
-                )
-                place = Place.objects.create(
-                    user=user,
-                    place_id=place_details,
-                )
-                place_details.save()
-                place.save()
 
-            return JsonResponse({
-                'status': HTTP_200_OK,
-                'message': "User Place saved."
-            })
+                place_detail = PlaceDetail.objects.filter(place_id=place_id).first()
+                if not place_detail:
+                    place_detail = PlaceDetail.objects.create(
+                        place_id=place_id,
+                        place_name=place_name,
+                        latitude=latitude,
+                        longitude=longitude,
+                    )
+                    place_detail.save()
+
+                place_obj = Place.objects.filter(user=user.id, place_type=place_type).first()
+                if place_obj:
+                    place_obj.place_id = place_detail
+                    place_obj.save()
+                    return JsonResponse({
+                        'status': HTTP_200_OK,
+                        'message': "{} Place updated.".format(place_obj.place_type)
+                    })
+                else:
+                    user_place_obj = Place.objects.create(user=user, place_id=place_detail, place_type=place_type)
+                    user_place_obj.save()
+                    return JsonResponse({
+                        'status': HTTP_200_OK,
+                        'message': "{} Place updated.".format(place_obj.place_type)
+                    })
 
         except Exception as e:
             return JsonResponse({

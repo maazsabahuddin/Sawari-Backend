@@ -51,7 +51,6 @@ class PlaceDetail(models.Model):
     place_name = models.CharField(max_length=100, blank=False, null=False)
     latitude = models.CharField(max_length=30, blank=False, null=False)
     longitude = models.CharField(max_length=30, blank=False, null=False)
-    place_type = models.CharField(max_length=10, blank=False)
     updated_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -59,9 +58,10 @@ class PlaceDetail(models.Model):
 
 
 class Place(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user_place')
-    place_id = models.ManyToManyField(PlaceDetail)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_place')
+    place_id = models.ForeignKey(PlaceDetail, on_delete=models.CASCADE)
+    place_type = models.CharField(max_length=10, blank=False)
 
     def __str__(self):
-        return "{} - {}".format(self.user, self.place_id)
+        return "{} - {} - {}".format(self.user, self.place_type, self.place_id.place_id)
 
