@@ -21,7 +21,7 @@ from Reservation.views import UserRides, CancelRide, BookRide
 from User.views_designpatterns import RegisterCase, IsVerified, UserLogin, UserLogout, ResendOtpRegister, \
     PasswordReset, PasswordResetCheck, SetNewPassword, PasswordResetResendOtp, PasswordChange, ChangePhoneNumber, \
     ChangePhoneNumberOtpMatch, UpdateName, UserDetails, PasswordCheck, DeleteUser, PasswordChangeResendOtp, \
-    UpdateEmail, AddUserPlace, UpdateUserPlace
+    UpdateEmail, AddUserPlace, UpdateUserPlace, UserPlaces
 from RideSchedule.views import VehicleRoute, BusRoute, CalculateFare
 
 # from Reservation.views import BusRoute, BookingDetails, BookRide
@@ -67,8 +67,9 @@ urlpatterns = [
     path('update/name/', UpdateName.as_view(), name='update_name'),
 
     # Return User Details
-    path('user_rides/', UserRides.as_view(), name='user_rides'),
-    path('my_details/', UserDetails.as_view(), name='user_details'),
+    path('user/rides/', UserRides.as_view(), name='user_rides'),
+    path('user/details/', UserDetails.as_view(), name='user_details'),
+    path('user/places/', UserPlaces.as_view(), name='user_details'),
 
     # Save User Place
     path('add/user/place/', AddUserPlace.as_view(), name='user_place'),
