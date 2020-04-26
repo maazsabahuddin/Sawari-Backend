@@ -195,7 +195,9 @@ def login_credentials(f):
             request = args[1]
             email_or_phone = request.data.get("email_or_phone")
             password = request.data.get('password')
+            app = request.data.get('app')
 
+            app = app.strip()
             email_or_phone = email_or_phone.strip()
             if not password:
                 return JsonResponse({
@@ -209,11 +211,17 @@ def login_credentials(f):
                     'message': 'Email/Phone required.',
                 })
 
+            if not app:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'App not mentioned.',
+                })
+
             if email_or_phone[0] == "0":
                 email_or_phone = "+" + COUNTRY_CODE_PK + email_or_phone[1:]
 
-            context = {'email_or_phone': email_or_phone, 'password': password}
-            return f(args[0], request, context)
+            data = {'email_or_phone': email_or_phone, 'password': password, 'app': app}
+            return f(args[0], request, data)
 
         except TwilioEmailException as e:
             return JsonResponse({

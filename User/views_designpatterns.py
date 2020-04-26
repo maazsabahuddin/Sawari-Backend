@@ -422,18 +422,19 @@ class IsVerified(generics.GenericAPIView, UserOTPMixin):
 class UserLogin(generics.GenericAPIView, UserMixinMethods):
 
     @login_credentials
-    def post(self, request, context=None):
+    def post(self, request, data=None):
         token = ''
         user = ''
         try:
-            email_or_phone = context['email_or_phone']
-            password = context['password']
+            email_or_phone = data.get('email_or_phone')
+            password = data.get('password')
+            app = data.get('app')
 
             # Check if user exist or not.
             user_check = CustomUserCheck.check_user(email_or_phone)
             if not user_check:
-                raise WrongPassword(message="User not exist.")
-            if not user_check.is_customer:
+                raise WrongPassword(message="The sign-in credentials does not exist. Try again or create a new account")
+            if app == "Customer" and not user_check.is_customer:
                 raise UserNotAuthorized(message='Not authorized to login in the app.')
 
             user = CustomAuthenticationBackend.authenticate(email_or_phone, password)
@@ -457,7 +458,7 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
 
         except UserNotAuthorized as e:
             return JsonResponse({
-                'status': HTTP_404_NOT_FOUND,
+                'status': HTTP_401_UNAUTHORIZED,
                 'message': str(e.message),
             })
 

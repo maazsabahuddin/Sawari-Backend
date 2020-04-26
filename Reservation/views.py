@@ -3,7 +3,7 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.utils import timezone
 from rest_framework import generics
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK, HTTP_401_UNAUTHORIZED
 
 from A.settings.base import FIXED_FARE, KILOMETER_FARE, SENDER_PHONE_NUMBER
 from Payment.exceptions import PaymentException
@@ -391,28 +391,10 @@ class UserRides(generics.GenericAPIView):
     @login_decorator
     def get(self, request, data=None):
         try:
-            user = data['user']
-            if not user:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'User not found.',
-                })
-
-            customer = Customer.objects.filter(user=user).first()
-            if not customer:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'Customer not found.',
-                })
-
+            user = data.get('user')
             user_rides = []
+            customer = Customer.objects.filter(user=user).first()
             user_reservations = Reservation.objects.filter(customer_id=customer.id)
-            if not user_reservations:
-                return JsonResponse({
-                    'status': HTTP_200_OK,
-                    'message': user_rides,
-                })
-
             for reservations in user_reservations:
                 ride_details = UserRideDetail.objects.filter(reservation_id=reservations.id).first()
                 user_rides.append(UserRides.rides(ride=ride_details, reservation=reservations))
@@ -425,7 +407,7 @@ class UserRides(generics.GenericAPIView):
 
         except Exception as e:
             return JsonResponse({
-                'status': HTTP_200_OK,
+                'status': HTTP_400_BAD_REQUEST,
                 'message': str(e),
             })
 

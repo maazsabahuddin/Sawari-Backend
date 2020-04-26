@@ -15,7 +15,7 @@ from rest_framework.authtoken.models import Token
 
 from CustomAuthentication.backend_authentication import CustomAuthenticationBackend
 
-from A import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_COUNTER, EMAIL_REGEX, PHONE_NUMBER_REGEX, \
+from A.settings.base import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_COUNTER, EMAIL_REGEX, PHONE_NUMBER_REGEX, \
     EMAIL_VERIFICATION, PHONE_VERIFICATION
 
 from .otp_verify import UserOTPMixin
