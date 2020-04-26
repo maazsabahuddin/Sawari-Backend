@@ -1235,7 +1235,7 @@ class UpdateUserPlace(generics.GenericAPIView):
                     place_detail.save()
 
                 place_obj = Place.objects.filter(user=user.id, place_type=place_type).first()
-                if place_obj:
+                if place_obj and place_obj.place_type != "Other":
                     place_obj.place_id = place_detail
                     place_obj.save()
                     return JsonResponse({
@@ -1247,7 +1247,7 @@ class UpdateUserPlace(generics.GenericAPIView):
                     user_place_obj.save()
                     return JsonResponse({
                         'status': HTTP_200_OK,
-                        'message': "{} Place updated.".format(place_obj.place_type)
+                        'message': "{} Place updated.".format(user_place_obj.place_type)
                     })
 
         except Exception as e:
