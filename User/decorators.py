@@ -35,7 +35,7 @@ def login_decorator(f):
             if not user_token:
                 return JsonResponse({
                     'status': HTTP_401_UNAUTHORIZED,
-                    'message': 'Invalid Token.',
+                    'message': 'Login session expire.',
                 })
 
             user = CustomUserCheck.check_user_separately(user_token.user.email, user_token.user.phone_number)

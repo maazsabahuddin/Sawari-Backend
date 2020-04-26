@@ -281,13 +281,13 @@ class Register(RegisterCase, UserMixinMethods):
 
     @transaction.atomic
     @register
-    def post(self, request, context=None):
+    def post(self, request, data=None):
         try:
-            email = context['email']
-            phone_number = context['phone_number']
-            password = context['password']
-            is_customer = context['is_customer']
-            first_name = context['first_name']
+            email = data.get('email')
+            phone_number = data.get('phone_number')
+            password = data.get('password')
+            is_customer = data.get('is_customer')
+            first_name = data.get('first_name')
 
             if not phone_number:
                 return JsonResponse({
