@@ -465,6 +465,10 @@ class LoginViaGoogle(generics.GenericAPIView):
                 raise UserException(status_code=400, message="Missing values")
 
             user = CustomUserCheck.check_user(email)
+            if not user:
+                raise UserException(status_code=400,
+                                    message="The sign-in credentials does not exist. Try again or create a new account")
+
             if app == "Customer" and not user.is_customer:
                 raise UserNotAuthorized(message='Not authorized to login in the app.')
 
