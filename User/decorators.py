@@ -221,6 +221,12 @@ def login_credentials(f):
             if email_or_phone[0] == "0":
                 email_or_phone = "+" + COUNTRY_CODE_PK + email_or_phone[1:]
 
+                if len(email_or_phone) != 13:
+                    raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
+
+                if not UserMixinMethods.validate_phone(email_or_phone):
+                    raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
+
             data = {'email_or_phone': email_or_phone, 'password': password, 'app': app}
             return f(args[0], request, data)
 
@@ -427,6 +433,12 @@ def register(f):
             if phone_number:
                 if phone_number[0] == "0":
                     phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
+
+                if len(phone_number) != 13:
+                    return JsonResponse({
+                        'status': HTTP_400_BAD_REQUEST,
+                        'message': 'Invalid Phone Number',
+                    })
 
                 from User.views_designpatterns import UserMixinMethods
                 if not UserMixinMethods.validate_phone(phone_number):

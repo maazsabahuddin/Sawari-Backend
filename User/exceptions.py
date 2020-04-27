@@ -57,3 +57,7 @@ class UserNotActive(UserException):
 
 class NameException(UserException):
     pass
+
+
+class WrongPhonenumber(UserException):
+    pass

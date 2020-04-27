@@ -15,7 +15,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 
 from A.settings.base import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_COUNTER, EMAIL_REGEX, PHONE_NUMBER_REGEX, \
-    EMAIL_VERIFICATION, PHONE_VERIFICATION
+    EMAIL_VERIFICATION, PHONE_VERIFICATION, COUNTRY_CODE_PK
 from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
 from User.decorators import login_credentials, otp_verify, login_decorator, register, password_reset_decorator, \
     logout_decorator, resend_otp, phone_number_decorator, password_change_decorator, resend_otp_change_phone_number, \
@@ -24,11 +24,67 @@ from .models import User, Customer, UserOtp, Place, PlaceDetail
 from User.otp_verify import UserOTPMixin
 
 from User.exceptions import TwilioEmailException, UserException, InvalidUsage, WrongPassword, \
-     UserNotAuthorized, UserNotActive
+    UserNotAuthorized, UserNotActive, MissingField, WrongPhonenumber
 
 account_sid = TWILIO_ACCOUNT_SID
 auth_token = TWILIO_AUTH_TOKEN
 client = Client(account_sid, auth_token)
+
+
+class CheckUser(generics.GenericAPIView):
+
+    def post(self, request):
+        try:
+            phone_number = request.data.get("phone_number")
+            app = request.data.get('app')
+
+            phone_number = phone_number.strip()
+            app = app.strip()
+
+            if not phone_number or not app:
+                raise MissingField(status_code=400, message='Phone required.')
+
+            # Checking Validation
+            if phone_number:
+                if phone_number[0] == "0":
+                    phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
+
+                if len(phone_number) != 13:
+                    raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
+
+                if not UserMixinMethods.validate_phone(phone_number):
+                    raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
+
+            # Check if user exist or not.
+            user = CustomUserCheck.check_user(phone_number)
+            if not user:
+                raise UserNotAuthorized(message="The sign-in credentials does not exist. "
+                                                "Try again or create a new account")
+            if app == "Customer" and not user.is_customer:
+                raise UserNotAuthorized(message='Not authorized to login in the app.')
+
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'message': 'User Exist.'
+            })
+
+        except MissingField as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': e.message,
+            })
+
+        except WrongPhonenumber as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': e.message,
+            })
+
+        except UserNotAuthorized as e:
+            return JsonResponse({
+                'status': HTTP_401_UNAUTHORIZED,
+                'message': str(e.message),
+            })
 
 
 class UserMixinMethods(object):
