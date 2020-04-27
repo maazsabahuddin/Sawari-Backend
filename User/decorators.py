@@ -8,7 +8,7 @@ from A.settings.base import PHONE_NUMBER_REGEX, EMAIL_REGEX, COUNTRY_CODE_PK
 from CustomAuthentication.backend_authentication import CustomUserCheck
 from User.models import UserOtp, User
 from User.exceptions import UserException, PinNotMatched, MissingField, UserNotFound, OldPin, \
-    TwilioEmailException, InvalidUsage, WrongPassword
+    TwilioEmailException, InvalidUsage, WrongPassword, WrongPhonenumber
 from RideSchedule.exceptions import RideFare, RideException, RideNotAvailable, FieldMissing, NotEnoughSeats, \
     StopNotExist
 from Payment.exceptions import PaymentException, PaymentMethodException, Fare
@@ -224,6 +224,7 @@ def login_credentials(f):
                 if len(email_or_phone) != 13:
                     raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
 
+                from User.views_designpatterns import UserMixinMethods
                 if not UserMixinMethods.validate_phone(email_or_phone):
                     raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
 
@@ -234,6 +235,12 @@ def login_credentials(f):
             return JsonResponse({
                 'status': HTTP_404_NOT_FOUND,
                 'message': str(e.message),
+            })
+
+        except WrongPhonenumber as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': e.message,
             })
 
         except Exception as e:
