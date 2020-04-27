@@ -3,7 +3,7 @@ from functools import wraps
 from django.http import JsonResponse
 from rest_framework.authtoken.models import Token
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_401_UNAUTHORIZED, HTTP_200_OK
-
+from django.db import transaction
 from A.settings.base import PHONE_NUMBER_REGEX, EMAIL_REGEX, COUNTRY_CODE_PK
 from CustomAuthentication.backend_authentication import CustomUserCheck
 from User.models import UserOtp, User
@@ -12,7 +12,8 @@ from User.exceptions import UserException, PinNotMatched, MissingField, UserNotF
 from RideSchedule.exceptions import RideFare, RideException, RideNotAvailable, FieldMissing, NotEnoughSeats, \
     StopNotExist
 from Payment.exceptions import PaymentException, PaymentMethodException, Fare
-
+import uuid
+from django.contrib.auth.hashers import make_password
 
 # import dump
 # from User.views_designpatterns import UserMixinMethods
@@ -334,81 +335,138 @@ def change_phone_number_otp_verify(f):
     return token_decorator
 
 
+def register_via_google_decorator(f):
+
+    def decorator(*args):
+        try:
+            request = args[1]
+            email = request.data.get('email')
+            name = request.data.get('name')
+            is_customer = request.data.get('is_customer')
+            is_captain = request.data.get('is_captain')
+
+            from User.views_designpatterns import UserMixinMethods
+            if not UserMixinMethods.validate_email(email):
+                raise UserException(status_code=400, message='Invalid Email address')
+
+            user_email = User.objects.filter(email=email).first()
+            if user_email:
+                raise UserException(status_code=400, message='Email already registered.')
+
+            password = uuid.uuid4()
+            password = make_password(password)
+
+            data = {
+                'email': email,
+                'password': password,
+                'is_customer': is_customer,
+                'is_captain': is_captain,
+                'first_name': name,
+            }
+            return f(args[0], request, data)
+
+        except UserException as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': e.message,
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': str(e),
+            })
+
+    return decorator
+
+
 def register(f):
     @wraps(f)
     def register_decorator(*args):
-        request = args[1]
-        data = request.data.get
-        email = data('email')
-        phone_number = data('phone_number')
-        password = data('password')
-        confirm_password = data('confirm_password')
-        is_customer = data('is_customer')
+        try:
+            request = args[1]
+            data = request.data.get
+            email = data('email')
+            phone_number = data('phone_number')
+            password = data('password')
+            confirm_password = data('confirm_password')
+            is_customer = data('is_customer')
+            register_via = data('via')
+            first_name = data('first_name')
 
-        email = email.strip()
-        phone_number = phone_number.strip()
+            email = email.strip()
+            phone_number = phone_number.strip()
 
-        if not phone_number:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Phone number is required.',
-            })
+            if register_via == "google":
+                register_via_google(email, first_name)
 
-        if not password and not confirm_password:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Password Field required.',
-            })
-
-        # Checking Validation
-        first_name = ''
-        if email:
-            from User.views_designpatterns import UserMixinMethods
-            if not UserMixinMethods.validate_email(email):
+            if not phone_number:
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Invalid Email.',
+                    'message': 'Phone number is required.',
                 })
-            first_name = email.split('@')[0]
 
-        # Checking Validation
-        if phone_number:
-            if phone_number[0] == "0":
-                phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
-
-            from User.views_designpatterns import UserMixinMethods
-            if not UserMixinMethods.validate_phone(phone_number):
+            if not password and not confirm_password:
                 return JsonResponse({
                     'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Invalid Phone Number',
+                    'message': 'Password Field required.',
                 })
 
-        if is_customer == 'False':
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'is_customer field should be true',
-            })
+            # Checking Validation
+            first_name = ''
+            if email:
+                from User.views_designpatterns import UserMixinMethods
+                if not UserMixinMethods.validate_email(email):
+                    return JsonResponse({
+                        'status': HTTP_400_BAD_REQUEST,
+                        'message': 'Invalid Email.',
+                    })
+                first_name = email.split('@')[0]
 
-        if password != confirm_password:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Password Fields not matched'
-            })
+            # Checking Validation
+            if phone_number:
+                if phone_number[0] == "0":
+                    phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
 
-        if not email and not phone_number:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Email/Phone is required'
-            })
+                from User.views_designpatterns import UserMixinMethods
+                if not UserMixinMethods.validate_phone(phone_number):
+                    return JsonResponse({
+                        'status': HTTP_400_BAD_REQUEST,
+                        'message': 'Invalid Phone Number',
+                    })
 
-        context = {
-            'email': email,
-            'phone_number': phone_number,
-            'password': password,
-            'is_customer': is_customer,
-            'first_name': first_name,
-        }
-        return f(args[0], request, context)
+            if is_customer == 'False':
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'is_customer field should be true',
+                })
+
+            if password != confirm_password:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Password Fields not matched'
+                })
+
+            if not email and not phone_number:
+                return JsonResponse({
+                    'status': HTTP_400_BAD_REQUEST,
+                    'message': 'Email/Phone is required'
+                })
+
+            data = {
+                'email': email,
+                'phone_number': phone_number,
+                'password': password,
+                'is_customer': is_customer,
+                'first_name': first_name,
+            }
+            return f(args[0], request, data)
+
+        except UserException as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': e.message,
+            })
 
     return register_decorator
 

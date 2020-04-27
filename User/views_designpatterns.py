@@ -19,7 +19,7 @@ from A.settings.base import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_C
 from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
 from User.decorators import login_credentials, otp_verify, login_decorator, register, password_reset_decorator, \
     logout_decorator, resend_otp, phone_number_decorator, password_change_decorator, resend_otp_change_phone_number, \
-    change_phone_number_otp_verify
+    change_phone_number_otp_verify, register_via_google_decorator
 from .models import User, Customer, UserOtp, Place, PlaceDetail
 from User.otp_verify import UserOTPMixin
 
@@ -228,6 +228,45 @@ class ResendOtpRegister(UserMixinMethods, generics.GenericAPIView):
             })
 
 
+class RegisterViaGoogle(generics.GenericAPIView):
+
+    @register_via_google_decorator
+    def post(self, request, data=None):
+        try:
+            email = data.get('email')
+            password = data.get('password')
+            is_customer = data.get('is_customer')
+            is_captain = data.get('is_captain')
+            first_name = data.get('first_name')
+
+            with transaction.atomic():
+                user = User.objects.create(
+                    first_name=first_name,
+                    email=email,
+                    password=password,
+                    is_active=True,
+                    is_customer=is_customer,
+                )
+                user.save()
+
+                if is_customer:
+                    Customer.objects.create(user=user)
+                    if user:
+                        token, _ = Token.objects.get_or_create(user=user)
+
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'token': token.key,
+                    'message': 'User Registered successfully.',
+                })
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'Slow internet connection.',
+            })
+
+
 # @singleton
 class Register(RegisterCase, UserMixinMethods):
 
@@ -288,12 +327,6 @@ class Register(RegisterCase, UserMixinMethods):
             password = data.get('password')
             is_customer = data.get('is_customer')
             first_name = data.get('first_name')
-
-            if not phone_number:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Phone number required.',
-                })
 
             user_email = User.objects.filter(email=email).first()
             user_phone_no = User.objects.filter(phone_number=phone_number).first()
@@ -1241,13 +1274,25 @@ class UpdateUserPlace(generics.GenericAPIView):
                     place_obj.save()
                     return JsonResponse({
                         'status': HTTP_200_OK,
+                        'place_id': place_obj.place_id.place_id,
+                        'place_name': place_obj.place_id.place_name,
+                        'place_type': place_obj.place_type,
+                        'latitude': place_obj.place_id.latitude,
+                        'longitude': place_obj.place_id.longitude,
                         'message': "{} Place updated.".format(place_obj.place_type)
                     })
                 else:
-                    user_place_obj = Place.objects.create(user=user, place_id=place_detail, place_type=place_type)
-                    user_place_obj.save()
+                    user_place_obj = Place.objects.filter(user=user, place_id=place_detail, place_type=place_type).first()
+                    if not user_place_obj:
+                        user_place_obj = Place.objects.create(user=user, place_id=place_detail, place_type=place_type)
+                        user_place_obj.save()
                     return JsonResponse({
                         'status': HTTP_200_OK,
+                        'place_id': user_place_obj.place_id.place_id,
+                        'place_name': user_place_obj.place_id.place_name,
+                        'place_type': user_place_obj.place_type,
+                        'latitude': user_place_obj.place_id.latitude,
+                        'longitude': user_place_obj.place_id.longitude,
                         'message': "{} Place updated.".format(user_place_obj.place_type)
                     })
 
