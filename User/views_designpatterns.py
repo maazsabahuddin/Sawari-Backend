@@ -451,6 +451,58 @@ class IsVerified(generics.GenericAPIView, UserOTPMixin):
             })
 
 
+class LoginViaGoogle(generics.GenericAPIView):
+
+    def post(self, request, data=None):
+        try:
+            email = request.data.get('email')
+            name = request.data.get('name')
+            app = request.data.get('app')
+
+            email = email.strip()
+            name = name.strip()
+            if not (email and name and app):
+                raise UserException(status_code=400, message="Missing values")
+
+            user = CustomUserCheck.check_user(email)
+            if app == "Customer" and not user.is_customer:
+                raise UserNotAuthorized(message='Not authorized to login in the app.')
+
+            token, _ = Token.objects.get_or_create(user=user)
+            if not user.is_active and user.first_name != name:
+                raise UserNotActive(message="User not authenticated. Please verify first.")
+
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'token': token.key,
+                'message': 'Login Successfully',
+            })
+
+        except UserNotAuthorized as e:
+            return JsonResponse({
+                'status': HTTP_401_UNAUTHORIZED,
+                'message': str(e.message),
+            })
+
+        except UserNotActive as e:
+            return JsonResponse({
+                'status': HTTP_401_UNAUTHORIZED,
+                'message': str(e.message),
+            })
+
+        except UserException as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': str(e.message),
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'status': HTTP_400_BAD_REQUEST,
+                'message': 'Error: ' + str(e),
+            })
+
+
 # User Login - Customer
 class UserLogin(generics.GenericAPIView, UserMixinMethods):
 
