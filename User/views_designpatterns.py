@@ -24,7 +24,7 @@ from .models import User, Customer, UserOtp, Place, PlaceDetail
 from User.otp_verify import UserOTPMixin
 
 from User.exceptions import TwilioEmailException, UserException, InvalidUsage, WrongPassword, \
-    UserNotAuthorized, UserNotActive, MissingField, WrongPhonenumber
+    UserNotAuthorized, UserNotActive, MissingField, WrongPhonenumber, UserNotFound
 
 account_sid = TWILIO_ACCOUNT_SID
 auth_token = TWILIO_AUTH_TOKEN
@@ -49,35 +49,30 @@ class CheckUser(generics.GenericAPIView):
                 if phone_number[0] == "0":
                     phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
 
-                if len(phone_number) != 13:
-                    raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
-
-                if not UserMixinMethods.validate_phone(phone_number):
+                if len(phone_number) != 13 or not UserMixinMethods.validate_phone(phone_number):
                     raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
 
             # Check if user exist or not.
             user = CustomUserCheck.check_user(phone_number)
             if not user:
-                raise UserNotAuthorized(message="The sign-in credentials does not exist. "
-                                                "Try again or create a new account")
+                raise UserNotFound(status_code=HTTP_404_NOT_FOUND,
+                                   message='The sign-in credentials does not exist. Try again or create a new account')
+
             if app == "Customer" and not user.is_customer:
-                raise UserNotAuthorized(message='Not authorized to login in the app.')
+                raise UserNotAuthorized(status_code=401, message='Not authorized to login in the app.')
+
+            if app == "Captain" and not user.is_captain:
+                raise UserNotAuthorized(status_code=401, message='Not authorized to login in the app.')
 
             return JsonResponse({
                 'status': HTTP_200_OK,
                 'message': 'User Exist.'
             })
 
-        except MissingField as e:
+        except (WrongPhonenumber, UserNotAuthorized, UserNotFound, MissingField) as e:
             return JsonResponse({
                 'status': e.status_code,
-                'message': e.message,
-            })
-
-        except WrongPhonenumber as e:
-            return JsonResponse({
-                'status': e.status_code,
-                'message': e.message,
+                'message': str(e.message),
             })
 
         except UserNotAuthorized as e:
@@ -509,7 +504,7 @@ class IsVerified(generics.GenericAPIView, UserOTPMixin):
 
 class LoginViaGoogle(generics.GenericAPIView):
 
-    def post(self, request, data=None):
+    def post(self, request):
         try:
             email = request.data.get('email')
             name = request.data.get('name')
@@ -517,40 +512,34 @@ class LoginViaGoogle(generics.GenericAPIView):
 
             email = email.strip()
             name = name.strip()
+            app = app.strip()
             if not (email and name and app):
-                raise UserException(status_code=400, message="Missing values")
+                raise MissingField(status_code=400, message="Missing values")
 
             user = CustomUserCheck.check_user(email)
             if not user:
-                raise UserException(status_code=400,
-                                    message="The sign-in credentials does not exist. Try again or create a new account")
+                raise UserNotFound(status_code=404,
+                                   message='The sign-in credentials does not exist. Try again or create a new account')
 
             if app == "Customer" and not user.is_customer:
-                raise UserNotAuthorized(message='Not authorized to login in the app.')
+                raise UserNotAuthorized(status_code=401, message='Not authorized to login in the app.')
+
+            if app == "Captain" and not user.is_captain:
+                raise UserNotAuthorized(status_code=401, message='Not authorized to login in the app.')
+
+            user_name = user.first_name + " " + user.last_name
+            user_name = user_name.strip()
+            if not user.is_active and user_name != name:
+                raise UserNotActive(status_code=401, message="User not authenticated. Please contact Sawari helpline.")
 
             token, _ = Token.objects.get_or_create(user=user)
-            if not user.is_active and user.first_name != name:
-                raise UserNotActive(message="User not authenticated. Please verify first.")
-
             return JsonResponse({
                 'status': HTTP_200_OK,
                 'token': token.key,
                 'message': 'Login Successfully',
             })
 
-        except UserNotAuthorized as e:
-            return JsonResponse({
-                'status': HTTP_401_UNAUTHORIZED,
-                'message': str(e.message),
-            })
-
-        except UserNotActive as e:
-            return JsonResponse({
-                'status': HTTP_401_UNAUTHORIZED,
-                'message': str(e.message),
-            })
-
-        except UserException as e:
+        except (WrongPassword, UserNotAuthorized, UserNotFound, UserNotActive) as e:
             return JsonResponse({
                 'status': e.status_code,
                 'message': str(e.message),
@@ -578,16 +567,22 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
             # Check if user exist or not.
             user_check = CustomUserCheck.check_user(email_or_phone)
             if not user_check:
-                raise WrongPassword(message="The sign-in credentials does not exist. Try again or create a new account")
+                raise UserNotFound(status_code=HTTP_404_NOT_FOUND,
+                                   message='The sign-in credentials does not exist. Try again or create a new account')
+
             if app == "Customer" and not user_check.is_customer:
-                raise UserNotAuthorized(message='Not authorized to login in the app.')
+                raise UserNotAuthorized(status_code=401, message='Not authorized to login in the app.')
+
+            if app == "Captain" and not user_check.is_captain:
+                raise UserNotAuthorized(status_code=401, message='Not authorized to login in the app.')
 
             user = CustomAuthenticationBackend.authenticate(email_or_phone, password)
             if not user:
-                raise WrongPassword(message="Invalid Credentials.")
+                raise WrongPassword(status_code=401, message="Invalid Credentials.")
+
             token, _ = Token.objects.get_or_create(user=user)
             if not user.is_active:
-                raise UserNotActive(message="User not authenticated. Please verify first.")
+                raise UserNotActive(status_code=401, message="User not authenticated. Please verify first.")
 
             return JsonResponse({
                 'status': HTTP_200_OK,
@@ -595,15 +590,9 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
                 'message': 'Login Successfully',
             })
 
-        except WrongPassword as e:
+        except (WrongPassword, UserNotAuthorized, UserNotFound) as e:
             return JsonResponse({
-                'status': HTTP_401_UNAUTHORIZED,
-                'message': str(e.message),
-            })
-
-        except UserNotAuthorized as e:
-            return JsonResponse({
-                'status': HTTP_401_UNAUTHORIZED,
+                'status': e.status_code,
                 'message': str(e.message),
             })
 
@@ -618,8 +607,8 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
                 return JsonResponse({
                     'status': HTTP_200_OK,
                     'token': token.key,
-                    'message1': "OTP has been successfully sent.",
-                    'message': str(e.message),
+                    'message': "OTP has been successfully sent.",
+                    'user_message': str(e.message),
                 })
             except Exception as e:
                 raise TwilioEmailException(message=user.phone_number + " is not verified on your Twilio trial account.")
@@ -639,12 +628,13 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
 
 class UserLogout(APIView):
 
-    @logout_decorator
-    def post(self, request, **kwargs):
+    @login_decorator
+    def post(self, request, data=None):
         try:
-            token_user = kwargs.get('user')
+            user = data.get('user')
+            user_token = Token.objects.filter(user=user).first()
 
-            is_logout = token_user.user.auth_token.delete()
+            is_logout = user_token.user.auth_token.delete()
             if is_logout:
                 return JsonResponse({
                     'status': HTTP_200_OK,

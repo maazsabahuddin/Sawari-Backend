@@ -61,3 +61,7 @@ class NameException(UserException):
 
 class WrongPhonenumber(UserException):
     pass
+
+
+class TemporaryUserMessage(UserException):
+    pass

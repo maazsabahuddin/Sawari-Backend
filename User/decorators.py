@@ -8,7 +8,7 @@ from A.settings.base import PHONE_NUMBER_REGEX, EMAIL_REGEX, COUNTRY_CODE_PK
 from CustomAuthentication.backend_authentication import CustomUserCheck
 from User.models import UserOtp, User
 from User.exceptions import UserException, PinNotMatched, MissingField, UserNotFound, OldPin, \
-    TwilioEmailException, InvalidUsage, WrongPassword, WrongPhonenumber
+    TwilioEmailException, InvalidUsage, WrongPassword, WrongPhonenumber, TemporaryUserMessage
 from RideSchedule.exceptions import RideFare, RideException, RideNotAvailable, FieldMissing, NotEnoughSeats, \
     StopNotExist
 from Payment.exceptions import PaymentException, PaymentMethodException, Fare
@@ -27,44 +27,20 @@ def login_decorator(f):
             token = request.headers.get('authorization')
 
             if not token:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Token required for authentication.',
-                })
+                raise MissingField(status_code=HTTP_400_BAD_REQUEST, message='Token required for authentication.')
 
             user_token = Token.objects.filter(key=token).first()
             if not user_token:
-                return JsonResponse({
-                    'status': HTTP_401_UNAUTHORIZED,
-                    'message': 'Login session expire.',
-                })
+                raise UserNotFound(status_code=HTTP_404_NOT_FOUND, message='Login session expire.')
 
             user = CustomUserCheck.check_user_separately(user_token.user.email, user_token.user.phone_number)
-
-            if not user.is_active:
-                return JsonResponse({
-                    'status': HTTP_401_UNAUTHORIZED,
-                    'message': 'User not authenticated. Please verify first.',
-                })
 
             data = {'user': user}
             return f(args[0], request, data)
 
-        except UserNotFound as e:
+        except (UserNotFound, MissingField) as e:
             return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': str(e.message),
-            })
-
-        except WrongPassword as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': str(e.message),
-            })
-
-        except MissingField as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
+                'status': e.status_code,
                 'message': str(e.message),
             })
 
@@ -97,12 +73,6 @@ def login_decorator(f):
                 'status': e.status_code,
                 'message': str(e.message),
             })
-
-        # except PaymentMethodException as e:
-        #     return JsonResponse({
-        #         'status': e.status_code,
-        #         'message': str(e.message),
-        #     })
 
         except StopNotExist as e:
             return JsonResponse({
@@ -200,32 +170,24 @@ def login_credentials(f):
 
             app = app.strip()
             email_or_phone = email_or_phone.strip()
+
+            if app == "Captain":
+                raise TemporaryUserMessage(status_code=400, message='Captain app coming soon.')
+
             if not password:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Password required.',
-                })
+                raise MissingField(status_code=400, message='Password required.')
 
             if not email_or_phone:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Email/Phone required.',
-                })
+                raise MissingField(status_code=400, message='Email/Phone required.')
 
             if not app:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'App not mentioned.',
-                })
+                raise MissingField(status_code=400, message='App not mentioned.')
 
             if email_or_phone[0] == "0":
                 email_or_phone = "+" + COUNTRY_CODE_PK + email_or_phone[1:]
 
-                if len(email_or_phone) != 13:
-                    raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
-
                 from User.views_designpatterns import UserMixinMethods
-                if not UserMixinMethods.validate_phone(email_or_phone):
+                if len(email_or_phone) != 13 or not UserMixinMethods.validate_phone(email_or_phone):
                     raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
 
             data = {'email_or_phone': email_or_phone, 'password': password, 'app': app}
@@ -237,7 +199,7 @@ def login_credentials(f):
                 'message': str(e.message),
             })
 
-        except WrongPhonenumber as e:
+        except (WrongPhonenumber, MissingField, TemporaryUserMessage) as e:
             return JsonResponse({
                 'status': e.status_code,
                 'message': e.message,
