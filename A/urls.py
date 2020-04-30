@@ -21,7 +21,7 @@ from Reservation.views import UserRides, CancelRide, BookRide
 from User.views_designpatterns import RegisterCase, IsVerified, UserLogin, UserLogout, ResendOtpRegister, \
     PasswordReset, PasswordResetCheck, SetNewPassword, PasswordResetResendOtp, PasswordChange, ChangePhoneNumber, \
     ChangePhoneNumberOtpMatch, UpdateName, UserDetails, PasswordCheck, DeleteUser, PasswordChangeResendOtp, \
-    UpdateEmail, AddUserPlace, UpdateUserPlace, UserPlaces, RegisterViaGoogle, LoginViaGoogle, CheckUser
+    UpdateEmail, AddUserPlace, UpdateUserPlace, UserPlaces, LoginViaGoogle, CheckUser
 from RideSchedule.views import VehicleRoute, BusRoute, CalculateFare
 
 # from Reservation.views import BusRoute, BookingDetails, BookRide
@@ -32,14 +32,13 @@ urlpatterns = [
     # Register User.
     # path('register/', Register.as_view(), name='user_register_api'),
     path('register/', RegisterCase.as_view(), name='user_register_api'),
-    path('register/via/google/', RegisterViaGoogle.as_view(), name='register_via_google'),
     path('is_verified/', IsVerified.as_view(), name='user_is_verified'),
     path('register/resend_otp/', ResendOtpRegister.as_view(), name='resend_otp'),
 
     # User login logout API.
     path('check/user/', CheckUser.as_view(), name='check_user'),
     path('login/', UserLogin.as_view(), name='customer_login'),
-    path('login/via/google/', LoginViaGoogle.as_view(), name='customer_login'),
+    path('login/via/google/', LoginViaGoogle.as_view(), name='login_or_register_via_google'),
     path('logout/', UserLogout.as_view(), name='customer_logout'),
 
     path('bus/route/', BusRoute.as_view(), name='bus_route'),

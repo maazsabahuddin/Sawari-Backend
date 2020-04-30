@@ -19,8 +19,8 @@ from A.settings.base import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_C
 from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
 from User.decorators import login_credentials, otp_verify, login_decorator, register, password_reset_decorator, \
     logout_decorator, resend_otp, phone_number_decorator, password_change_decorator, resend_otp_change_phone_number, \
-    change_phone_number_otp_verify, register_via_google_decorator
-from .models import User, Customer, UserOtp, Place, PlaceDetail
+    change_phone_number_otp_verify, register_or_login_google
+from .models import User, Customer, UserOtp, Place, PlaceDetail, Captain
 from User.otp_verify import UserOTPMixin
 
 from User.exceptions import TwilioEmailException, UserException, InvalidUsage, WrongPassword, \
@@ -279,37 +279,74 @@ class ResendOtpRegister(UserMixinMethods, generics.GenericAPIView):
             })
 
 
-class RegisterViaGoogle(generics.GenericAPIView):
+class LoginViaGoogle(generics.GenericAPIView):
 
-    @register_via_google_decorator
+    @register_or_login_google
     def post(self, request, data=None):
+        token = None
         try:
             email = data.get('email')
             password = data.get('password')
-            is_customer = data.get('is_customer')
-            is_captain = data.get('is_captain')
-            first_name = data.get('first_name')
+            app = data.get('app')
+            name = data.get('name')
+
+            user = CustomUserCheck.check_user(email)
+            if user and not password:
+                user_name = user.first_name + " " + user.last_name
+                user_name = user_name.strip()
+                if not user.is_active and user_name != name:
+                    raise UserNotActive(status_code=401,
+                                        message="User not authenticated. Please contact Sawari helpline.")
+
+                if app == "Customer" and not user.is_customer:
+                    raise UserNotAuthorized(status_code=401, message='Not authorized to login in the app.')
+
+                if app == "Captain" and not user.is_captain:
+                    raise UserNotAuthorized(status_code=401, message='Not authorized to login in the app.')
+
+                token, _ = Token.objects.get_or_create(user=user)
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'token': token.key,
+                    'message': 'Login Successfully',
+                })
 
             with transaction.atomic():
                 user = User.objects.create(
-                    first_name=first_name,
+                    first_name=name,
                     email=email,
+                    phone_number=None,
                     password=password,
                     is_active=True,
-                    is_customer=is_customer,
                 )
                 user.save()
 
-                if is_customer:
+                if app == "Customer":
                     Customer.objects.create(user=user)
                     if user:
+                        user.is_customer = True
+                        user.save()
                         token, _ = Token.objects.get_or_create(user=user)
+                elif app == "Captain":
+                    Captain.objects.create(user=user)
+                    if user:
+                        user.is_customer = True
+                        user.save()
+                        token, _ = Token.objects.get_or_create(user=user)
+                else:
+                    pass
 
                 return JsonResponse({
                     'status': HTTP_200_OK,
                     'token': token.key,
                     'message': 'User Registered successfully.',
                 })
+
+        except (UserNotAuthorized, UserNotActive) as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': str(e.message),
+            })
 
         except Exception as e:
             return JsonResponse({
@@ -502,54 +539,54 @@ class IsVerified(generics.GenericAPIView, UserOTPMixin):
             })
 
 
-class LoginViaGoogle(generics.GenericAPIView):
-
-    def post(self, request):
-        try:
-            email = request.data.get('email')
-            name = request.data.get('name')
-            app = request.data.get('app')
-
-            email = email.strip()
-            name = name.strip()
-            app = app.strip()
-            if not (email and name and app):
-                raise MissingField(status_code=400, message="Missing values")
-
-            user = CustomUserCheck.check_user(email)
-            if not user:
-                raise UserNotFound(status_code=404,
-                                   message='The sign-in credentials does not exist. Try again or create a new account')
-
-            if app == "Customer" and not user.is_customer:
-                raise UserNotAuthorized(status_code=401, message='Not authorized to login in the app.')
-
-            if app == "Captain" and not user.is_captain:
-                raise UserNotAuthorized(status_code=401, message='Not authorized to login in the app.')
-
-            user_name = user.first_name + " " + user.last_name
-            user_name = user_name.strip()
-            if not user.is_active and user_name != name:
-                raise UserNotActive(status_code=401, message="User not authenticated. Please contact Sawari helpline.")
-
-            token, _ = Token.objects.get_or_create(user=user)
-            return JsonResponse({
-                'status': HTTP_200_OK,
-                'token': token.key,
-                'message': 'Login Successfully',
-            })
-
-        except (WrongPassword, UserNotAuthorized, UserNotFound, UserNotActive) as e:
-            return JsonResponse({
-                'status': e.status_code,
-                'message': str(e.message),
-            })
-
-        except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Error: ' + str(e),
-            })
+# class LoginViaGoogle(generics.GenericAPIView):
+#
+#     def post(self, request):
+#         try:
+#             email = request.data.get('email')
+#             name = request.data.get('name')
+#             app = request.data.get('app')
+#
+#             email = email.strip()
+#             name = name.strip()
+#             app = app.strip()
+#             if not (email and name and app):
+#                 raise MissingField(status_code=400, message="Missing values")
+#
+#             user = CustomUserCheck.check_user(email)
+#             if not user:
+#                 raise UserNotFound(status_code=404,
+#                                    message='The sign-in credentials does not exist. Try again or create a new account')
+#
+#             if app == "Customer" and not user.is_customer:
+#                 raise UserNotAuthorized(status_code=401, message='Not authorized to login in the app.')
+#
+#             if app == "Captain" and not user.is_captain:
+#                 raise UserNotAuthorized(status_code=401, message='Not authorized to login in the app.')
+#
+#             user_name = user.first_name + " " + user.last_name
+#             user_name = user_name.strip()
+#             if not user.is_active and user_name != name:
+#                 raise UserNotActive(status_code=401, message="User not authenticated. Please contact Sawari helpline.")
+#
+#             token, _ = Token.objects.get_or_create(user=user)
+#             return JsonResponse({
+#                 'status': HTTP_200_OK,
+#                 'token': token.key,
+#                 'message': 'Login Successfully',
+#             })
+#
+#         except (WrongPassword, UserNotAuthorized, UserNotFound, UserNotActive) as e:
+#             return JsonResponse({
+#                 'status': e.status_code,
+#                 'message': str(e.message),
+#             })
+#
+#         except Exception as e:
+#             return JsonResponse({
+#                 'status': HTTP_400_BAD_REQUEST,
+#                 'message': 'Error: ' + str(e),
+#             })
 
 
 # User Login - Customer

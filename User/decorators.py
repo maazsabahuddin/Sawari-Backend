@@ -15,9 +15,6 @@ from Payment.exceptions import PaymentException, PaymentMethodException, Fare
 import uuid
 from django.contrib.auth.hashers import make_password
 
-# import dump
-# from User.views_designpatterns import UserMixinMethods
-
 
 def login_decorator(f):
     @wraps(f)
@@ -310,33 +307,34 @@ def change_phone_number_otp_verify(f):
     return token_decorator
 
 
-def register_via_google_decorator(f):
+def register_or_login_google(f):
 
     def decorator(*args):
         try:
             request = args[1]
             email = request.data.get('email')
             name = request.data.get('name')
-            is_customer = request.data.get('is_customer')
-            is_captain = request.data.get('is_captain')
+            app = request.data.get('app')
+
+            email = email.strip()
+            name = name.strip()
+            app = app.strip()
 
             from User.views_designpatterns import UserMixinMethods
             if not UserMixinMethods.validate_email(email):
                 raise UserException(status_code=400, message='Invalid Email address')
 
-            user_email = User.objects.filter(email=email).first()
-            if user_email:
-                raise UserException(status_code=400, message='Email already registered.')
-
-            password = uuid.uuid4()
-            password = make_password(password)
+            password = None
+            user = CustomUserCheck.check_user(email)
+            if not user:
+                password = uuid.uuid4()
+                password = make_password(password)
 
             data = {
                 'email': email,
                 'password': password,
-                'is_customer': is_customer,
-                'is_captain': is_captain,
-                'first_name': name,
+                'app': app,
+                'name': name,
             }
             return f(args[0], request, data)
 
