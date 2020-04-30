@@ -8,7 +8,7 @@ from A.settings.base import PHONE_NUMBER_REGEX, EMAIL_REGEX, COUNTRY_CODE_PK
 from CustomAuthentication.backend_authentication import CustomUserCheck
 from User.models import UserOtp, User
 from User.exceptions import UserException, PinNotMatched, MissingField, UserNotFound, OldPin, \
-    TwilioEmailException, InvalidUsage, WrongPassword, WrongPhonenumber, TemporaryUserMessage
+    TwilioEmailException, InvalidUsage, WrongPassword, WrongPhonenumber, TemporaryUserMessage, MisMatchField
 from RideSchedule.exceptions import RideFare, RideException, RideNotAvailable, FieldMissing, NotEnoughSeats, \
     StopNotExist
 from Payment.exceptions import PaymentException, PaymentMethodException, Fare
@@ -362,84 +362,57 @@ def register(f):
             email = data('email')
             phone_number = data('phone_number')
             password = data('password')
-            confirm_password = data('confirm_password')
-            is_customer = data('is_customer')
-            register_via = data('via')
+            app = data('app')
             first_name = data('first_name')
 
             email = email.strip()
             phone_number = phone_number.strip()
+            app = app.strip()
+            first_name = first_name.strip()
+            password = password.strip()
 
-            if register_via == "google":
-                register_via_google(email, first_name)
-
+            if app == "Captain":
+                raise TemporaryUserMessage(status_code=400, message='Captain app coming soon.')
             if not phone_number:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Phone number is required.',
-                })
+                raise MissingField(status_code=400, message='Phone number is required.')
+            if not password:
+                raise MissingField(status_code=400, message='Password field required.')
+            if not app:
+                raise MissingField(status_code=400, message='App field required.')
 
-            if not password and not confirm_password:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Password Field required.',
-                })
+            if not first_name:
+                first_name = ''
+            if not email:
+                email = None
 
-            # Checking Validation
-            first_name = ''
             if email:
                 from User.views_designpatterns import UserMixinMethods
                 if not UserMixinMethods.validate_email(email):
-                    return JsonResponse({
-                        'status': HTTP_400_BAD_REQUEST,
-                        'message': 'Invalid Email.',
-                    })
+                    raise MisMatchField(status_code=400, message='Invalid email address.')
                 first_name = email.split('@')[0]
 
             # Checking Validation
-            if phone_number:
-                if phone_number[0] == "0":
-                    phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
-
-                if len(phone_number) != 13:
-                    return JsonResponse({
-                        'status': HTTP_400_BAD_REQUEST,
-                        'message': 'Invalid Phone Number',
-                    })
+            if phone_number[0] == "0":
+                phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
 
                 from User.views_designpatterns import UserMixinMethods
-                if not UserMixinMethods.validate_phone(phone_number):
-                    return JsonResponse({
-                        'status': HTTP_400_BAD_REQUEST,
-                        'message': 'Invalid Phone Number',
-                    })
-
-            if is_customer == 'False':
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'is_customer field should be true',
-                })
-
-            if password != confirm_password:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Password Fields not matched'
-                })
-
-            if not email and not phone_number:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Email/Phone is required'
-                })
+                if len(email_or_phone) != 13 or not UserMixinMethods.validate_phone(phone_number):
+                    raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
 
             data = {
                 'email': email,
                 'phone_number': phone_number,
                 'password': password,
-                'is_customer': is_customer,
+                'app': app,
                 'first_name': first_name,
             }
             return f(args[0], request, data)
+
+        except (WrongPhonenumber, MissingField, TemporaryUserMessage, MisMatchField) as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': e.message,
+            })
 
         except UserException as e:
             return JsonResponse({

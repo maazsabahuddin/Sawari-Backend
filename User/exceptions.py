@@ -65,3 +65,11 @@ class WrongPhonenumber(UserException):
 
 class TemporaryUserMessage(UserException):
     pass
+
+
+class MisMatchField(UserException):
+    pass
+
+
+class UserAlreadyExist(UserException):
+    pass

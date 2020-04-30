@@ -24,7 +24,7 @@ from .models import User, Customer, UserOtp, Place, PlaceDetail, Captain
 from User.otp_verify import UserOTPMixin
 
 from User.exceptions import TwilioEmailException, UserException, InvalidUsage, WrongPassword, \
-    UserNotAuthorized, UserNotActive, MissingField, WrongPhonenumber, UserNotFound
+    UserNotAuthorized, UserNotActive, MissingField, WrongPhonenumber, UserNotFound, UserAlreadyExist
 
 account_sid = TWILIO_ACCOUNT_SID
 auth_token = TWILIO_AUTH_TOKEN
@@ -413,20 +413,15 @@ class Register(RegisterCase, UserMixinMethods):
             email = data.get('email')
             phone_number = data.get('phone_number')
             password = data.get('password')
-            is_customer = data.get('is_customer')
+            app = data.get('app')
             first_name = data.get('first_name')
 
             user_email = User.objects.filter(email=email).first()
             user_phone_no = User.objects.filter(phone_number=phone_number).first()
-
             if user_email or user_phone_no:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Email/Phone already registered.',
-                })
+                raise UserAlreadyExist(status_code=400, message='Email/Phone already registered.')
 
             with transaction.atomic():
-
                 otp = UserOTPMixin.generate_otp()
                 print(otp)
                 # FACTORY PATTERN it delegates the decision to the get_serializer method and
@@ -434,16 +429,12 @@ class Register(RegisterCase, UserMixinMethods):
                 serializer = UserMixinMethods.get_serializer_object_register(email, phone_number)
                 serializer(otp, email=email, phone_number=phone_number)
 
-                if not email:
-                    email = None
-
                 user = User.objects.create(
                     first_name=first_name,
                     email=email,
                     phone_number=phone_number,
                     password=make_password(password),
                     is_active=False,
-                    is_customer=is_customer,
                 )
                 user_otp = UserOtp.objects.create(
                     user=user,
