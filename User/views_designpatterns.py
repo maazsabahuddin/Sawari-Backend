@@ -2,29 +2,26 @@ import datetime
 import re
 import uuid
 from abc import abstractmethod
-from django.utils.timezone import localtime
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from django.http import JsonResponse
 from django_twilio.client import Client
-from rest_framework import generics
 
+from rest_framework import generics
 from rest_framework.permissions import AllowAny
 from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 
-import A
-from A.settings.base import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_COUNTER, EMAIL_REGEX, PHONE_NUMBER_REGEX, \
-    EMAIL_VERIFICATION, PHONE_VERIFICATION, COUNTRY_CODE_PK, NOT_CATCHABLE_ERROR_CODE, NOT_CATCHABLE_ERROR_MESSAGE, \
-    TIME_ZONE, local_tz, OTP_COUNTER_LIMIT
+from A.settings.base import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_COUNTER, EMAIL_REGEX, \
+    PHONE_NUMBER_REGEX, EMAIL_VERIFICATION, PHONE_VERIFICATION, COUNTRY_CODE_PK, NOT_CATCHABLE_ERROR_CODE, \
+    NOT_CATCHABLE_ERROR_MESSAGE, OTP_COUNTER_LIMIT
 from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
 from User.decorators import login_credentials, otp_verify, login_decorator, register, password_reset_decorator, \
     logout_decorator, resend_otp, phone_number_decorator, password_change_decorator, resend_otp_change_phone_number, \
     change_phone_number_otp_verify, register_or_login_google
 from .models import User, Customer, UserOtp, Place, PlaceDetail, Captain
 from User.otp_verify import UserOTPMixin
-
 from User.exceptions import UserException, InvalidUsage, WrongPassword, \
     UserNotAuthorized, UserNotActive, MissingField, WrongPhonenumber, UserNotFound, UserAlreadyExist, \
     TemporaryUserMessage, MisMatchField, TwilioException
@@ -78,11 +75,8 @@ class CheckUser(generics.GenericAPIView):
                 'message': str(e.message),
             })
 
-        except UserNotAuthorized as e:
-            return JsonResponse({
-                'status': HTTP_401_UNAUTHORIZED,
-                'message': str(e.message),
-            })
+        except Exception as e:
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class UserMixinMethods(object):
@@ -113,19 +107,16 @@ class UserMixinMethods(object):
 
     @staticmethod
     def user_otp_save(user, otp):
-        try:
-            if user:
-                otp_counter = user.otp_counter
-                otp_counter += 1
-
-                user.otp = otp
-                user.otp_time = datetime.datetime.today()
-                user.is_verified = False
-                user.otp_counter = otp_counter
-                user.save()
-
-        except Exception as e:
+        from django.utils import timezone
+        if not user:
             raise UserException(status_code=404, message="User doesn't exist.")
+        otp_counter = user.otp_counter
+        otp_counter += 1
+        user.otp = otp
+        user.otp_time = timezone.localtime(timezone.now())
+        user.is_verified = False
+        user.otp_counter = otp_counter
+        user.save()
 
     @staticmethod
     def save_user_password_reset_uuid(user, password_uuid):
@@ -263,23 +254,14 @@ class ResendOtpRegister(UserMixinMethods, generics.GenericAPIView):
                     'message': str(e.message),
                 })
 
-        except TwilioEmailException as e:
-            if e.status_code == 101:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': str(e.message),
-                })
-            if e.status_code == 101:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': str(e.message),
-                })
+        except TwilioException as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': str(e.message),
+            })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': "Server Error. " + str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class LoginViaGoogle(generics.GenericAPIView):
@@ -352,10 +334,7 @@ class LoginViaGoogle(generics.GenericAPIView):
             })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Slow internet connection.',
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 # @singleton
@@ -536,60 +515,7 @@ class IsVerified(generics.GenericAPIView, UserOTPMixin):
                 })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_404_NOT_FOUND,
-                'message': str(e),
-            })
-
-
-# class LoginViaGoogle(generics.GenericAPIView):
-#
-#     def post(self, request):
-#         try:
-#             email = request.data.get('email')
-#             name = request.data.get('name')
-#             app = request.data.get('app')
-#
-#             email = email.strip()
-#             name = name.strip()
-#             app = app.strip()
-#             if not (email and name and app):
-#                 raise MissingField(status_code=400, message="Missing values")
-#
-#             user = CustomUserCheck.check_user(email)
-#             if not user:
-#                 raise UserNotFound(status_code=404,
-#                                    message='The sign-in credentials does not exist. Try again or create a new account')
-#
-#             if app == "Customer" and not user.is_customer:
-#                 raise UserNotAuthorized(status_code=401, message='Not authorized to login in the app.')
-#
-#             if app == "Captain" and not user.is_captain:
-#                 raise UserNotAuthorized(status_code=401, message='Not authorized to login in the app.')
-#
-#             user_name = user.first_name + " " + user.last_name
-#             user_name = user_name.strip()
-#             if not user.is_active and user_name != name:
-#                 raise UserNotActive(status_code=401, message="User not authenticated. Please contact Sawari helpline.")
-#
-#             token, _ = Token.objects.get_or_create(user=user)
-#             return JsonResponse({
-#                 'status': HTTP_200_OK,
-#                 'token': token.key,
-#                 'message': 'Login Successfully',
-#             })
-#
-#         except (WrongPassword, UserNotAuthorized, UserNotFound, UserNotActive) as e:
-#             return JsonResponse({
-#                 'status': e.status_code,
-#                 'message': str(e.message),
-#             })
-#
-#         except Exception as e:
-#             return JsonResponse({
-#                 'status': HTTP_400_BAD_REQUEST,
-#                 'message': 'Error: ' + str(e),
-#             })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 # User Login - Customer
@@ -657,7 +583,7 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
                 })
             user_otp.otp = otp
             user_otp.otp_time = timezone.localtime(timezone.now())
-            user_otp.otp_counter += OTP_INITIAL_COUNTER
+            user_otp.otp_counter += 1
             user_otp.save()
 
             return JsonResponse({
@@ -689,16 +615,13 @@ class UserLogout(APIView):
                     'status': HTTP_200_OK,
                     'message': 'Logged out',
                 })
-
             return JsonResponse({
                 'status': HTTP_404_NOT_FOUND,
                 'message': 'Unable to logout',
             })
+
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Error. ' + str(e)
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class PasswordReset(generics.GenericAPIView, UserOTPMixin):
@@ -827,10 +750,7 @@ class PasswordReset(generics.GenericAPIView, UserOTPMixin):
                                   password_uuid=password_uuid)
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class PasswordResetCheck(generics.GenericAPIView):
@@ -862,10 +782,7 @@ class PasswordResetCheck(generics.GenericAPIView):
                 })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Server Error.' + str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class SetNewPassword(generics.GenericAPIView):
@@ -910,10 +827,7 @@ class SetNewPassword(generics.GenericAPIView):
                 })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_404_NOT_FOUND,
-                'message': "Server Error.",
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class PasswordResetResendOtp(generics.GenericAPIView, UserOTPMixin):
@@ -933,10 +847,7 @@ class PasswordResetResendOtp(generics.GenericAPIView, UserOTPMixin):
                 return serializer(user_otp, otp, email=user_otp.user.email, phone_number=user_otp.user.phone_number)
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': "Server Error. " + str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class UpdateName(generics.GenericAPIView):
@@ -999,10 +910,7 @@ class UpdateName(generics.GenericAPIView):
                 })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class ChangePhoneNumber(generics.GenericAPIView, UserOTPMixin):
@@ -1072,18 +980,14 @@ class ChangePhoneNumber(generics.GenericAPIView, UserOTPMixin):
                     'message': "User not found.",
                 })
 
-        except TwilioEmailException as e:
-            if e.status_code == 101:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': str(e.message),
-                })
+        except TwilioException as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': e.message,
+            })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Server Error.' + str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class ChangePhoneNumberOtpMatch(generics.GenericAPIView):
@@ -1116,10 +1020,7 @@ class ChangePhoneNumberOtpMatch(generics.GenericAPIView):
                 })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class PasswordChange(generics.GenericAPIView):
@@ -1141,10 +1042,7 @@ class PasswordChange(generics.GenericAPIView):
             })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class PasswordCheck(generics.GenericAPIView):
@@ -1170,10 +1068,7 @@ class PasswordCheck(generics.GenericAPIView):
             })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class UserDetails(generics.GenericAPIView):
@@ -1207,10 +1102,7 @@ class UserDetails(generics.GenericAPIView):
                 })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class DeleteUser(generics.GenericAPIView):
@@ -1219,8 +1111,6 @@ class DeleteUser(generics.GenericAPIView):
     def get(self, request, data=None):
         try:
             user = data.get('user')
-            if not user:
-                raise UserException(status_code=404)
 
             return JsonResponse({
                 'status': HTTP_200_OK,
@@ -1235,10 +1125,7 @@ class DeleteUser(generics.GenericAPIView):
                 })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class PasswordChangeResendOtp(generics.GenericAPIView):
@@ -1277,23 +1164,14 @@ class PasswordChangeResendOtp(generics.GenericAPIView):
                     'message': str(e.message),
                 })
 
-        except TwilioEmailException as e:
-            if e.status_code == 101:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': str(e.message),
-                })
-            if e.status_code == 101:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': str(e.message),
-                })
+        except TwilioException as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': e.message,
+            })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': "Server Error. " + str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class UpdateEmail(generics.GenericAPIView):
@@ -1383,10 +1261,7 @@ class AddUserPlace(generics.GenericAPIView):
             })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class UpdateUserPlace(generics.GenericAPIView):
@@ -1448,10 +1323,7 @@ class UpdateUserPlace(generics.GenericAPIView):
                     })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class UserPlaces(generics.GenericAPIView):
@@ -1477,7 +1349,4 @@ class UserPlaces(generics.GenericAPIView):
             })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
