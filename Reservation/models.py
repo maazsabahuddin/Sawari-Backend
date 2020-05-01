@@ -1,5 +1,5 @@
 import datetime
-
+from django.utils import timezone
 from sortedm2m.fields import SortedManyToManyField
 from django.db import models
 from User.models import Captain, Customer
@@ -42,7 +42,7 @@ class Route(models.Model):
     stop_ids = models.ManyToManyField(Stop, through='RouteStops')
     start_name = models.CharField(blank=False, max_length=50)
     stop_name = models.CharField(blank=False, max_length=50)
-    created_date = models.DateTimeField(blank=True, null=True)
+    created_date = models.DateTimeField(blank=True, null=True, default=timezone.localtime(timezone.now()))
 
     def __str__(self):
         return "{} - Route {} = {} - {}".format(self.id, self.route_id, self.start_name, self.stop_name)
@@ -78,7 +78,7 @@ class Reservation(models.Model):
     reservation_seats = models.IntegerField(blank=False)
     is_confirmed = models.BooleanField(default=False)
     created_date = models.DateField(default=datetime.datetime.today)
-    updated_timestamp = models.DateTimeField(blank=True, null=True)
+    updated_timestamp = models.DateTimeField(blank=True, null=True, default=timezone.localtime(timezone.now()))
 
     def __str__(self):
         return "{} - {} - {}".format(self.reservation_number, self.customer_id.user.email,

@@ -2,7 +2,7 @@ import datetime
 import re
 import uuid
 from abc import abstractmethod
-
+from django.utils.timezone import localtime
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from django.http import JsonResponse
@@ -14,8 +14,10 @@ from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_200_OK, HTTP_400_BAD_
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 
+import A
 from A.settings.base import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_COUNTER, EMAIL_REGEX, PHONE_NUMBER_REGEX, \
-    EMAIL_VERIFICATION, PHONE_VERIFICATION, COUNTRY_CODE_PK
+    EMAIL_VERIFICATION, PHONE_VERIFICATION, COUNTRY_CODE_PK, NOT_CATCHABLE_ERROR_CODE, NOT_CATCHABLE_ERROR_MESSAGE, \
+    TIME_ZONE, local_tz
 from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
 from User.decorators import login_credentials, otp_verify, login_decorator, register, password_reset_decorator, \
     logout_decorator, resend_otp, phone_number_decorator, password_change_decorator, resend_otp_change_phone_number, \
@@ -23,8 +25,9 @@ from User.decorators import login_credentials, otp_verify, login_decorator, regi
 from .models import User, Customer, UserOtp, Place, PlaceDetail, Captain
 from User.otp_verify import UserOTPMixin
 
-from User.exceptions import TwilioEmailException, UserException, InvalidUsage, WrongPassword, \
-    UserNotAuthorized, UserNotActive, MissingField, WrongPhonenumber, UserNotFound, UserAlreadyExist
+from User.exceptions import UserException, InvalidUsage, WrongPassword, \
+    UserNotAuthorized, UserNotActive, MissingField, WrongPhonenumber, UserNotFound, UserAlreadyExist, \
+    TemporaryUserMessage, MisMatchField, TwilioException
 
 account_sid = TWILIO_ACCOUNT_SID
 auth_token = TWILIO_AUTH_TOKEN
@@ -361,54 +364,49 @@ class Register(RegisterCase, UserMixinMethods):
     permission_classes = (AllowAny,)
 
     def email_phone_otp(self, otp, **kwargs):
-        phone_number = ''
-        try:
-            email = kwargs.get('email')
-            phone_number = kwargs.get('phone_number')
+        email = kwargs.get('email')
+        phone_number = kwargs.get('phone_number')
 
-            if EMAIL_VERIFICATION:
-                UserOTPMixin.send_otp_email(email, otp)
+        if EMAIL_VERIFICATION:
+            result_email = UserOTPMixin.send_otp_email(email, otp)
+            if not result_email:
+                raise MisMatchField(status_code=400, message='Invalid email address.')
+            return True
 
-            if PHONE_VERIFICATION:
-                UserOTPMixin.send_otp_phone(phone_number, otp)
-
-        except TwilioEmailException as e:
-            if e.status_code == 102:
-                raise TwilioEmailException(status_code=102, message="Email not sent.")
-            if e.status_code == 101:
-                raise TwilioEmailException(status_code=101,
-                                           message=phone_number + " is not verified on your Twilio trial account.")
+        if PHONE_VERIFICATION:
+            result_phone_number = UserOTPMixin.send_otp_phone(phone_number, otp)
+            if not result_phone_number:
+                raise TwilioException(status_code=500,
+                                      message=phone_number + " is not verified on your Twilio trial account.")
+            return True
+        return False
 
     def email_otp(self, otp, **kwargs):
-        try:
-            email = kwargs.get('email')
+        email = kwargs.get('email')
 
-            # Sending OTP Via Email
-            if EMAIL_VERIFICATION:
-                UserOTPMixin.send_otp_email(email, otp)
-
-        except TwilioEmailException as e:
-            if e.status_code == 102:
-                raise TwilioEmailException(status_code=102, message="Email not sent.")
+        # Sending OTP Via Email
+        if EMAIL_VERIFICATION:
+            result_email = UserOTPMixin.send_otp_email(email, otp)
+            if not result_email:
+                raise MisMatchField(status_code=400, message='Invalid email address.')
+            return True
+        return False
 
     def phone_otp(self, otp, **kwargs):
-        phone_number = ''
-        try:
-            phone_number = kwargs.get('phone_number')
+        phone_number = kwargs.get('phone_number')
 
-            # Sending OTP Via Phone
-            if PHONE_VERIFICATION:
-                UserOTPMixin.send_otp_phone(phone_number, otp)
-                return True
+        # Sending OTP Via Phone
+        if PHONE_VERIFICATION:
+            result_phone_number = UserOTPMixin.send_otp_phone(phone_number, otp)
+            if not result_phone_number:
+                raise TwilioException(status_code=500,
+                                      message=phone_number + " is not verified on your Twilio trial account.")
+            return True
+        return False
 
-        except TwilioEmailException as e:
-            if e.status_code == 101:
-                raise TwilioEmailException(status_code=101,
-                                           message=phone_number + " is not verified on your Twilio trial account.")
-
-    @transaction.atomic
     @register
     def post(self, request, data=None):
+        token = None
         try:
             email = data.get('email')
             phone_number = data.get('phone_number')
@@ -422,13 +420,9 @@ class Register(RegisterCase, UserMixinMethods):
                 raise UserAlreadyExist(status_code=400, message='Email/Phone already registered.')
 
             with transaction.atomic():
-                otp = UserOTPMixin.generate_otp()
-                print(otp)
-                # FACTORY PATTERN it delegates the decision to the get_serializer method and
-                # return the object of concrete/implementation method
-                serializer = UserMixinMethods.get_serializer_object_register(email, phone_number)
-                serializer(otp, email=email, phone_number=phone_number)
 
+                if not email:
+                    email = None
                 user = User.objects.create(
                     first_name=first_name,
                     email=email,
@@ -436,19 +430,47 @@ class Register(RegisterCase, UserMixinMethods):
                     password=make_password(password),
                     is_active=False,
                 )
+                user.save()
+
+                if app == "Customer":
+                    Customer.objects.create(user=user)
+                    if user:
+                        user.is_customer = True
+                        user.save()
+                        token, _ = Token.objects.get_or_create(user=user)
+                elif app == "Captain":
+                    Captain.objects.create(user=user)
+                    if user:
+                        user.is_customer = True
+                        user.save()
+                        token, _ = Token.objects.get_or_create(user=user)
+                else:
+                    raise TemporaryUserMessage(status_code=400,
+                                               message='Server temporary down. Sorry for inconvenience.')
+                otp = UserOTPMixin.generate_otp()
+                print(otp)
+                # FACTORY PATTERN it delegates the decision to the get_serializer method and
+                # return the object of concrete/implementation method
+                serializer = UserMixinMethods.get_serializer_object_register(email, phone_number)
+                result_otp = serializer(otp, email=email, phone_number=phone_number)
+                if not result_otp:
+                    user.is_active = True
+                    user.save()
+                    return JsonResponse({
+                        'status': HTTP_200_OK,
+                        'token': token.key,
+                        'message': 'User successfully registered.',
+                    })
+
+                from django.utils import timezone
                 user_otp = UserOtp.objects.create(
                     user=user,
                     otp=otp,
-                    otp_time=datetime.datetime.today(),
+                    otp_time=timezone.localtime(timezone.now()),
                     otp_counter=OTP_INITIAL_COUNTER,
                     is_verified=False,
                 )
                 user_otp.save()
-                user.save()
-
-                Customer.objects.create(user=user)
-                if user:
-                    token, _ = Token.objects.get_or_create(user=user)
 
                 return JsonResponse({
                     'status': HTTP_200_OK,
@@ -456,23 +478,13 @@ class Register(RegisterCase, UserMixinMethods):
                     'message': 'OTP has been successfully sent.',
                 })
 
-        except TwilioEmailException as e:
-            if e.status_code == 101:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': str(e.message),
-                })
-            if e.status_code == 101:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': str(e.message),
-                })
-
-        except Exception as e:
+        except (UserAlreadyExist, TemporaryUserMessage, TwilioException, MisMatchField) as e:
             return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': str(e),
+                'status': e.status_code,
+                'message': e.message,
             })
+        except Exception as e:
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class IsVerified(generics.GenericAPIView, UserOTPMixin):

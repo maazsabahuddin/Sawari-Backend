@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.utils import timezone
 from User.models import User
 
 
@@ -18,7 +18,7 @@ class Pricing(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     price_per_km = models.FloatField(blank=False, null=False, max_length=5)
     fixed_fare = models.FloatField(blank=False, null=False, max_length=5)
-    updated_timestamp = models.DateTimeField(auto_now_add=True)
+    updated_timestamp = models.DateTimeField(default=timezone.localtime(timezone.now()))
 
     def __str__(self):
         return "{} - {}".format(self.user_id, self.price_per_km)

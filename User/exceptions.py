@@ -9,7 +9,7 @@ class InvalidUsage(Exception):
         self.message = message
 
 
-class TwilioEmailException(Exception):
+class TwilioException(Exception):
     status_code = 400
     message = ""
 

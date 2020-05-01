@@ -4,11 +4,12 @@ from django.http import JsonResponse
 from rest_framework.authtoken.models import Token
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_401_UNAUTHORIZED, HTTP_200_OK
 from django.db import transaction
-from A.settings.base import PHONE_NUMBER_REGEX, EMAIL_REGEX, COUNTRY_CODE_PK
+from A.settings.base import PHONE_NUMBER_REGEX, EMAIL_REGEX, COUNTRY_CODE_PK, NOT_CATCHABLE_ERROR_CODE, \
+    NOT_CATCHABLE_ERROR_MESSAGE
 from CustomAuthentication.backend_authentication import CustomUserCheck
 from User.models import UserOtp, User
 from User.exceptions import UserException, PinNotMatched, MissingField, UserNotFound, OldPin, \
-    TwilioEmailException, InvalidUsage, WrongPassword, WrongPhonenumber, TemporaryUserMessage, MisMatchField
+     InvalidUsage, WrongPassword, WrongPhonenumber, TemporaryUserMessage, MisMatchField
 from RideSchedule.exceptions import RideFare, RideException, RideNotAvailable, FieldMissing, NotEnoughSeats, \
     StopNotExist
 from Payment.exceptions import PaymentException, PaymentMethodException, Fare
@@ -382,8 +383,6 @@ def register(f):
 
             if not first_name:
                 first_name = ''
-            if not email:
-                email = None
 
             if email:
                 from User.views_designpatterns import UserMixinMethods
@@ -396,7 +395,7 @@ def register(f):
                 phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
 
                 from User.views_designpatterns import UserMixinMethods
-                if len(email_or_phone) != 13 or not UserMixinMethods.validate_phone(phone_number):
+                if len(phone_number) != 13 or not UserMixinMethods.validate_phone(phone_number):
                     raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
 
             data = {
@@ -414,11 +413,8 @@ def register(f):
                 'message': e.message,
             })
 
-        except UserException as e:
-            return JsonResponse({
-                'status': e.status_code,
-                'message': e.message,
-            })
+        except Exception as e:
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
     return register_decorator
 

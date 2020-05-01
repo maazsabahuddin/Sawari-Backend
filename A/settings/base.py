@@ -230,7 +230,7 @@ EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
 EMAIL_VERIFICATION = False
 
 # Phone Verification
-PHONE_VERIFICATION = True
+PHONE_VERIFICATION = False
 
 # FIXED_FARE_PRICE = 50
 # KILOMETER_FARE_PRICE = 8.8
@@ -251,6 +251,10 @@ STOP_WAIT_TIME = 1
 SHOW_RIDES_TODAY_ONLY = False
 # if today is 01 - 01 - 2020 then show the rides of today and tomorrow both (+1) it all depends on show_ride_days.
 SHOW_RIDE_DAYS = 3
+
+# Not catchable error message
+NOT_CATCHABLE_ERROR_MESSAGE = "Connection problem, please try again."
+NOT_CATCHABLE_ERROR_CODE = 400
 
 # LOGGING = {
 #     'version': 1,

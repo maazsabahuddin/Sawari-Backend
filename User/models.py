@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
 
 
 class User(AbstractUser):
@@ -19,7 +20,7 @@ class User(AbstractUser):
 class UserOtp(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_otp')
     otp = models.CharField(default=None, max_length=8, null=True, blank=False)
-    otp_time = models.DateTimeField(null=False, blank=False)
+    otp_time = models.DateTimeField(null=False, blank=False, default=timezone.localtime(timezone.now()))
     otp_counter = models.IntegerField(null=False, blank=False, default=0)
     is_verified = models.BooleanField(default=False)
     password_reset_id = models.CharField(unique=True, null=True, blank=True, max_length=255)
@@ -30,7 +31,7 @@ class UserOtp(models.Model):
 
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer')
-    created_date = models.DateTimeField(auto_now_add=True)
+    created_date = models.DateTimeField(default=timezone.localtime(timezone.now()))
 
     def __str__(self):
         return "{} - {} - {}".format(self.id, self.user.email, self.user.phone_number)
@@ -40,7 +41,7 @@ class Captain(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='captain_id')
     vendor = models.ForeignKey('user', on_delete=models.CASCADE, blank=True, null=True, related_name='vendor_id')
     is_owner = models.BooleanField(default=False)
-    created_date = models.DateTimeField(auto_now_add=True)
+    created_date = models.DateTimeField(default=timezone.localtime(timezone.now()))
 
     def __str__(self):
         return "{} - {}".format(self.id, self.user.email)
@@ -51,7 +52,7 @@ class PlaceDetail(models.Model):
     place_name = models.CharField(max_length=100, blank=False, null=False)
     latitude = models.CharField(max_length=30, blank=False, null=False)
     longitude = models.CharField(max_length=30, blank=False, null=False)
-    updated_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(default=timezone.localtime(timezone.now()))
 
     def __str__(self):
         return "{} - {}".format(self.place_id, self.place_name)
