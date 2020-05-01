@@ -630,12 +630,6 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
                 'message': 'Login Successfully',
             })
 
-        except (WrongPassword, UserNotAuthorized, UserNotFound) as e:
-            return JsonResponse({
-                'status': e.status_code,
-                'message': str(e.message),
-            })
-
         except UserNotActive as e:
             otp = UserOTPMixin.generate_otp()
             print(otp)
@@ -671,18 +665,14 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
                 'token': token.key,
                 'message': 'OTP has been successfully sent.',
             })
-
-        except TwilioException as e:
+        except (WrongPassword, UserNotAuthorized, UserNotFound, TwilioException) as e:
             return JsonResponse({
-                'status': HTTP_404_NOT_FOUND,
+                'status': e.status_code,
                 'message': str(e.message),
             })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Error: ' + str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class UserLogout(APIView):
