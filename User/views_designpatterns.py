@@ -17,7 +17,7 @@ from rest_framework.views import APIView
 import A
 from A.settings.base import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_COUNTER, EMAIL_REGEX, PHONE_NUMBER_REGEX, \
     EMAIL_VERIFICATION, PHONE_VERIFICATION, COUNTRY_CODE_PK, NOT_CATCHABLE_ERROR_CODE, NOT_CATCHABLE_ERROR_MESSAGE, \
-    TIME_ZONE, local_tz
+    TIME_ZONE, local_tz, OTP_COUNTER_LIMIT
 from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
 from User.decorators import login_credentials, otp_verify, login_decorator, register, password_reset_decorator, \
     logout_decorator, resend_otp, phone_number_decorator, password_change_decorator, resend_otp_change_phone_number, \
@@ -297,7 +297,7 @@ class LoginViaGoogle(generics.GenericAPIView):
             if user and not password:
                 user_name = user.first_name + " " + user.last_name
                 user_name = user_name.strip()
-                if not user.is_active and user_name != name:
+                if not user.is_active or user_name != name:
                     raise UserNotActive(status_code=401,
                                         message="User not authenticated. Please contact Sawari helpline.")
 
@@ -637,23 +637,42 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
             })
 
         except UserNotActive as e:
-            try:
-                otp = UserOTPMixin.generate_otp()
-                print(otp)
-                # FACTORY PATTERN it delegates the decision to the get_serializer method and
-                # return the object of concrete/implementation method
-                serializer = UserMixinMethods.get_serializer_object_register(user.email, user.phone_number)
-                serializer(otp, email=user.email, phone_number=user.phone_number)
+            otp = UserOTPMixin.generate_otp()
+            print(otp)
+            # FACTORY PATTERN it delegates the decision to the get_serializer method and
+            # return the object of concrete/implementation method
+            serializer = UserMixinMethods.get_serializer_object_register(user.email, user.phone_number)
+            result_otp = serializer(otp, email=user.email, phone_number=user.phone_number)
+            if not result_otp:
+                user.is_active = True
+                user.save()
                 return JsonResponse({
                     'status': HTTP_200_OK,
                     'token': token.key,
-                    'message': "OTP has been successfully sent.",
-                    'user_message': str(e.message),
+                    'message': 'User verified and login successfully.',
                 })
-            except Exception as e:
-                raise TwilioEmailException(message=user.phone_number + " is not verified on your Twilio trial account.")
 
-        except TwilioEmailException as e:
+            from django.utils import timezone
+            user_otp = UserOtp.objects.filter(user=user).first()
+            if not user_otp:
+                user_otp = UserOtp.objects.create(user=user)
+            if user_otp.otp_counter > OTP_COUNTER_LIMIT:
+                return JsonResponse({
+                    'status': 401,
+                    'message': "User not authenticated. Please contact Sawari helpline."
+                })
+            user_otp.otp = otp
+            user_otp.otp_time = timezone.localtime(timezone.now())
+            user_otp.otp_counter += OTP_INITIAL_COUNTER
+            user_otp.save()
+
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'token': token.key,
+                'message': 'OTP has been successfully sent.',
+            })
+
+        except TwilioException as e:
             return JsonResponse({
                 'status': HTTP_404_NOT_FOUND,
                 'message': str(e.message),
