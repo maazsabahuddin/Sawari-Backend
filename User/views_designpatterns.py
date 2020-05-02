@@ -773,7 +773,6 @@ class UpdateName(generics.GenericAPIView):
         name = first_name + ' ' + last_name
         return any(char.isdigit() for char in name)
 
-    @transaction.atomic
     @login_decorator
     def post(self, request, data=None):
         try:
@@ -782,8 +781,8 @@ class UpdateName(generics.GenericAPIView):
             first_name = request.data.get('first_name')
             last_name = request.data.get('last_name')
 
-            if not (first_name or last_name):
-                raise UserException(status_code=404)
+            if not (first_name and last_name):
+                raise MissingField(status_code=400, message='Some field missing.')
 
             if not first_name:
                 first_name = user.first_name
@@ -792,7 +791,7 @@ class UpdateName(generics.GenericAPIView):
                 last_name = user.last_name
 
             if UpdateName.check_string_for_numbers(first_name=first_name, last_name=last_name):
-                raise UserException(status_code=400)
+                raise InvalidUsage(status_code=400, message='Name cannot contain digits.')
 
             with transaction.atomic():
                 user.first_name = first_name
@@ -806,18 +805,8 @@ class UpdateName(generics.GenericAPIView):
                     'message': "Your name successfully updated.",
                 })
 
-        except UserException as e:
-            if e.status_code == 404:
-                return JsonResponse({
-                    'status': e.status_code,
-                    'message': 'Field cannot be empty.',
-                })
-            if e.status_code == 400:
-                return JsonResponse({
-                    'status': e.status_code,
-                    'message': 'Name cannot contain digits.',
-                })
-
+        except (MissingField, InvalidUsage) as e:
+            return JsonResponse({'status': e.status_code, 'message': e.message})
         except Exception as e:
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
