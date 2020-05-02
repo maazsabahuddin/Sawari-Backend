@@ -946,20 +946,14 @@ class PasswordCheck(generics.GenericAPIView):
             user = data.get('user')
             password = request.data.get('password')
 
+            password = password.strip()
             if not user.check_password(password):
-                raise UserException(status_code=401)
+                raise UserException(status_code=400, message="Invalid password.")
 
-            return JsonResponse({
-                'status': HTTP_200_OK,
-                'message': 'Password Verified.',
-            })
+            return JsonResponse({'status': HTTP_200_OK, 'message': 'Password Verified.'})
 
         except UserException as e:
-            return JsonResponse({
-                'status': 401,
-                'message': 'Invalid password.',
-            })
-
+            return JsonResponse({'status': e.status_code, 'message': e.message})
         except Exception as e:
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 

@@ -36,7 +36,7 @@ def login_decorator(f):
             data = {'user': user}
             return f(args[0], request, data)
 
-        except (UserNotFound, MissingField, DuplicateUser) as e:
+        except (UserNotFound, MissingField, DuplicateUser, UserException) as e:
             return JsonResponse({
                 'status': e.status_code,
                 'message': e.message,
