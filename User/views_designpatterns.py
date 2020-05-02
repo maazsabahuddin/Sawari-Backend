@@ -109,7 +109,7 @@ class UserMixinMethods(object):
     def user_otp_save(user, otp):
         from django.utils import timezone
         if not user:
-            raise UserException(status_code=404, message="User doesn't exist.")
+            return False
         otp_counter = user.otp_counter
         otp_counter += 1
         user.otp = otp
@@ -117,6 +117,7 @@ class UserMixinMethods(object):
         user.is_verified = False
         user.otp_counter = otp_counter
         user.save()
+        return True
 
     @staticmethod
     def save_user_password_reset_uuid(user, password_uuid):
@@ -219,8 +220,8 @@ class ResendOtpRegister(UserMixinMethods, generics.GenericAPIView):
         #         raise TwilioEmailException(status_code=101,
         #                                    message=phone_number + " is not verified on your Twilio trial account.")
 
-    @transaction.atomic
-    @resend_otp
+    @login_decorator
+    # @resend_otp
     def post(self, request, data=None):
         try:
             user = data.get('user')
@@ -228,38 +229,31 @@ class ResendOtpRegister(UserMixinMethods, generics.GenericAPIView):
             user_otp_obj = UserOtp.objects.filter(user=user).first()
             with transaction.atomic():
 
+                from django.utils import timezone
                 otp = UserOTPMixin.generate_otp()
-                UserMixinMethods.user_otp_save(user_otp_obj, otp)
+                save_otp = UserMixinMethods.user_otp_save(user_otp_obj, otp)
+                if not save_otp:
+                    user_otp = UserOtp.objects.create(
+                        user=user,
+                        otp=otp,
+                        otp_time=timezone.localtime(timezone.now()),
+                        otp_counter=OTP_INITIAL_COUNTER,
+                        is_verified=False,
+                    )
+                    user_otp.save()
+
                 # FACTORY PATTERN it delegates the decision to the get_serializer method and
                 # return the object of concrete/implementation method
                 serializer = UserMixinMethods.get_serializer_object_register(user.email, user.phone_number)
-                serializer(otp, email=user.email, phone_number=user.phone_number)
+                result_otp = serializer(otp, email=user.email, phone_number=user.phone_number)
+                if not result_otp:
+                    return JsonResponse({
+                        'status': HTTP_400_BAD_REQUEST, 'message': 'OTP has been successfully resent.'
+                    })
+                return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'OTP has been successfully resent.'})
 
-                return JsonResponse({
-                    'status': HTTP_200_OK,
-                    'message': 'OTP has been successfully resent.',
-                })
-
-        except InvalidUsage as e:
-            if e.status_code == 100:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': str(e.message),
-                })
-
-        except UserException as e:
-            if e.status_code == 404:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': str(e.message),
-                })
-
-        except TwilioException as e:
-            return JsonResponse({
-                'status': e.status_code,
-                'message': str(e.message),
-            })
-
+        except (MisMatchField, TwilioException, UserException) as e:
+            return JsonResponse({'status': e.status_code, 'message': e.message})
         except Exception as e:
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
@@ -492,16 +486,12 @@ class VerifyUser(generics.GenericAPIView, UserOTPMixin):
             return JsonResponse({'status': HTTP_200_OK, 'message': 'User verified.'})
 
         except (UserException, WrongOtp, UserNotFound) as e:
-            return JsonResponse({
-                'status': e.status_code,
-                'message': e.message,
-            })
-
+            return JsonResponse({'status': e.status_code, 'message': e.message})
         except Exception as e:
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
-# User Login - Customer
+# User Login - Customer / Captain
 class UserLogin(generics.GenericAPIView, UserMixinMethods):
 
     @login_credentials
