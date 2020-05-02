@@ -1105,7 +1105,7 @@ class UpdateEmail(generics.GenericAPIView):
             return JsonResponse({'status': HTTP_200_OK, 'message': "Email updated successfully."})
 
         except MissingField as e:
-            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
+            return JsonResponse({'status': e.status_code, 'message': e.message})
         except Exception as e:
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
@@ -1123,10 +1123,7 @@ class AddUserPlace(generics.GenericAPIView):
             place_type = request.data.get('place_type')
 
             if not (place_id and latitude and longitude and place_name and place_type):
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': "Value missing."
-                })
+                raise MissingField(status_code=400, message='Some field missing.')
 
             user_place_type_obj = Place.objects.filter(user=user.id, place_type=place_type).first()
             if user_place_type_obj and user_place_type_obj.place_type != "Other":
@@ -1161,6 +1158,8 @@ class AddUserPlace(generics.GenericAPIView):
                 'message': "User {} Place saved.".format(place_type)
             })
 
+        except MissingField as e:
+            return JsonResponse({'status': e.status_code, 'message': e.message})
         except Exception as e:
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
@@ -1178,10 +1177,7 @@ class UpdateUserPlace(generics.GenericAPIView):
             place_type = request.data.get('place_type')
 
             if not (place_id and latitude and longitude and place_name and place_type):
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': "Value missing."
-                })
+                raise MissingField(status_code=400, message='Some field missing.')
 
             with transaction.atomic():
 
@@ -1223,6 +1219,8 @@ class UpdateUserPlace(generics.GenericAPIView):
                         'message': "{} Place updated.".format(user_place_obj.place_type)
                     })
 
+        except MissingField as e:
+            return JsonResponse({'status': e.status_code, 'message': e.message})
         except Exception as e:
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
