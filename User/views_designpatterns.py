@@ -975,12 +975,9 @@ class UserDetails(generics.GenericAPIView):
     def get(self, request, data=None):
         try:
             user = data.get('user')
-            if not user:
-                raise UserException(status_code=404)
 
             if not user.email:
                 user.email = ""
-
             if not user.phone_number:
                 user.phone_number = ""
 
@@ -991,13 +988,6 @@ class UserDetails(generics.GenericAPIView):
                 'last_name': user.last_name,
                 'phone_number': user.phone_number,
             })
-
-        except UserException as e:
-            if e.status_code == 404:
-                return JsonResponse({
-                    'status': e.status_code,
-                    'message': 'User not found.',
-                })
 
         except Exception as e:
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
@@ -1231,10 +1221,7 @@ class UserPlaces(generics.GenericAPIView):
                         'longitude': place.place_id.longitude
                     })
 
-            return JsonResponse({
-                'status': HTTP_200_OK,
-                'places': user_places,
-            })
+            return JsonResponse({'status': HTTP_200_OK, 'places': user_places})
 
         except Exception as e:
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})

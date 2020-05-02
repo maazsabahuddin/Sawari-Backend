@@ -311,7 +311,6 @@ class ConfirmRide(RideBook, generics.GenericAPIView):
             print(str(e))
             return False
 
-    @transaction.atomic
     @login_decorator
     @confirm_ride
     def post(self, request, **kwargs):
@@ -400,10 +399,7 @@ class UserRides(generics.GenericAPIView):
                 user_rides.append(UserRides.rides(ride=ride_details, reservation=reservations))
 
             reverse_user_rides = user_rides[::-1]
-            return JsonResponse({
-                'status': HTTP_200_OK,
-                'reservations': reverse_user_rides,
-            })
+            return JsonResponse({'status': HTTP_200_OK, 'reservations': reverse_user_rides})
 
         except Exception as e:
             return JsonResponse({
