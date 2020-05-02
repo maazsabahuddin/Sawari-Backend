@@ -10,7 +10,7 @@ from rest_framework import generics
 from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_200_OK, HTTP_400_BAD_REQUEST
 
 from A.settings.base import DISTANCE_KILOMETRE_LIMIT, gmaps, local_tz, STOP_WAIT_TIME, SHOW_RIDES_TODAY_ONLY, \
-    SHOW_RIDE_DAYS, FIXED_FARE, KILOMETER_FARE
+    SHOW_RIDE_DAYS, FIXED_FARE, KILOMETER_FARE, NOT_CATCHABLE_ERROR_CODE, NOT_CATCHABLE_ERROR_MESSAGE
 
 from Reservation.models import Ride, Stop, Route, RouteStops
 from Reservation.views import BookRide
@@ -271,6 +271,10 @@ class BusRoute(generics.GenericAPIView):
             stop_lat = request.data.get('stop_lat')
             stop_lon = request.data.get('stop_lon')
 
+            start_lat = start_lat.strip()
+            start_lon = start_lon.strip()
+            stop_lat = stop_lat.strip()
+            stop_lon = stop_lon.strip()
             available_rides = []
 
             start_lat_lon_ = {'lat': float(start_lat), 'lon': float(start_lon)}
@@ -333,10 +337,7 @@ class BusRoute(generics.GenericAPIView):
             })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
     @staticmethod
     def return_stops_of_a_ride(**kwargs):
@@ -449,13 +450,14 @@ class CalculateFare(generics.GenericAPIView):
     @login_decorator
     def get(self, request, data=None):
         try:
+            user = data.get('user')
             req_seats = request.data.get('total_seats')
             kilometer = request.data.get('kilometer')
             fare_per_km = BookRide.price_per_km()
 
             # Yeh puchna hay.
             if not (req_seats and kilometer):
-                raise RideFare(status_code=500, message="Fare Calculation Error.")
+                raise RideFare(status_code=500, message="Missing values.")
 
             with transaction.atomic():
                 from Reservation.views import fare_object
@@ -463,20 +465,9 @@ class CalculateFare(generics.GenericAPIView):
                 total_fare = fare_object_price(req_seats=req_seats, kilometer=kilometer,
                                                fare_per_km=fare_per_km)
 
-                return JsonResponse({
-                    'status': HTTP_200_OK,
-                    'total_fare': total_fare,
-                })
+                return JsonResponse({'status': HTTP_200_OK, 'total_fare': total_fare})
 
         except RideFare as e:
-            if e.status_code == 500:
-                return JsonResponse({
-                    'status': e.status_code,
-                    'total_fare': e.message,
-                })
-
+            return JsonResponse({'status': e.status_code, 'message': e.message})
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_200_OK,
-                'total_fare': total_fare,
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
