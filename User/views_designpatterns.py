@@ -55,8 +55,60 @@ class CheckUser(generics.GenericAPIView):
             # Check if user exist or not.
             user = CustomUserCheck.check_user(phone_number)
             if not user:
-                raise UserNotFound(status_code=HTTP_404_NOT_FOUND,
-                                   message='The sign-in credentials does not exist. Try again or create a new account')
+                with transaction.atomic():
+                    email = None
+                    user = User.objects.create(
+                        phone_number=phone_number,
+                        password=make_password(uuid.uuid4()),
+                        is_active=False,
+                    )
+                    user.save()
+
+                    if app == "Customer":
+                        Customer.objects.create(user=user)
+                        if user:
+                            user.is_customer = True
+                            user.save()
+                            token, _ = Token.objects.get_or_create(user=user)
+                    elif app == "Captain":
+                        Captain.objects.create(user=user)
+                        if user:
+                            user.is_customer = True
+                            user.save()
+                            token, _ = Token.objects.get_or_create(user=user)
+                    else:
+                        raise TemporaryUserMessage(status_code=400,
+                                                   message='Server temporary down. Sorry for inconvenience.')
+                    otp = UserOTPMixin.generate_otp()
+                    print(otp)
+                    # FACTORY PATTERN it delegates the decision to the get_serializer method and
+                    # return the object of concrete/implementation method
+                    serializer = UserMixinMethods.get_serializer_object_register(email, phone_number)
+                    result_otp = serializer(otp, email=email, phone_number=phone_number)
+                    if not result_otp:
+                        user.is_active = True
+                        user.save()
+                        return JsonResponse({
+                            'status': HTTP_200_OK,
+                            'token': token.key,
+                            'message': 'User successfully registered.',
+                        })
+
+                    from django.utils import timezone
+                    user_otp = UserOtp.objects.create(
+                        user=user,
+                        otp=otp,
+                        otp_time=timezone.localtime(timezone.now()),
+                        otp_counter=OTP_INITIAL_COUNTER,
+                        is_verified=False,
+                    )
+                    user_otp.save()
+
+                    return JsonResponse({
+                        'status': HTTP_200_OK,
+                        'token': token.key,
+                        'message': 'OTP has been successfully sent.',
+                    })
 
             if app == "Customer" and not user.is_customer:
                 raise UserNotAuthorized(status_code=401, message='Not authorized to login in the app.')
@@ -64,12 +116,52 @@ class CheckUser(generics.GenericAPIView):
             if app == "Captain" and not user.is_captain:
                 raise UserNotAuthorized(status_code=401, message='Not authorized to login in the app.')
 
+            token, _ = Token.objects.get_or_create(user=user)
+            if not user.is_active:
+                raise UserNotActive(status_code=401, message="User not authenticated. Please verify first.")
+
             return JsonResponse({
                 'status': HTTP_200_OK,
                 'message': 'User Exist.'
             })
 
-        except (WrongPhonenumber, UserNotAuthorized, UserNotFound, MissingField) as e:
+        except UserNotActive as e:
+            otp = UserOTPMixin.generate_otp()
+            print(otp)
+            # FACTORY PATTERN it delegates the decision to the get_serializer method and
+            # return the object of concrete/implementation method
+            serializer = UserMixinMethods.get_serializer_object_register(user.email, user.phone_number)
+            result_otp = serializer(otp, email=user.email, phone_number=user.phone_number)
+            if not result_otp:
+                user.is_active = True
+                user.save()
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'token': token.key,
+                    'message': 'User verified and login successfully.',
+                })
+
+            from django.utils import timezone
+            user_otp = UserOtp.objects.filter(user=user).first()
+            if not user_otp:
+                user_otp = UserOtp.objects.create(user=user)
+            if user_otp.otp_counter > OTP_COUNTER_LIMIT:
+                return JsonResponse({
+                    'status': 401,
+                    'message': "User not authenticated. Please contact Sawari helpline."
+                })
+            user_otp.otp = otp
+            user_otp.otp_time = timezone.localtime(timezone.now())
+            user_otp.otp_counter += 1
+            user_otp.save()
+
+            return JsonResponse({
+                'status': HTTP_200_OK,
+                'token': token.key,
+                'message': 'OTP has been successfully sent.',
+            })
+
+        except (WrongPhonenumber, UserNotAuthorized, UserNotFound, MissingField, TemporaryUserMessage) as e:
             return JsonResponse({
                 'status': e.status_code,
                 'message': str(e.message),
