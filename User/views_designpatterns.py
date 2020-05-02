@@ -156,70 +156,6 @@ class RegisterCase(generics.GenericAPIView):
 
 class ResendOtpRegister(UserMixinMethods, generics.GenericAPIView):
 
-    @staticmethod
-    def get_method_object(email, phone_number):
-        pass
-        # try:
-        #     if email and phone_number:
-        #         return ResendOtpRegister().email_phone_resend_otp
-        #     elif phone_number:
-        #         return ResendOtpRegister().phone_resend_otp
-        #     elif email:
-        #         return ResendOtpRegister().email_resend_otp
-        #
-        # except InvalidUsage as e:
-        #     raise InvalidUsage(status_code=100)
-
-    @staticmethod
-    def email_phone_resend_otp(otp, **kwargs):
-        pass
-        # phone_number = ''
-        # try:
-        #     email = kwargs.get('email')
-        #     phone_number = kwargs.get('phone_number')
-        #
-        #     if EMAIL_VERIFICATION:
-        #         UserOTPMixin.send_otp_email(email, otp)
-        #     if PHONE_VERIFICATION:
-        #         UserOTPMixin.send_otp_phone(phone_number, otp)
-        #
-        # except TwilioEmailException as e:
-        #     if e.status_code == 102:
-        #         raise TwilioEmailException(status_code=102, message="Email not sent.")
-        #     if e.status_code == 101:
-        #         raise TwilioEmailException(status_code=101,
-        #                                    message=phone_number + " is not verified on your Twilio trial account.")
-
-    @staticmethod
-    def email_resend_otp(otp, **kwargs):
-        pass
-        # try:
-        #     email = kwargs.get('email')
-        #
-        #     if EMAIL_VERIFICATION:
-        #         UserOTPMixin.send_otp_email(email, otp)
-        #
-        # except TwilioEmailException as e:
-        #     if e.status_code == 102:
-        #         raise TwilioEmailException(status_code=102, message="Email not sent.")
-
-    @staticmethod
-    @transaction.atomic
-    def phone_resend_otp(otp, **kwargs):
-        pass
-        # phone_number = ''
-        # try:
-        #     phone_number = kwargs.get('phone_number')
-        #
-        #     with transaction.atomic():
-        #         if PHONE_VERIFICATION:
-        #             UserOTPMixin.send_otp_phone(phone_number, otp)
-        #
-        # except TwilioEmailException as e:
-        #     if e.status_code == 101:
-        #         raise TwilioEmailException(status_code=101,
-        #                                    message=phone_number + " is not verified on your Twilio trial account.")
-
     @login_decorator
     # @resend_otp
     def post(self, request, data=None):
@@ -1151,35 +1087,27 @@ class UpdateEmail(generics.GenericAPIView):
 
     @login_decorator
     def post(self, request, data=None):
-        user = data.get('user')
-        email = request.data.get('email')
+        try:
+            user = data.get('user')
+            email = request.data.get('email')
 
-        if not email:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': "Email value missing."
-            })
+            email = email.strip()
+            if not email:
+                raise MissingField(status_code=400, message='Email required.')
+            if user.email == email:
+                raise MissingField(status_code=400, message=email + ' already set to your account.')
+            if not UserMixinMethods.validate_email(email):
+                raise MissingField(status_code=400, message='Invalid email address.')
 
-        if user.email == email:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': email + " already set to your account."
-            })
+            with transaction.atomic():
+                user.email = email
+                user.save()
+            return JsonResponse({'status': HTTP_200_OK, 'message': "Email updated successfully."})
 
-        if not UserMixinMethods.validate_email(email):
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Invalid Email.',
-            })
-
-        with transaction.atomic():
-            user.email = email
-            user.save()
-
-        return JsonResponse({
-            'status': HTTP_200_OK,
-            'message': "Email updated successfully."
-        })
+        except MissingField as e:
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
+        except Exception as e:
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class AddUserPlace(generics.GenericAPIView):
