@@ -928,16 +928,11 @@ class PasswordChange(generics.GenericAPIView):
     def post(self, request, data=None):
         try:
             user = data.get('user')
-            # previous_pin = data.get('previous_pin')
-            new_pin = data.get('new_pin')
+            new_pin = data.get('pin')
 
             user.set_password(new_pin)
             user.save()
-
-            return JsonResponse({
-                'status': HTTP_200_OK,
-                'message': 'Password has been changed.',
-            })
+            return JsonResponse({'status': HTTP_200_OK, 'message': 'Password has been changed.'})
 
         except Exception as e:
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})

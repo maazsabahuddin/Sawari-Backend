@@ -214,7 +214,7 @@ def verify_user(f):
     @wraps(f)
     def token_decorator(*args):
         request = args[1]
-        user = args[2]['user']
+        user = args[2].get('user')
         otp = request.data.get('otp')
         email_or_phone = request.data.get('email_or_phone')
 
@@ -249,7 +249,7 @@ def change_phone_number_otp_verify(f):
     def token_decorator(*args):
         try:
             request = args[1]
-            user = args[2]['user']
+            user = args[2].get('user')
             otp = request.data.get('otp')
             phone_number = request.data.get('phone_number')
             phone_number = phone_number.strip()
@@ -460,7 +460,7 @@ def resend_otp_change_phone_number(f):
     def resend_otp_function(*args):
         try:
             request = args[1]
-            user = args[2]['user']
+            user = args[2].get('user')
             phone_number = request.data.get('phone_number')
 
             phone_number = phone_number.strip()
@@ -509,7 +509,7 @@ def phone_number_decorator(f):
     def phone_number_function(*args):
         try:
             request = args[1]
-            user = args[2]['user']
+            user = args[2].get('user')
             phone_number = request.data.get('phonenumber')
             phone_number = phone_number.strip()
 
@@ -573,61 +573,18 @@ def phone_number_decorator(f):
 
 def password_change_decorator(f):
     def password_change(*args):
-        try:
-            request = args[1]
-            user = args[2]['user']
-            # previous_pin = request.data.get('previous_pin')
-            pin = request.data.get('pin')
-            confirm_pin = request.data.get('confirm_pin')
+        request = args[1]
+        user = args[2].get('user')
+        pin = request.data.get('pin')
 
-            # previous_pin = previous_pin.strip()
-            pin = pin.strip()
-            confirm_pin = confirm_pin.strip()
+        pin = pin.strip()
+        if not user:
+            raise MissingField(status_code=400, message="Pin required")
 
-            if not user:
-                raise UserException(status_code=404)
+        if user.check_password(pin):
+            raise UserException(status_code=400, message="You cannot set old pin as new pin.")
 
-            if not (pin and confirm_pin):
-                raise UserException(status_code=405)
-
-            if pin != confirm_pin:
-                raise UserException(status_code=406)
-
-            if user.check_password(pin):
-                raise UserException(status_code=407)
-
-            # from django.contrib.auth.hashers import make_password
-            # pin = make_password(pin)
-            # if user.password == pin:
-            #     raise UserException(status_code=407)
-
-            # if new_pin == previous_pin:
-            #     raise UserException(status_code=407)
-
-            context = {
-                'user': user,
-                'new_pin': pin,
-                'confirm_new_pin': confirm_pin,
-            }
-
-            return f(args[0], request, context)
-
-        except UserException as e:
-            if e.status_code == 401:
-                raise WrongPassword(message='Previous pin is not correct.')
-            if e.status_code == 404:
-                raise UserNotFound(message="User not found.")
-            elif e.status_code == 405:
-                raise MissingField(message="Field missing.")
-            if e.status_code == 406:
-                raise PinNotMatched(message="Password Fields not matched.")
-            elif e.status_code == 407:
-                raise OldPin(message="You cannot set old pin as new pin.")
-
-        except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': str(e),
-            })
+        data = {'user': user, 'pin': pin}
+        return f(args[0], request, data)
 
     return password_change
