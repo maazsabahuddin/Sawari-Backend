@@ -28,6 +28,12 @@ class UserOtp(models.Model):
     def __str__(self):
         return "{} - {} - {}".format(self.user.email, self.user.phone_number, self.is_verified)
 
+    # def from_db_value(self, value, expression, connection, context):
+    #     if value is None:
+    #         return None
+    #     else:
+    #         return django.utils.timezone.localtime(value)
+
 
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer')

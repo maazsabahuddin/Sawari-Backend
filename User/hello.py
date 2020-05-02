@@ -415,8 +415,8 @@ a = 10
 
 import re
 
-phonenumber = "+923442713545asdada"
-regex = r"\+" + "92" + r"3\d{9}"
-
-if len(phonenumber) != 13:
-    print("Invalid")
+# phonenumber = "+923442713545asdada"
+# regex = r"\+" + "92" + r"3\d{9}"
+#
+# if len(phonenumber) != 13:
+#     print("Invalid")

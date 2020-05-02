@@ -31,6 +31,10 @@ class UserNotFound(UserException):
     pass
 
 
+class DuplicateUser(UserException):
+    pass
+
+
 class PinNotMatched(UserException):
     pass
 
@@ -44,6 +48,10 @@ class OldPin(UserException):
 
 
 class WrongPassword(UserException):
+    pass
+
+
+class WrongOtp(UserException):
     pass
 
 

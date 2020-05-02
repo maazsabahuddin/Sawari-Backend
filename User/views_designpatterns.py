@@ -17,14 +17,14 @@ from A.settings.base import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_C
     PHONE_NUMBER_REGEX, EMAIL_VERIFICATION, PHONE_VERIFICATION, COUNTRY_CODE_PK, NOT_CATCHABLE_ERROR_CODE, \
     NOT_CATCHABLE_ERROR_MESSAGE, OTP_COUNTER_LIMIT
 from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
-from User.decorators import login_credentials, otp_verify, login_decorator, register, password_reset_decorator, \
+from User.decorators import login_credentials, login_decorator, register, password_reset_decorator, \
     logout_decorator, resend_otp, phone_number_decorator, password_change_decorator, resend_otp_change_phone_number, \
-    change_phone_number_otp_verify, register_or_login_google
+    change_phone_number_otp_verify, register_or_login_google, verify_user
 from .models import User, Customer, UserOtp, Place, PlaceDetail, Captain
 from User.otp_verify import UserOTPMixin
 from User.exceptions import UserException, InvalidUsage, WrongPassword, \
     UserNotAuthorized, UserNotActive, MissingField, WrongPhonenumber, UserNotFound, UserAlreadyExist, \
-    TemporaryUserMessage, MisMatchField, TwilioException
+    TemporaryUserMessage, MisMatchField, TwilioException, WrongOtp
 
 account_sid = TWILIO_ACCOUNT_SID
 auth_token = TWILIO_AUTH_TOKEN
@@ -466,53 +466,36 @@ class Register(RegisterCase, UserMixinMethods):
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
-class IsVerified(generics.GenericAPIView, UserOTPMixin):
+class VerifyUser(generics.GenericAPIView, UserOTPMixin):
 
     @staticmethod
     def verify_otp(user, otp):
-        try:
-            time_now = datetime.datetime.today()
-            verify_result = UserOTPMixin.verify_user_otp(user, otp, time_now)
 
-            if verify_result:
-                user.is_active = True
-                user.save()
-                return True
+        otp_result = UserOTPMixin.verify_user_otp(user, otp)
+        if not otp_result:
             return False
+        user.is_active = True
+        user.save()
+        return True
 
-        except UserException as e:
-            if e.status_code == 405:
-                raise UserException(status_code=405, message="User Counter Exception.")
-
-    @otp_verify
-    def post(self, request, context=None):
+    @login_decorator
+    @verify_user
+    def post(self, request, data=None):
         try:
-            user = context['user']
-            otp = context['otp']
+            user = data.get('user')
+            otp = data.get('otp')
 
-            if user.is_active:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Already Verified',
-                })
+            result = VerifyUser.verify_otp(user, otp)
+            if not result:
+                raise WrongOtp(status_code=401, message="OTP not matched.")
 
-            if self.verify_otp(user, otp):
-                return JsonResponse({
-                    'status': HTTP_200_OK,
-                    'message': 'Verified',
-                })
+            return JsonResponse({'status': HTTP_200_OK, 'message': 'User verified.'})
 
+        except (UserException, WrongOtp, UserNotFound) as e:
             return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'OTP not matched.',
+                'status': e.status_code,
+                'message': e.message,
             })
-
-        except UserException as e:
-            if e.status_code == 405:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': str(e.message),
-                })
 
         except Exception as e:
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})

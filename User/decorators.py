@@ -9,7 +9,7 @@ from A.settings.base import PHONE_NUMBER_REGEX, EMAIL_REGEX, COUNTRY_CODE_PK, NO
 from CustomAuthentication.backend_authentication import CustomUserCheck
 from User.models import UserOtp, User
 from User.exceptions import UserException, PinNotMatched, MissingField, UserNotFound, OldPin, \
-     InvalidUsage, WrongPassword, WrongPhonenumber, TemporaryUserMessage, MisMatchField
+     InvalidUsage, WrongPassword, WrongPhonenumber, TemporaryUserMessage, MisMatchField, DuplicateUser
 from RideSchedule.exceptions import RideFare, RideException, RideNotAvailable, FieldMissing, NotEnoughSeats, \
     StopNotExist
 from Payment.exceptions import PaymentException, PaymentMethodException, Fare
@@ -36,10 +36,10 @@ def login_decorator(f):
             data = {'user': user}
             return f(args[0], request, data)
 
-        except (UserNotFound, MissingField) as e:
+        except (UserNotFound, MissingField, DuplicateUser) as e:
             return JsonResponse({
                 'status': e.status_code,
-                'message': str(e.message),
+                'message': e.message,
             })
 
         except PinNotMatched as e:
@@ -85,10 +85,7 @@ def login_decorator(f):
             })
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Server problem' + str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
     return decorated_function
 
@@ -168,6 +165,7 @@ def login_credentials(f):
 
             app = app.strip()
             email_or_phone = email_or_phone.strip()
+            password = password.strip()
 
             if app == "Captain":
                 raise TemporaryUserMessage(status_code=400, message='Captain app coming soon.')
@@ -212,61 +210,36 @@ def login_credentials(f):
     return decorated_function
 
 
-def otp_verify(f):
+def verify_user(f):
     @wraps(f)
     def token_decorator(*args):
-        try:
-            request = args[1]
-            token = request.headers.get('authorization')
-            otp = request.data.get('otp')
-            email_or_phone = request.data.get('email_or_phone')
-            email_or_phone = email_or_phone.strip()
+        request = args[1]
+        user = args[2]['user']
+        otp = request.data.get('otp')
+        email_or_phone = request.data.get('email_or_phone')
 
-            if not email_or_phone:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'Phone number required',
-                })
+        email_or_phone = email_or_phone.strip()
+        otp = otp.strip()
 
-            if email_or_phone[0] == "0":
-                email_or_phone = "+" + COUNTRY_CODE_PK + email_or_phone[1:]
+        if not (email_or_phone and user and otp):
+            raise MissingField(status_code=HTTP_400_BAD_REQUEST, message='Token required for authentication.')
 
-            # email_or_phone_user = User.objects.filter(phone_number=phone_number).first()
-            email_or_phone_user = CustomUserCheck.check_user(email_or_phone)
+        if email_or_phone[0] == "0":
+            email_or_phone = "+" + COUNTRY_CODE_PK + email_or_phone[1:]
 
-            if not otp:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'otp required',
-                })
+            from User.views_designpatterns import UserMixinMethods
+            if len(email_or_phone) != 13 or not UserMixinMethods.validate_phone(email_or_phone):
+                raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
 
-            if not token:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'token required',
-                })
+        user_email_or_phone = CustomUserCheck.check_user(email_or_phone)
+        if not user == user_email_or_phone:
+            raise DuplicateUser(status_code=409, message='Duplicate user.')
 
-            token_user = Token.objects.filter(key=token).first()
-            if not token_user:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Invalid Token.',
-                })
+        if user.is_active:
+            return JsonResponse({'status': HTTP_200_OK, 'message': 'User already verified'})
 
-            if not token_user.user == email_or_phone_user:
-                return JsonResponse({
-                    'status': HTTP_401_UNAUTHORIZED,
-                    'message': 'duplicate user.',
-                })
-
-            context = {'user': token_user.user, 'otp': otp, 'email_or_phone': email_or_phone}
-            return f(args[0], request, context)
-
-        except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Server problem' + str(e),
-            })
+        data = {'user': user, 'otp': otp, 'email_or_phone': email_or_phone}
+        return f(args[0], request, data)
 
     return token_decorator
 

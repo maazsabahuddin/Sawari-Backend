@@ -18,10 +18,10 @@ from django.urls import path
 # from User.views import ResendOtpRegister, PasswordReset, PasswordResetCheck, \
 #     PasswordChange, SetNewPassword, ChangePhoneNumber
 from Reservation.views import UserRides, CancelRide, BookRide
-from User.views_designpatterns import RegisterCase, IsVerified, UserLogin, UserLogout, ResendOtpRegister, \
+from User.views_designpatterns import RegisterCase, UserLogin, UserLogout, ResendOtpRegister, \
     PasswordReset, PasswordResetCheck, SetNewPassword, PasswordResetResendOtp, PasswordChange, ChangePhoneNumber, \
     ChangePhoneNumberOtpMatch, UpdateName, UserDetails, PasswordCheck, DeleteUser, PasswordChangeResendOtp, \
-    UpdateEmail, AddUserPlace, UpdateUserPlace, UserPlaces, LoginViaGoogle, CheckUser
+    UpdateEmail, AddUserPlace, UpdateUserPlace, UserPlaces, LoginViaGoogle, CheckUser, VerifyUser
 from RideSchedule.views import VehicleRoute, BusRoute, CalculateFare
 
 # from Reservation.views import BusRoute, BookingDetails, BookRide
@@ -32,7 +32,7 @@ urlpatterns = [
     # Register User.
     # path('register/', Register.as_view(), name='user_register_api'),
     path('register/', RegisterCase.as_view(), name='user_register_api'),
-    path('is_verified/', IsVerified.as_view(), name='user_is_verified'),
+    path('verify/user/', VerifyUser.as_view(), name='user_is_verified'),
     path('register/resend_otp/', ResendOtpRegister.as_view(), name='resend_otp'),
 
     # User login logout API.

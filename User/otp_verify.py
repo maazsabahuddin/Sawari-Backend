@@ -13,7 +13,7 @@ from twilio.base.exceptions import TwilioRestException
 from .models import UserOtp
 from django.core.mail import EmailMessage
 
-from User.exceptions import InvalidUsage, UserException
+from User.exceptions import InvalidUsage, UserException, UserNotFound, WrongOtp
 
 account_sid = TWILIO_ACCOUNT_SID
 auth_token = TWILIO_AUTH_TOKEN
@@ -69,38 +69,38 @@ class UserOTPMixin(object):
         return local_tz.normalize(local_dt)
 
     @classmethod
-    def verify_user_otp(cls, user, otp, time_now):
+    def verify_user_otp(cls, user, otp):
 
-        try:
-            otp_user_obj = UserOtp.objects.filter(user=user).first()
-            if not otp_user_obj:
-                return False
-            if otp_user_obj.otp_counter > OTP_COUNTER_LIMIT:
-                return False
+        otp_user_obj = UserOtp.objects.filter(user=user).first()
+        if not otp_user_obj:
+            raise UserNotFound(status_code=404,
+                               message="The sign-in credentials does not exist. Try again or create a new account")
+        if otp_user_obj.otp_counter > OTP_COUNTER_LIMIT:
+            raise WrongOtp(status_code=401,
+                           message="OTP not matched. User not authenticated. Please contact Sawari helpline.")
 
-            # adding current timezone to local time.
-            time_now_format = local_tz.localize(time_now)
+        from django.utils import timezone
+        current_time = timezone.localtime(timezone.now())
 
-            # fetch db time
-            otp_send_time = otp_user_obj.otp_time
-            # adding seconds to db time..s
-            otp_end_time = otp_send_time + datetime.timedelta(0, OTP_VALID_TIME)
-            # convert db time utc to local time format
-            otp_end_time_local = cls.utc_to_local(otp_end_time)
+        # fetching db time
+        OTP_SEND_TIME = otp_user_obj.otp_time
 
-            if time_now_format > otp_end_time_local:
-                return False
+        # adding OTP TIME to db time..
+        OTP_END_TIME = OTP_SEND_TIME + datetime.timedelta(0, OTP_VALID_TIME)
 
-            if otp_user_obj.otp == otp:
-                otp_user_obj.otp_counter = 0
-                otp_user_obj.is_verified = True
-                otp_user_obj.save()
-                return True
+        # convert db time to local time (UTC to LOCAL)
+        otp_end_time_local = cls.utc_to_local(OTP_END_TIME)
 
-            return False
+        if current_time > otp_end_time_local:
+            raise WrongOtp(status_code=401, message="OTP not matched.")
 
-        except Exception:
-            raise UserException(status_code=405)
+        if otp_user_obj.otp == otp:
+            otp_user_obj.otp_counter = 0
+            otp_user_obj.is_verified = True
+            otp_user_obj.save()
+            return True
+
+        return False
 
     @staticmethod
     def generate_otp():
