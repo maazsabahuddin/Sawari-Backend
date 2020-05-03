@@ -771,7 +771,7 @@ class PasswordResetCheck(generics.GenericAPIView):
 
             with transaction.atomic():
 
-                if IsVerified.verify_otp(user_otp.user, otp):
+                if VerifyUser.verify_otp(user_otp.user, otp):
                     return JsonResponse({
                         'status': HTTP_200_OK,
                         'message': 'Verified',
@@ -873,7 +873,7 @@ class UpdateName(generics.GenericAPIView):
             first_name = request.data.get('first_name')
             last_name = request.data.get('last_name')
 
-            if not (first_name and last_name):
+            if not (first_name or last_name):
                 raise MissingField(status_code=400, message='Some field missing.')
 
             if not first_name:
@@ -991,7 +991,7 @@ class ChangePhoneNumberOtpMatch(generics.GenericAPIView):
             otp = data.get('otp')
             phone_number = data.get('phone_number')
 
-            if not IsVerified.verify_otp(user, otp):
+            if not VerifyUser.verify_otp(user, otp):
                 raise InvalidUsage(status_code=401, message="OTP not matched.")
 
             user.phone_number = phone_number
@@ -1040,7 +1040,7 @@ class PasswordCheck(generics.GenericAPIView):
 
             password = password.strip()
             if not user.check_password(password):
-                raise UserException(status_code=400, message="Invalid password.")
+                raise UserException(status_code=401 , message="Invalid password.")
 
             return JsonResponse({'status': HTTP_200_OK, 'message': 'Password Verified.'})
 

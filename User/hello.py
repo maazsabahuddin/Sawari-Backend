@@ -420,3 +420,9 @@ import re
 #
 # if len(phonenumber) != 13:
 #     print("Invalid")
+
+first_name = ''
+last_name = 'Maaz'
+
+if not (first_name and last_name):
+    print("1")
