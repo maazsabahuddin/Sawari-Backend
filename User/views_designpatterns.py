@@ -256,31 +256,31 @@ class ResendOtpRegister(UserMixinMethods, generics.GenericAPIView):
         try:
             user = data.get('user')
 
-            user_otp_obj = UserOtp.objects.filter(user=user).first()
             with transaction.atomic():
+                otp = UserOTPMixin.generate_otp()
 
                 from django.utils import timezone
-                otp = UserOTPMixin.generate_otp()
-                save_otp = UserMixinMethods.user_otp_save(user_otp_obj, otp)
-                if not save_otp:
-                    user_otp = UserOtp.objects.create(
-                        user=user,
-                        otp=otp,
-                        otp_time=timezone.localtime(timezone.now()),
-                        otp_counter=OTP_INITIAL_COUNTER,
-                        is_verified=False,
-                    )
-                    user_otp.save()
+                user_otp = UserOtp.objects.filter(user=user).first()
+                if not user_otp:
+                    user_otp = UserOtp.objects.create(user=user)
+                if user_otp.otp_counter >= OTP_COUNTER_LIMIT:
+                    return JsonResponse({
+                        'status': 401,
+                        'message': "User not authenticated. Please contact Sawari helpline."
+                    })
+                user_otp.otp = otp
+                user_otp.otp_time = timezone.localtime(timezone.now())
+                user_otp.otp_counter += 1
+                user_otp.save()
 
                 # FACTORY PATTERN it delegates the decision to the get_serializer method and
                 # return the object of concrete/implementation method
                 serializer = UserMixinMethods.get_serializer_object_register(user.email, user.phone_number)
                 result_otp = serializer(otp, email=user.email, phone_number=user.phone_number)
                 if not result_otp:
-                    return JsonResponse({
-                        'status': HTTP_400_BAD_REQUEST, 'message': 'OTP has been successfully resent.'
-                    })
-                return JsonResponse({'status': HTTP_400_BAD_REQUEST, 'message': 'OTP has been successfully resent.'})
+                    return JsonResponse({'status': 400, 'message': 'Unable to resent the otp.'})
+
+                return JsonResponse({'status': 200, 'message': 'OTP has been successfully resent.'})
 
         except (MisMatchField, TwilioException, UserException) as e:
             return JsonResponse({'status': e.status_code, 'message': e.message})
@@ -908,34 +908,8 @@ class UpdateName(generics.GenericAPIView):
 
 class ChangePhoneNumber(generics.GenericAPIView, UserOTPMixin):
 
-    @staticmethod
-    @transaction.atomic
-    def phone_send_otp(user_otp_obj, otp, **kwargs):
-        try:
-            pass
-            # phone_number = kwargs.get('phone_number')
-            # user_otp_obj = kwargs.get('user_otp_obj')
-            # otp = kwargs.get('otp')
-            #
-            # if not phone_number:
-            #     return JsonResponse({
-            #         'status': HTTP_404_NOT_FOUND,
-            #         'message': 'Phone number not found.',
-            #     })
-            #
-            # with transaction.atomic():
-            #     if PHONE_VERIFICATION:
-            #         if not UserOTPMixin.send_otp_phone(phone_number, otp):
-            #             return False
-            #
-            #     UserMixinMethods.user_otp_save(user_otp_obj, otp)
-            #     print(otp)
-            #     return True
-
-        except Exception as e:
-            print(str(e))
-
-    @transaction.atomic
+    # QUERY AGAINST CHANGING PHONE NUMBER. WHAT WE DO? WE CREATE THE NEW USER OF THAT PHONE NUMBER OR WE DIRECTLY
+    # CHANGE THE PHONE NUMBER OF THAT USER.
     @login_decorator
     @phone_number_decorator
     def post(self, request, **kwargs):
@@ -944,40 +918,41 @@ class ChangePhoneNumber(generics.GenericAPIView, UserOTPMixin):
             phone_number = kwargs.get('phonenumber')
 
             with transaction.atomic():
-                if PHONE_VERIFICATION:
-                    otp = UserOTPMixin.generate_otp()
-                    print(otp)
+                otp = UserOTPMixin.generate_otp()
+                print(otp)
+                from django.utils import timezone
 
-                    # Is current user ki saari cheezen new number waly user pr transfer hungy..
-                    user_otp_obj = UserOtp.objects.filter(user=user).first()
-                    UserMixinMethods.user_otp_save(user_otp_obj, otp)
+                user_otp = UserOtp.objects.create(user=user)
+                if user_otp.otp_counter >= OTP_COUNTER_LIMIT:
+                    return JsonResponse({
+                        'status': 401,
+                        'message': "Please contact Sawari helpline. This {} phonenumber is blocked.".format(phone_number)
+                    })
+                user_otp.otp = otp
+                user_otp.otp_time = timezone.localtime(timezone.now())
+                user_otp.otp_counter += 1
+                user_otp.save()
 
-                    if Register().phone_otp(otp, phone_number=phone_number):
-                        return JsonResponse({
-                            'status': HTTP_200_OK,
-                            'message': 'OTP has been successfully sent.',
-                        })
-
-                else:
-                    user.phone_number = phone_number
+                email = None
+                # FACTORY PATTERN it delegates the decision to the get_serializer method and
+                # return the object of concrete/implementation method
+                serializer = UserMixinMethods.get_serializer_object_register(email, phone_number)
+                result_otp = serializer(otp, email=email, phone_number=phone_number)
+                if not result_otp:
+                    user.is_active = True
                     user.save()
                     return JsonResponse({
                         'status': HTTP_200_OK,
-                        'message': 'Phone Number changed.',
+                        'message': 'Phonenumber successfully changed.',
                     })
 
-        except UserException as e:
-            if e.status_code == 404:
                 return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': "User not found.",
+                    'status': HTTP_200_OK,
+                    'message': 'OTP has been successfully sent.',
                 })
 
-        except TwilioException as e:
-            return JsonResponse({
-                'status': e.status_code,
-                'message': e.message,
-            })
+        except (TwilioException, UserException) as e:
+            return JsonResponse({'status': e.status_code, 'message': e.message})
 
         except Exception as e:
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
@@ -985,7 +960,6 @@ class ChangePhoneNumber(generics.GenericAPIView, UserOTPMixin):
 
 class ChangePhoneNumberOtpMatch(generics.GenericAPIView):
 
-    @transaction.atomic
     @login_decorator
     @change_phone_number_otp_verify
     def post(self, request, data=None):
@@ -994,24 +968,16 @@ class ChangePhoneNumberOtpMatch(generics.GenericAPIView):
             otp = data.get('otp')
             phone_number = data.get('phone_number')
 
-            if not VerifyUser.verify_otp(user, otp):
-                raise InvalidUsage(status_code=401, message="OTP not matched.")
+            result = VerifyUser.verify_otp(user, otp)
+            if not result:
+                raise WrongOtp(status_code=401, message="OTP not matched.")
 
             user.phone_number = phone_number
             user.save()
+            return JsonResponse({'status': HTTP_200_OK, 'message': 'Phonenumber successfully changed.'})
 
-            return JsonResponse({
-                'status': HTTP_200_OK,
-                'message': 'Phone Number successfully changed.',
-            })
-
-        except InvalidUsage as e:
-            if e.status_code == 401:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': str(e.message),
-                })
-
+        except (UserException, WrongOtp, UserNotFound) as e:
+            return JsonResponse({'status': e.status_code, 'message': e.message})
         except Exception as e:
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
@@ -1102,7 +1068,6 @@ class DeleteUser(generics.GenericAPIView):
 
 class PasswordChangeResendOtp(generics.GenericAPIView):
 
-    @transaction.atomic
     @login_decorator
     @resend_otp_change_phone_number
     def post(self, request, data=None):
@@ -1110,38 +1075,35 @@ class PasswordChangeResendOtp(generics.GenericAPIView):
             user = data.get('user')
             phone_number = data.get('phone_number')
 
-            user_otp_obj = UserOtp.objects.filter(user=user).first()
             with transaction.atomic():
-
                 otp = UserOTPMixin.generate_otp()
-                UserMixinMethods.user_otp_save(user_otp_obj, otp)
-                Register().phone_otp(otp, phone_number=phone_number)
 
-                return JsonResponse({
-                    'status': HTTP_200_OK,
-                    'message': 'OTP has been successfully resent.',
-                })
+                from django.utils import timezone
+                user_otp = UserOtp.objects.filter(user=user).first()
+                if not user_otp:
+                    user_otp = UserOtp.objects.create(user=user)
+                if user_otp.otp_counter >= OTP_COUNTER_LIMIT:
+                    return JsonResponse({
+                        'status': 401,
+                        'message': "User not authenticated. Please contact Sawari helpline."
+                    })
+                user_otp.otp = otp
+                user_otp.otp_time = timezone.localtime(timezone.now())
+                user_otp.otp_counter += 1
+                user_otp.save()
 
-        except InvalidUsage as e:
-            if e.status_code == 100:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': str(e.message),
-                })
+                # FACTORY PATTERN it delegates the decision to the get_serializer method and
+                # return the object of concrete/implementation method
+                email = None
+                serializer = UserMixinMethods.get_serializer_object_register(email, phone_number)
+                result_otp = serializer(otp, email=user.email, phone_number=user.phone_number)
+                if not result_otp:
+                    return JsonResponse({'status': 400, 'message': 'Unable to resent the otp.'})
 
-        except UserException as e:
-            if e.status_code == 404:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': str(e.message),
-                })
+                return JsonResponse({'status': 200, 'message': 'OTP has been successfully resent.'})
 
-        except TwilioException as e:
-            return JsonResponse({
-                'status': e.status_code,
-                'message': e.message,
-            })
-
+        except (MisMatchField, TwilioException, UserException) as e:
+            return JsonResponse({'status': e.status_code, 'message': e.message})
         except Exception as e:
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
