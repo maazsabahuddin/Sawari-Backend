@@ -81,6 +81,17 @@ class CheckUser(generics.GenericAPIView):
                                                    message='Server temporary down. Sorry for inconvenience.')
                     otp = UserOTPMixin.generate_otp()
                     print(otp)
+
+                    from django.utils import timezone
+                    user_otp = UserOtp.objects.create(
+                        user=user,
+                        otp=otp,
+                        otp_time=timezone.localtime(timezone.now()),
+                        otp_counter=OTP_INITIAL_COUNTER,
+                        is_verified=False,
+                    )
+                    user_otp.save()
+
                     # FACTORY PATTERN it delegates the decision to the get_serializer method and
                     # return the object of concrete/implementation method
                     serializer = UserMixinMethods.get_serializer_object_register(email, phone_number)
@@ -93,16 +104,6 @@ class CheckUser(generics.GenericAPIView):
                             'token': token.key,
                             'message': 'User successfully registered.',
                         })
-
-                    from django.utils import timezone
-                    user_otp = UserOtp.objects.create(
-                        user=user,
-                        otp=otp,
-                        otp_time=timezone.localtime(timezone.now()),
-                        otp_counter=OTP_INITIAL_COUNTER,
-                        is_verified=False,
-                    )
-                    user_otp.save()
 
                     return JsonResponse({
                         'status': HTTP_200_OK,
@@ -128,18 +129,6 @@ class CheckUser(generics.GenericAPIView):
         except UserNotActive as e:
             otp = UserOTPMixin.generate_otp()
             print(otp)
-            # FACTORY PATTERN it delegates the decision to the get_serializer method and
-            # return the object of concrete/implementation method
-            serializer = UserMixinMethods.get_serializer_object_register(user.email, user.phone_number)
-            result_otp = serializer(otp, email=user.email, phone_number=user.phone_number)
-            if not result_otp:
-                user.is_active = True
-                user.save()
-                return JsonResponse({
-                    'status': HTTP_200_OK,
-                    'token': token.key,
-                    'message': 'User verified and login successfully.',
-                })
 
             from django.utils import timezone
             user_otp = UserOtp.objects.filter(user=user).first()
@@ -154,6 +143,19 @@ class CheckUser(generics.GenericAPIView):
             user_otp.otp_time = timezone.localtime(timezone.now())
             user_otp.otp_counter += 1
             user_otp.save()
+
+            # FACTORY PATTERN it delegates the decision to the get_serializer method and
+            # return the object of concrete/implementation method
+            serializer = UserMixinMethods.get_serializer_object_register(user.email, user.phone_number)
+            result_otp = serializer(otp, email=user.email, phone_number=user.phone_number)
+            if not result_otp:
+                user.is_active = True
+                user.save()
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'token': token.key,
+                    'message': 'User verified and login successfully.',
+                })
 
             return JsonResponse({
                 'status': HTTP_200_OK,
@@ -560,18 +562,6 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
         except UserNotActive as e:
             otp = UserOTPMixin.generate_otp()
             print(otp)
-            # FACTORY PATTERN it delegates the decision to the get_serializer method and
-            # return the object of concrete/implementation method
-            serializer = UserMixinMethods.get_serializer_object_register(user.email, user.phone_number)
-            result_otp = serializer(otp, email=user.email, phone_number=user.phone_number)
-            if not result_otp:
-                user.is_active = True
-                user.save()
-                return JsonResponse({
-                    'status': HTTP_200_OK,
-                    'token': token.key,
-                    'message': 'User verified and login successfully.',
-                })
 
             from django.utils import timezone
             user_otp = UserOtp.objects.filter(user=user).first()
@@ -586,6 +576,19 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
             user_otp.otp_time = timezone.localtime(timezone.now())
             user_otp.otp_counter += 1
             user_otp.save()
+
+            # FACTORY PATTERN it delegates the decision to the get_serializer method and
+            # return the object of concrete/implementation method
+            serializer = UserMixinMethods.get_serializer_object_register(user.email, user.phone_number)
+            result_otp = serializer(otp, email=user.email, phone_number=user.phone_number)
+            if not result_otp:
+                user.is_active = True
+                user.save()
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'token': token.key,
+                    'message': 'User verified and login successfully.',
+                })
 
             return JsonResponse({
                 'status': HTTP_200_OK,
