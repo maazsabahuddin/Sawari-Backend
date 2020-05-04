@@ -134,7 +134,7 @@ class CheckUser(generics.GenericAPIView):
             user_otp = UserOtp.objects.filter(user=user).first()
             if not user_otp:
                 user_otp = UserOtp.objects.create(user=user)
-            if user_otp.otp_counter > OTP_COUNTER_LIMIT:
+            if user_otp.otp_counter >= OTP_COUNTER_LIMIT:
                 return JsonResponse({
                     'status': 401,
                     'message': "User not authenticated. Please contact Sawari helpline."
@@ -567,7 +567,7 @@ class UserLogin(generics.GenericAPIView, UserMixinMethods):
             user_otp = UserOtp.objects.filter(user=user).first()
             if not user_otp:
                 user_otp = UserOtp.objects.create(user=user)
-            if user_otp.otp_counter > OTP_COUNTER_LIMIT:
+            if user_otp.otp_counter >= OTP_COUNTER_LIMIT:
                 return JsonResponse({
                     'status': 401,
                     'message': "User not authenticated. Please contact Sawari helpline."
