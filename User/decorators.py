@@ -9,7 +9,7 @@ from A.settings.base import PHONE_NUMBER_REGEX, EMAIL_REGEX, COUNTRY_CODE_PK, NO
 from CustomAuthentication.backend_authentication import CustomUserCheck
 from User.models import UserOtp, User
 from User.exceptions import UserException, PinNotMatched, MissingField, UserNotFound, OldPin, \
-     InvalidUsage, WrongPassword, WrongPhonenumber, TemporaryUserMessage, MisMatchField, DuplicateUser
+     InvalidUsage, WrongPassword, WrongPhonenumber, TemporaryUserMessage, MisMatchField, DuplicateUser, TwilioException
 from RideSchedule.exceptions import RideFare, RideException, RideNotAvailable, FieldMissing, NotEnoughSeats, \
     StopNotExist
 from Payment.exceptions import PaymentException, PaymentMethodException, Fare
@@ -182,14 +182,14 @@ def login_credentials(f):
             if email_or_phone[0] == "0":
                 email_or_phone = "+" + COUNTRY_CODE_PK + email_or_phone[1:]
 
-                from User.views_designpatterns import UserMixinMethods
-                if len(email_or_phone) != 13 or not UserMixinMethods.validate_phone(email_or_phone):
-                    raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
+            from User.views_designpatterns import UserMixinMethods
+            if len(email_or_phone) != 13 or not UserMixinMethods.validate_phone(email_or_phone):
+                raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
 
             data = {'email_or_phone': email_or_phone, 'password': password, 'app': app}
             return f(args[0], request, data)
 
-        except TwilioEmailException as e:
+        except TwilioException as e:
             return JsonResponse({
                 'status': HTTP_404_NOT_FOUND,
                 'message': str(e.message),
@@ -261,9 +261,9 @@ def change_phone_number_otp_verify(f):
         if phone_number[0] == "0":
             phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
 
-            from User.views_designpatterns import UserMixinMethods
-            if len(phone_number) != 13 or not UserMixinMethods.validate_phone(phone_number):
-                raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
+        from User.views_designpatterns import UserMixinMethods
+        if len(phone_number) != 13 or not UserMixinMethods.validate_phone(phone_number):
+            raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
 
         data = {'user': user, 'otp': otp, 'phone_number': phone_number}
         return f(args[0], request, data)
@@ -519,6 +519,10 @@ def phone_number_decorator(f):
         user2 = CustomUserCheck.check_user(phone_number)
         if user2 and user2.is_active:
             raise WrongPhonenumber(status_code=400, message='User with this Phone Number already exists.')
+
+        # Temporary Message
+        if user:
+            raise WrongPhonenumber(status_code=400, message='API locked.')
 
         return f(args[0], request, user=user, phonenumber=phone_number)
 
