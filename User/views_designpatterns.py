@@ -24,7 +24,7 @@ from .models import User, Customer, UserOtp, Place, PlaceDetail, Captain
 from User.otp_verify import UserOTPMixin
 from User.exceptions import UserException, InvalidUsage, WrongPassword, \
     UserNotAuthorized, UserNotActive, MissingField, WrongPhonenumber, UserNotFound, UserAlreadyExist, \
-    TemporaryUserMessage, MisMatchField, TwilioException, WrongOtp
+    TemporaryUserMessage, MisMatchField, TwilioException, WrongOtp, PlaceException
 
 account_sid = TWILIO_ACCOUNT_SID
 auth_token = TWILIO_AUTH_TOKEN
@@ -1269,5 +1269,32 @@ class UserPlaces(generics.GenericAPIView):
 
             return JsonResponse({'status': HTTP_200_OK, 'places': user_places})
 
+        except Exception as e:
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
+
+
+class DeleteUserPlace(generics.GenericAPIView):
+
+    @login_decorator
+    def post(self, request, data=None):
+        try:
+            user = data.get('user')
+            place_id = request.data.get('place_id')
+            place_type = request.data.get('place_type')
+
+            place_id = place_id.strip()
+            place_type = place_type.strip()
+
+            if not (place_id and place_type):
+                raise MissingField(status_code=400, message='Some field missing.')
+
+            user_place = Place.objects.filter(user=user.id, place_id__place_id=place_id, place_type=place_type).first()
+            if not user_place:
+                raise PlaceException(status_code=400, message='No such place exist.')
+            user_place.delete()
+            return JsonResponse({'status': HTTP_200_OK, 'places': 'User place removed.'})
+
+        except (MissingField, PlaceException) as e:
+            return JsonResponse({'status': e.status_code, 'message': e.message})
         except Exception as e:
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})

@@ -43,6 +43,10 @@ class MissingField(UserException):
     pass
 
 
+class PlaceException(UserException):
+    pass
+
+
 class OldPin(UserException):
     pass
 
