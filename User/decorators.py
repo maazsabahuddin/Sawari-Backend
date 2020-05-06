@@ -146,10 +146,7 @@ def password_reset_decorator(f):
             return f(args[0], request, data)
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Server problem' + str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
     return match_uuid
 
@@ -189,23 +186,13 @@ def login_credentials(f):
             data = {'email_or_phone': email_or_phone, 'password': password, 'app': app}
             return f(args[0], request, data)
 
-        except TwilioException as e:
-            return JsonResponse({
-                'status': HTTP_404_NOT_FOUND,
-                'message': str(e.message),
-            })
-
-        except (WrongPhonenumber, MissingField, TemporaryUserMessage) as e:
+        except (WrongPhonenumber, MissingField, TemporaryUserMessage, TwilioException) as e:
             return JsonResponse({
                 'status': e.status_code,
                 'message': e.message,
             })
-
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Server problem' + str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
     return decorated_function
 
@@ -265,6 +252,9 @@ def change_phone_number_otp_verify(f):
         if len(phone_number) != 13 or not UserMixinMethods.validate_phone(phone_number):
             raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
 
+        if user:
+            raise WrongPhonenumber(status_code=400, message='API locked.')
+
         data = {'user': user, 'otp': otp, 'phone_number': phone_number}
         return f(args[0], request, data)
 
@@ -307,12 +297,8 @@ def register_or_login_google(f):
                 'status': e.status_code,
                 'message': e.message,
             })
-
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
     return decorator
 
@@ -357,9 +343,9 @@ def register(f):
             if phone_number[0] == "0":
                 phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
 
-                from User.views_designpatterns import UserMixinMethods
-                if len(phone_number) != 13 or not UserMixinMethods.validate_phone(phone_number):
-                    raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
+            from User.views_designpatterns import UserMixinMethods
+            if len(phone_number) != 13 or not UserMixinMethods.validate_phone(phone_number):
+                raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
 
             data = {
                 'email': email,
@@ -382,35 +368,35 @@ def register(f):
     return register_decorator
 
 
-def logout_decorator(f):
-    @wraps(f)
-    def decorated_function(*args):
-        try:
-            request = args[1]
-            token = request.headers['authorization']
-
-            if not token:
-                return JsonResponse({
-                    'status': HTTP_200_OK,
-                    'message': 'Token required for authentication.',
-                })
-
-            user_token = Token.objects.filter(key=token).first()
-            if not user_token:
-                return JsonResponse({
-                    'status': HTTP_200_OK,
-                    'message': 'Logged out.',
-                })
-
-            return f(args[0], request, user=user_token)
-
-        except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Server problem ' + str(e),
-            })
-
-    return decorated_function
+# def logout_decorator(f):
+#     @wraps(f)
+#     def decorated_function(*args):
+#         try:
+#             request = args[1]
+#             token = request.headers['authorization']
+#
+#             if not token:
+#                 return JsonResponse({
+#                     'status': HTTP_200_OK,
+#                     'message': 'Token required for authentication.',
+#                 })
+#
+#             user_token = Token.objects.filter(key=token).first()
+#             if not user_token:
+#                 return JsonResponse({
+#                     'status': HTTP_200_OK,
+#                     'message': 'Logged out.',
+#                 })
+#
+#             return f(args[0], request, user=user_token)
+#
+#         except Exception as e:
+#             return JsonResponse({
+#                 'status': HTTP_400_BAD_REQUEST,
+#                 'message': 'Server problem ' + str(e),
+#             })
+#
+#     return decorated_function
 
 
 def resend_otp(f):
@@ -448,49 +434,29 @@ def resend_otp(f):
 
 def resend_otp_change_phone_number(f):
     def resend_otp_function(*args):
-        try:
-            request = args[1]
-            user = args[2].get('user')
-            phone_number = request.data.get('phone_number')
 
-            phone_number = phone_number.strip()
+        request = args[1]
+        user = args[2].get('user')
+        phone_number = request.data.get('phone_number')
 
-            if not phone_number:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': "Phone Number required."
-                })
+        phone_number = phone_number.strip()
 
-            if not (not (phone_number[0] != "0") or not (phone_number[0] != "+")):
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Invalid Phonenumber',
-                })
+        if not phone_number:
+            raise MissingField(status_code=400, message='Phone number is required.')
 
-            if phone_number[0] == "0":
-                phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
+        # Checking Validation
+        if phone_number[0] == "0":
+            phone_number = "+" + COUNTRY_CODE_PK + phone_number[1:]
 
-            from User.views_designpatterns import UserMixinMethods
-            if not UserMixinMethods.validate_phone(phone_number):
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Invalid Phone Number',
-                })
+        from User.views_designpatterns import UserMixinMethods
+        if len(phone_number) != 13 or not UserMixinMethods.validate_phone(phone_number):
+            raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
 
-            if not user:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'User not found.',
-                })
+        if user:
+            raise WrongPhonenumber(status_code=400, message='API locked.')
 
-            data = {'user': user, 'phone_number': phone_number}
-            return f(args[0], request, data)
-
-        except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Server problem' + str(e),
-            })
+        data = {'user': user, 'phone_number': phone_number}
+        return f(args[0], request, data)
 
     return resend_otp_function
 
