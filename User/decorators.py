@@ -376,10 +376,7 @@ def logout_decorator(f):
             token = request.headers['authorization']
 
             if not token:
-                return JsonResponse({
-                    'status': HTTP_200_OK,
-                    'message': 'Token required for authentication.',
-                })
+                raise MissingField(status_code=400, message='Token required for authentication.')
 
             user_token = Token.objects.filter(key=token).first()
             if not user_token:
@@ -387,9 +384,13 @@ def logout_decorator(f):
                     'status': HTTP_200_OK,
                     'message': 'Logged out.',
                 })
-
             return f(args[0], request, user=user_token)
 
+        except MissingField as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': e.message,
+            })
         except Exception as e:
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
