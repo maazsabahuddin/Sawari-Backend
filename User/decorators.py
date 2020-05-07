@@ -368,35 +368,32 @@ def register(f):
     return register_decorator
 
 
-# def logout_decorator(f):
-#     @wraps(f)
-#     def decorated_function(*args):
-#         try:
-#             request = args[1]
-#             token = request.headers['authorization']
-#
-#             if not token:
-#                 return JsonResponse({
-#                     'status': HTTP_200_OK,
-#                     'message': 'Token required for authentication.',
-#                 })
-#
-#             user_token = Token.objects.filter(key=token).first()
-#             if not user_token:
-#                 return JsonResponse({
-#                     'status': HTTP_200_OK,
-#                     'message': 'Logged out.',
-#                 })
-#
-#             return f(args[0], request, user=user_token)
-#
-#         except Exception as e:
-#             return JsonResponse({
-#                 'status': HTTP_400_BAD_REQUEST,
-#                 'message': 'Server problem ' + str(e),
-#             })
-#
-#     return decorated_function
+def logout_decorator(f):
+    @wraps(f)
+    def decorated_function(*args):
+        try:
+            request = args[1]
+            token = request.headers['authorization']
+
+            if not token:
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'message': 'Token required for authentication.',
+                })
+
+            user_token = Token.objects.filter(key=token).first()
+            if not user_token:
+                return JsonResponse({
+                    'status': HTTP_200_OK,
+                    'message': 'Logged out.',
+                })
+
+            return f(args[0], request, user=user_token)
+
+        except Exception as e:
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
+
+    return decorated_function
 
 
 def resend_otp(f):
@@ -424,10 +421,7 @@ def resend_otp(f):
             return f(args[0], request, data)
 
         except Exception as e:
-            return JsonResponse({
-                'status': HTTP_400_BAD_REQUEST,
-                'message': 'Server problem' + str(e),
-            })
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
     return resend_otp_function
 
