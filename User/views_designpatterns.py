@@ -1200,8 +1200,16 @@ class UpdateUserPlace(generics.GenericAPIView):
             latitude = request.data.get('latitude')
             longitude = request.data.get('longitude')
             place_type = request.data.get('place_type')
+            address = request.data.get('address')
 
-            if not (place_id and latitude and longitude and place_name and place_type):
+            place_id = place_id.strip()
+            place_type = place_type.strip()
+            place_name = place_name.strip()
+            address = address.strip()
+            latitude = latitude.strip()
+            longitude = longitude.strip()
+
+            if not (place_id and latitude and longitude and place_name and place_type and address):
                 raise MissingField(status_code=400, message='Some field missing.')
 
             with transaction.atomic():
@@ -1211,6 +1219,7 @@ class UpdateUserPlace(generics.GenericAPIView):
                     place_detail = PlaceDetail.objects.create(
                         place_id=place_id,
                         place_name=place_name,
+                        place_address=address,
                         latitude=latitude,
                         longitude=longitude,
                     )
@@ -1225,6 +1234,7 @@ class UpdateUserPlace(generics.GenericAPIView):
                         'place_id': place_obj.place_id.place_id,
                         'place_name': place_obj.place_id.place_name,
                         'place_type': place_obj.place_type,
+                        'place_address': place_obj.place_id.place_address,
                         'latitude': place_obj.place_id.latitude,
                         'longitude': place_obj.place_id.longitude,
                         'message': "{} Place updated.".format(place_obj.place_type)
@@ -1239,6 +1249,7 @@ class UpdateUserPlace(generics.GenericAPIView):
                         'place_id': user_place_obj.place_id.place_id,
                         'place_name': user_place_obj.place_id.place_name,
                         'place_type': user_place_obj.place_type,
+                        'place_address': user_place_obj.place_id.place_address,
                         'latitude': user_place_obj.place_id.latitude,
                         'longitude': user_place_obj.place_id.longitude,
                         'message': "{} Place updated.".format(user_place_obj.place_type)
