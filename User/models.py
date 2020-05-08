@@ -56,6 +56,7 @@ class Captain(models.Model):
 class PlaceDetail(models.Model):
     place_id = models.CharField(max_length=50, blank=False, null=False, unique=True)
     place_name = models.CharField(max_length=100, blank=False, null=False)
+    place_address = models.CharField(max_length=100, blank=False, null=False)
     latitude = models.CharField(max_length=30, blank=False, null=False)
     longitude = models.CharField(max_length=30, blank=False, null=False)
     updated_date = models.DateTimeField(default=timezone.localtime(timezone.now()))
@@ -70,5 +71,5 @@ class Place(models.Model):
     place_type = models.CharField(max_length=10, blank=False)
 
     def __str__(self):
-        return "{} - {} - {}".format(self.user, self.place_type, self.place_id.place_id)
+        return "{} - {} - {}".format(self.user, self.place_type, self.place_id.place_name)
 
