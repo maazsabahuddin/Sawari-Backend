@@ -15,6 +15,7 @@ class UserRideDetail(models.Model):
         ('pending', 'PENDING'),
         ('active', 'ACTIVE'),
     )
+    objects = None
     ride_id = models.ForeignKey(Ride, on_delete=models.CASCADE)
     reservation_id = models.ForeignKey(Reservation, on_delete=models.CASCADE)  # Must be many2manyfield do check that
     admin_id = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)

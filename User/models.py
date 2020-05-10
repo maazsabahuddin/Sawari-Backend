@@ -18,6 +18,7 @@ class User(AbstractUser):
 
 
 class UserOtp(models.Model):
+    objects = None
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_otp')
     otp = models.CharField(default=None, max_length=8, null=True, blank=False)
     otp_time = models.DateTimeField(null=False, blank=False, default=timezone.localtime(timezone.now()))
@@ -36,6 +37,7 @@ class UserOtp(models.Model):
 
 
 class Customer(models.Model):
+    objects = None
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer')
     created_date = models.DateTimeField(default=timezone.localtime(timezone.now()))
 
@@ -44,6 +46,7 @@ class Customer(models.Model):
 
 
 class Captain(models.Model):
+    objects = None
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='captain_id')
     vendor = models.ForeignKey('user', on_delete=models.CASCADE, blank=True, null=True, related_name='vendor_id')
     is_owner = models.BooleanField(default=False)
@@ -54,6 +57,7 @@ class Captain(models.Model):
 
 
 class PlaceDetail(models.Model):
+    objects = None
     place_id = models.CharField(max_length=256, blank=False, null=False, unique=True)
     place_name = models.CharField(max_length=256, blank=False, null=False)
     place_address = models.CharField(max_length=256, blank=False, null=False)
@@ -66,6 +70,7 @@ class PlaceDetail(models.Model):
 
 
 class Place(models.Model):
+    objects = None
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_place')
     place_id = models.ForeignKey(PlaceDetail, on_delete=models.CASCADE)
     place_type = models.CharField(max_length=10, blank=False)

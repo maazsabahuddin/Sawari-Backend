@@ -4,6 +4,7 @@ from User.models import User
 
 
 class PaymentMethod(models.Model):
+    objects = None
     # Auth-User added for check payment method Updating details details by a particular admin-user
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)  # Do ask Hammad bhai
     payment_method = models.CharField(max_length=50, unique=True)
@@ -14,6 +15,7 @@ class PaymentMethod(models.Model):
 
 
 class Pricing(models.Model):
+    objects = None
     # Auth-User added for check pricing Updating details by a particular admin-user
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     price_per_km = models.FloatField(blank=False, null=False, max_length=5)

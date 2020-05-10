@@ -193,6 +193,10 @@ class CheckUser(generics.GenericAPIView):
 
 class UserMixinMethods(object):
 
+    @staticmethod
+    def get_otp_send_through():
+        pass
+
     # Decides which of the following concrete method will return
     @staticmethod
     def get_serializer_object_register(email, phone_number):
@@ -392,7 +396,7 @@ class Register(RegisterCase, UserMixinMethods):
             result_email = UserOTPMixin.send_otp_email(email, otp)
             if not result_email:
                 raise MisMatchField(status_code=400, message='Invalid email address.')
-            return True
+            # return True
 
         if PHONE_VERIFICATION:
             result_phone_number = UserOTPMixin.send_otp_phone(phone_number, otp)

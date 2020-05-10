@@ -6,6 +6,7 @@ from User.models import Captain, Customer
 
 
 class Vehicle(models.Model):
+    objects = None
     vehicle_no_plate = models.CharField(blank=False, max_length=10)
     driver_ids = models.ManyToManyField(Captain, related_name='drivers', blank=True)
     owner = models.ForeignKey(Captain, on_delete=models.CASCADE)
@@ -19,6 +20,7 @@ class Vehicle(models.Model):
 
 
 class Stop(models.Model):
+    objects = None
     name = models.CharField(blank=False, max_length=256)
     latitude = models.FloatField(blank=False, max_length=100)
     longitude = models.FloatField(blank=False, max_length=100)
@@ -37,6 +39,7 @@ class Route(models.Model):
 
     # SORT_VALUE_FIELD_NAME = 'sort_value'
 
+    objects = None
     route_id = models.CharField(max_length=10, null=True, blank=True)
     # stop_ids = SortedManyToManyField(Stop, sorted=False)
     stop_ids = models.ManyToManyField(Stop, through='RouteStops')
@@ -49,6 +52,7 @@ class Route(models.Model):
 
 
 class RouteStops(models.Model):
+    objects = None
     stop_id = models.ForeignKey(Stop, on_delete=models.CASCADE)
     route_id = models.ForeignKey(Route, on_delete=models.CASCADE)
     sort_value = models.PositiveSmallIntegerField()
@@ -58,6 +62,7 @@ class RouteStops(models.Model):
 
 
 class Ride(models.Model):
+    objects = None
     driver_ids = models.ManyToManyField(Captain)
     vehicle_id = models.ForeignKey(to='Vehicle', on_delete=models.CASCADE, related_name='driver_vehicle')
     route_id = models.ForeignKey(Route, related_name='ride_route', on_delete=models.CASCADE)
@@ -72,6 +77,7 @@ class Ride(models.Model):
 
 
 class Reservation(models.Model):
+    objects = None
     reservation_number = models.CharField(max_length=20, unique=True)
     customer_id = models.ForeignKey(Customer, on_delete=models.CASCADE)
     ride_id = models.ForeignKey(Ride, on_delete=models.CASCADE)
