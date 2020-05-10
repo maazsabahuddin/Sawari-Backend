@@ -193,21 +193,31 @@ class CheckUser(generics.GenericAPIView):
 
 class UserMixinMethods(object):
 
-    # PRIORITY QUEUE
+    # PRIORITY QUEUE and FACTORY METHOD DESIGN PATTERN using recursion
     @staticmethod
     def otp_send_through(**kwargs):
         phone_number = kwargs.get('phone_number')
         otp = kwargs.get('otp')
         priority = kwargs.get('priority')
+        priority_queue_length = kwargs.get('priority_queue_length')
+
+        # base case
+        if priority_queue_length == priority:
+            return False
 
         if PRIORITY_QUEUE[priority] == "Twilio":
             result_phone_number = UserOTPMixin.send_otp_phone_via_twilio(phone_number, otp)
             if not result_phone_number:
-                return False
+                return UserMixinMethods.otp_send_through(phone_number=phone_number, otp=otp, priority=priority+1,
+                                                         priority_queue_length=priority_queue_length)
             return True
 
         elif PRIORITY_QUEUE[priority] == "Other":
-            return False
+            result_phone_number = False
+            if not result_phone_number:
+                return UserMixinMethods.otp_send_through(phone_number=phone_number, otp=otp, priority=priority+1,
+                                                         priority_queue_length=priority_queue_length)
+            return True
 
     # Decides which of the following concrete method will return
     @staticmethod
@@ -412,16 +422,13 @@ class Register(RegisterCase, UserMixinMethods):
 
         # PRIORITY QUEUE implementation
         if PHONE_VERIFICATION:
-            length_of_priority_queue = len(PRIORITY_QUEUE)
-            for queue in range(length_of_priority_queue):
-                result_phone_number = UserMixinMethods.otp_send_through(phone_number=phone_number, otp=otp,
-                                                                            priority=queue)
-                if result_phone_number:
-                    return True
-
-            raise TwilioException(status_code=400,
-                                  message=phone_number + " is not verified on your Twilio trial account.")
-        return True
+            # length_of_priority_queue = len(PRIORITY_QUEUE)
+            result_phone_number = UserMixinMethods.otp_send_through(phone_number=phone_number, otp=otp, priority=0,
+                                                                    priority_queue_length=len(PRIORITY_QUEUE))
+            if not result_phone_number:
+                raise TwilioException(status_code=400, message=phone_number + " is not verified on your Twilio trial account.")
+            return True
+        return False
 
     def email_otp(self, otp, **kwargs):
         email = kwargs.get('email')
@@ -432,24 +439,20 @@ class Register(RegisterCase, UserMixinMethods):
             if not result_email:
                 raise MisMatchField(status_code=400, message='Invalid email address.')
             return True
-        return True
+        return False
 
     def phone_otp(self, otp, **kwargs):
         phone_number = kwargs.get('phone_number')
 
         # PRIORITY QUEUE implementation
         if PHONE_VERIFICATION:
-            length_of_priority_queue = len(PRIORITY_QUEUE)
-
-            for queue in range(length_of_priority_queue):
-                result_phone_number = UserMixinMethods.otp_send_through(phone_number=phone_number, otp=otp, priority=queue)
-                if result_phone_number:
-                    return True
-
-            raise TwilioException(status_code=400,
-                                  message=phone_number + " is not verified on your Twilio trial account.")
-
-        return True
+            # length_of_priority_queue = len(PRIORITY_QUEUE)
+            result_phone_number = UserMixinMethods.otp_send_through(phone_number=phone_number, otp=otp, priority=0,
+                                                                    priority_queue_length=len(PRIORITY_QUEUE))
+            if not result_phone_number:
+                raise TwilioException(status_code=400, message=phone_number + " is not verified on your Twilio trial account.")
+            return True
+        return False
 
     @register
     def post(self, request, data=None):
