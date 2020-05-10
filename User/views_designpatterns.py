@@ -15,7 +15,7 @@ from rest_framework.views import APIView
 
 from A.settings.base import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_COUNTER, EMAIL_REGEX, \
     PHONE_NUMBER_REGEX, EMAIL_VERIFICATION, PHONE_VERIFICATION, COUNTRY_CODE_PK, NOT_CATCHABLE_ERROR_CODE, \
-    NOT_CATCHABLE_ERROR_MESSAGE, OTP_COUNTER_LIMIT
+    NOT_CATCHABLE_ERROR_MESSAGE, OTP_COUNTER_LIMIT, PRIORITY_QUEUE
 from CustomAuthentication.backend_authentication import CustomAuthenticationBackend, CustomUserCheck
 from User.decorators import login_credentials, login_decorator, register, password_reset_decorator, \
     logout_decorator, resend_otp, phone_number_decorator, password_change_decorator, resend_otp_change_phone_number, \
@@ -193,9 +193,21 @@ class CheckUser(generics.GenericAPIView):
 
 class UserMixinMethods(object):
 
+    # PRIORITY QUEUE
     @staticmethod
-    def get_otp_send_through():
-        pass
+    def otp_send_through(**kwargs):
+        phone_number = kwargs.get('phone_number')
+        otp = kwargs.get('otp')
+        priority = kwargs.get('priority')
+
+        if PRIORITY_QUEUE[priority] == "Twilio":
+            result_phone_number = UserOTPMixin.send_otp_phone_via_twilio(phone_number, otp)
+            if not result_phone_number:
+                return False
+            return True
+
+        elif PRIORITY_QUEUE[priority] == "Other":
+            return False
 
     # Decides which of the following concrete method will return
     @staticmethod
@@ -398,13 +410,18 @@ class Register(RegisterCase, UserMixinMethods):
                 raise MisMatchField(status_code=400, message='Invalid email address.')
             # return True
 
+        # PRIORITY QUEUE implementation
         if PHONE_VERIFICATION:
-            result_phone_number = UserOTPMixin.send_otp_phone(phone_number, otp)
-            if not result_phone_number:
-                raise TwilioException(status_code=400,
-                                      message=phone_number + " is not verified on your Twilio trial account.")
-            return True
-        return False
+            length_of_priority_queue = len(PRIORITY_QUEUE)
+            for queue in range(length_of_priority_queue):
+                result_phone_number = UserMixinMethods.otp_send_through(phone_number=phone_number, otp=otp,
+                                                                            priority=queue)
+                if result_phone_number:
+                    return True
+
+            raise TwilioException(status_code=400,
+                                  message=phone_number + " is not verified on your Twilio trial account.")
+        return True
 
     def email_otp(self, otp, **kwargs):
         email = kwargs.get('email')
@@ -415,19 +432,24 @@ class Register(RegisterCase, UserMixinMethods):
             if not result_email:
                 raise MisMatchField(status_code=400, message='Invalid email address.')
             return True
-        return False
+        return True
 
     def phone_otp(self, otp, **kwargs):
         phone_number = kwargs.get('phone_number')
 
-        # Sending OTP Via Phone
+        # PRIORITY QUEUE implementation
         if PHONE_VERIFICATION:
-            result_phone_number = UserOTPMixin.send_otp_phone(phone_number, otp)
-            if not result_phone_number:
-                raise TwilioException(status_code=400,
-                                      message=phone_number + " is not verified on your Twilio trial account.")
-            return True
-        return False
+            length_of_priority_queue = len(PRIORITY_QUEUE)
+
+            for queue in range(length_of_priority_queue):
+                result_phone_number = UserMixinMethods.otp_send_through(phone_number=phone_number, otp=otp, priority=queue)
+                if result_phone_number:
+                    return True
+
+            raise TwilioException(status_code=400,
+                                  message=phone_number + " is not verified on your Twilio trial account.")
+
+        return True
 
     @register
     def post(self, request, data=None):

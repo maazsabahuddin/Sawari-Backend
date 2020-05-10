@@ -23,7 +23,7 @@ client = Client(account_sid, auth_token)
 class UserOTPMixin(object):
 
     @staticmethod
-    def send_otp_phone(phone_number, otp):
+    def send_otp_phone_via_twilio(phone_number, otp):
         try:
             message_body = 'Dear Sawaari user, your OTP is: ' + str(otp)
             sender_phone_number = SENDER_PHONE_NUMBER
