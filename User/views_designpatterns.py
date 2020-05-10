@@ -1,7 +1,7 @@
 import datetime
 import re
 import uuid
-from abc import abstractmethod
+from abc import abstractmethod, ABCMeta
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from django.http import JsonResponse
@@ -31,7 +31,24 @@ auth_token = TWILIO_AUTH_TOKEN
 client = Client(account_sid, auth_token)
 
 
+class AppInterface:
+    value = "Customer"
+
+    @classmethod
+    def app(cls, **kwargs):
+        app = kwargs.get('value')
+        if app != cls.value:
+            return False
+        return True
+
+
 class CheckUser(generics.GenericAPIView):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # client_app = request.data.get('app')
+        if not AppInterface.app(value="Customer"):
+            raise NotImplementedError
 
     def post(self, request):
         try:
@@ -163,7 +180,8 @@ class CheckUser(generics.GenericAPIView):
                 'message': 'OTP has been successfully sent.',
             })
 
-        except (WrongPhonenumber, UserNotAuthorized, UserNotFound, MissingField, TemporaryUserMessage) as e:
+        except (WrongPhonenumber, UserNotAuthorized, UserNotFound, MissingField, TemporaryUserMessage,
+                TwilioException) as e:
             return JsonResponse({
                 'status': e.status_code,
                 'message': str(e.message),
@@ -379,7 +397,7 @@ class Register(RegisterCase, UserMixinMethods):
         if PHONE_VERIFICATION:
             result_phone_number = UserOTPMixin.send_otp_phone(phone_number, otp)
             if not result_phone_number:
-                raise TwilioException(status_code=500,
+                raise TwilioException(status_code=400,
                                       message=phone_number + " is not verified on your Twilio trial account.")
             return True
         return False
@@ -402,7 +420,7 @@ class Register(RegisterCase, UserMixinMethods):
         if PHONE_VERIFICATION:
             result_phone_number = UserOTPMixin.send_otp_phone(phone_number, otp)
             if not result_phone_number:
-                raise TwilioException(status_code=500,
+                raise TwilioException(status_code=400,
                                       message=phone_number + " is not verified on your Twilio trial account.")
             return True
         return False
