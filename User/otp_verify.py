@@ -33,7 +33,7 @@ class UserOTPMixin(object):
             #     body=message_body,
             #     to=phone_number,
             # )
-            return False
+            return True
 
         except TwilioRestException:
             return False

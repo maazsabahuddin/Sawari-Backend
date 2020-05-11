@@ -450,7 +450,8 @@ class Register(RegisterCase, UserMixinMethods):
             result_phone_number = UserMixinMethods.otp_send_through(phone_number=phone_number, otp=otp, priority=0,
                                                                     priority_queue_length=len(PRIORITY_QUEUE))
             if not result_phone_number:
-                raise TwilioException(status_code=400, message=phone_number + " is not verified on your Twilio trial account.")
+                raise TwilioException(status_code=400,
+                                      message=phone_number + " is not verified on your Twilio trial account.")
             return True
         return False
 

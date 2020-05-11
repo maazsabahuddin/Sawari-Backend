@@ -13,11 +13,14 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf.urls import url
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.contrib.auth import views as auth_views
 # from User.views import ResendOtpRegister, PasswordReset, PasswordResetCheck, \
 #     PasswordChange, SetNewPassword, ChangePhoneNumber
 from Reservation.views import UserRides, CancelRide, BookRide
+from User.passwordreset import ForgotPassword
 from User.views_designpatterns import RegisterCase, UserLogin, UserLogout, ResendOtpRegister, \
     PasswordReset, PasswordResetCheck, SetNewPassword, PasswordResetResendOtp, PasswordChange, ChangePhoneNumber, \
     ChangePhoneNumberOtpMatch, UpdateName, UserDetails, PasswordCheck, DeleteUser, PasswordChangeResendOtp, \
@@ -49,6 +52,20 @@ urlpatterns = [
 
     path('calculate/fare/', CalculateFare.as_view(), name='calculate_fare'),
     path('confirm/book/ride/', BookRide.as_view(), name='book_a_ride'),
+
+    # django rest framework password reset view
+    url('^', include('django.contrib.auth.urls')),
+    # path('password-reset/', auth_views.PasswordResetView.as_view(template_name='users/password_reset.html'),
+    #      name='password_reset'),
+    # path('password-reset-confirm/<uidb64>/<token>/',
+    #      auth_views.PasswordResetConfirmView.as_view(template_name='users/password_reset_confirm.html'),
+    #      name='password_reset_confirm'),
+    # path('password-reset/done/',
+    #      auth_views.PasswordResetDoneView.as_view(template_name='users/password_reset_done.html'),
+    #      name='password_reset_done'),
+    # path('password-reset-complete/',
+    #      auth_views.PasswordResetCompleteView.as_view(template_name='users/password_reset_complete.html'),
+    path('forgot/password/', ForgotPassword.as_view(), name='forgot_password'),
 
     # # Reset your password
     path('password/reset/', PasswordReset.as_view(), name='password_reset'),
