@@ -33,6 +33,7 @@ class ForgotPassword(generics.GenericAPIView):
     @staticmethod
     def send_password_reset_link_to_email(**kwargs):
         user = kwargs.get('user')
+        password_reset_uuid = kwargs.get('password_reset_uuid')
         me = A.settings.base.EMAIL_HOST_USER
         you = user.email
 
@@ -41,17 +42,6 @@ class ForgotPassword(generics.GenericAPIView):
         msg['From'] = me
         msg['To'] = you
 
-        password_reset_uuid = generate_uuid()
-        from django.utils import timezone
-        user_otp = UserOtp.objects.filter(user=user).first()
-        if not user_otp:
-            user_otp = UserOtp.objects.create(user=user)
-
-        user_otp.password_reset_id = password_reset_uuid
-        user_otp.otp_time = timezone.localtime(timezone.now())
-        user_otp.save()
-
-        # text = "Hi!\nHow are you?\nHere is the link you wanted:\nhttp://www.python.org"
         html = """\
         <html>
           <head></head>
@@ -85,8 +75,8 @@ class ForgotPassword(generics.GenericAPIView):
     def send_password_reset_link_to_phone(**kwargs):
         try:
             user = kwargs.get('user')
+            password_reset_uuid = kwargs.get('password_reset_uuid')
             phone_number = user.phone_number
-            password_reset_uuid = generate_uuid()
 
             link = "http://ec2-18-191-165-120.us-east-2.compute.amazonaws.com/password/reset/?token_uuid={}".\
                 format(password_reset_uuid)
@@ -111,15 +101,27 @@ class ForgotPassword(generics.GenericAPIView):
         try:
             user = data.get('user')
 
+            password_reset_uuid = generate_uuid()
+            from django.utils import timezone
+            user_otp = UserOtp.objects.filter(user=user).first()
+            if not user_otp:
+                user_otp = UserOtp.objects.create(user=user)
+
+            user_otp.password_reset_id = password_reset_uuid
+            user_otp.otp_time = timezone.localtime(timezone.now())
+            user_otp.save()
+
             if user.email:
-                sent_link_email = ForgotPassword.send_password_reset_link_to_email(user=user)
+                sent_link_email = ForgotPassword.send_password_reset_link_to_email(user=user,
+                                                                                   password_reset_uuid=password_reset_uuid)
                 if not sent_link_email:
                     return JsonResponse({'status': 400, 'message': 'Email not sent. Check your email and try again.'})
                 return JsonResponse({'status': 200,
                                      'message': 'Reset your password from the link sent to your email.'})
 
             else:
-                sent_link_phone = ForgotPassword.send_password_reset_link_to_phone(user=user)
+                sent_link_phone = ForgotPassword.send_password_reset_link_to_phone(user=user,
+                                                                                   password_reset_uuid=password_reset_uuid)
                 if not sent_link_phone:
                     raise TwilioException(status_code=400,
                                           message=user.phone_number + " is not verified on your Twilio trial account.")
