@@ -95,60 +95,66 @@ def password_reset_decorator(f):
     def match_uuid(*args):
         try:
             request = args[1]
-            password_uuid = request.GET.get('password_uuid')
             email_or_phone = request.data.get('email_or_phone')
-
             email_or_phone = email_or_phone.strip()
-            password_uuid = password_uuid.strip()
 
             if not email_or_phone:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Email/Phone is required'
-                })
+                raise MissingField(status_code=400, message='Email/Phone required.')
 
-            phone_number = re.match(PHONE_NUMBER_REGEX, email_or_phone)
-            email = re.search(EMAIL_REGEX, email_or_phone)
-            if not phone_number and not email:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Invalid Email/Phone',
-                })
+            if email_or_phone[0] == "0":
+                email_or_phone = "+" + COUNTRY_CODE_PK + email_or_phone[1:]
 
-            if not password_uuid:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'No access.',
-                })
+            if email_or_phone[0] == "+":
+                from User.views_designpatterns import UserMixinMethods
+                if len(email_or_phone) != 13 or not UserMixinMethods.validate_phone(email_or_phone):
+                    raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
 
-            user_otp = UserOtp.objects.filter(password_reset_id=password_uuid).first()
-            if not user_otp:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Invalid uuid.',
-                })
+            from User.views_designpatterns import UserMixinMethods
+            if not UserMixinMethods.validate_email(email_or_phone):
+                raise WrongPhonenumber(status_code=400, message='Invalid email address')
 
-            # Check user Via Email and Phones
+            # Check if user exist or not.
             user = CustomUserCheck.check_user(email_or_phone)
             if not user:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'Invalid Email/Phone.',
-                })
+                raise UserNotFound(status_code=400, message='Invalid Email/Phone.')
 
-            if user != user_otp.user:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'User not matched.',
-                })
-
-            data = {'user': user_otp}
+            data = {'user': user}
             return f(args[0], request, data)
 
         except Exception as e:
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
     return match_uuid
+
+
+def password_reset_link(f):
+    @wraps(f)
+    def reset_link_check(*args):
+        try:
+            request = args[0]
+            token_uuid = request.GET.get('token_uuid')
+            token_uuid = token_uuid.strip()
+
+            if not token_uuid:
+                raise MissingField(status_code=400, message='Invalid link.')
+
+            # Check if user exist or not.
+            user = UserOtp.objects.filter(password_reset_id=token_uuid).first()
+            if not user:
+                raise UserNotFound(status_code=400, message='Invalid link.')
+
+            data = {'user': user.user}
+            return f(args[0], request, data)
+
+        except (MissingField, UserNotFound) as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': e.message,
+            })
+        except Exception as e:
+            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
+
+    return reset_link_check
 
 
 def login_credentials(f):

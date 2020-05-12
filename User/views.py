@@ -21,7 +21,7 @@ from A.settings.base import TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, OTP_INITIAL_C
 from .otp_verify import UserOTPMixin
 from .models import User, Customer, UserOtp
 # from .user_token_authentication import UserMixin
-from .decorators import login_decorator
+from .decorators import login_decorator, password_reset_link
 
 account_sid = TWILIO_ACCOUNT_SID
 auth_token = TWILIO_AUTH_TOKEN
@@ -787,3 +787,46 @@ class PasswordChange(generics.GenericAPIView):
 #                 'message': 'Server Error.'
 #             })
 
+from django.shortcuts import render, redirect
+from .passwordreset import PasswordResetForm
+
+
+# class PasswordResetLink(generics.GenericAPIView):
+
+@password_reset_link
+def PasswordResetLink(self, request, data=None):
+
+    user = data.get('user')
+    form = PasswordResetForm(request.POST)
+    if form.is_valid():
+        password = request.POST['password']
+        password = make_password(password)
+        user.password = password
+        user.save()
+
+        user_otp = UserOtp.objects.filter(user=user).first()
+        user_otp.password_reset_id = ''
+        user_otp.save()
+        return redirect('done/')
+    else:
+        pass
+
+    form = PasswordResetForm()
+    return render(request, 'home.html', {'form': form})
+
+
+def PasswordResetComplete(request):
+
+    # user = data.get('user')
+    # form = PasswordResetForm(request.POST)
+    # if form.is_valid():
+    #     password = request.POST['password']
+    #     password = make_password(password)
+    #     user.password = password
+    #     user.save()
+    #     return redirect('reset_done')
+    # else:
+    #     pass
+
+    # form = PasswordResetForm()
+    return render(request, 'reset_done.html')

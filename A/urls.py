@@ -21,8 +21,9 @@ from django.contrib.auth import views as auth_views
 #     PasswordChange, SetNewPassword, ChangePhoneNumber
 from Reservation.views import UserRides, CancelRide, BookRide
 from User.passwordreset import ForgotPassword
+from User.views import PasswordResetLink, PasswordResetComplete
 from User.views_designpatterns import RegisterCase, UserLogin, UserLogout, ResendOtpRegister, \
-    PasswordReset, PasswordResetCheck, SetNewPassword, PasswordResetResendOtp, PasswordChange, ChangePhoneNumber, \
+    PasswordChange, ChangePhoneNumber, \
     ChangePhoneNumberOtpMatch, UpdateName, UserDetails, PasswordCheck, DeleteUser, PasswordChangeResendOtp, \
     UpdateEmail, AddUserPlace, UpdateUserPlace, UserPlaces, LoginViaGoogle, CheckUser, VerifyUser, DeleteUserPlace
 from RideSchedule.views import VehicleRoute, BusRoute, CalculateFare
@@ -54,7 +55,7 @@ urlpatterns = [
     path('confirm/book/ride/', BookRide.as_view(), name='book_a_ride'),
 
     # django rest framework password reset view
-    url('^', include('django.contrib.auth.urls')),
+    # url('^', include('django.contrib.auth.urls')),
     # path('password-reset/', auth_views.PasswordResetView.as_view(template_name='users/password_reset.html'),
     #      name='password_reset'),
     # path('password-reset-confirm/<uidb64>/<token>/',
@@ -65,13 +66,12 @@ urlpatterns = [
     #      name='password_reset_done'),
     # path('password-reset-complete/',
     #      auth_views.PasswordResetCompleteView.as_view(template_name='users/password_reset_complete.html'),
-    path('forgot/password/', ForgotPassword.as_view(), name='forgot_password'),
 
     # # Reset your password
-    path('password/reset/', PasswordReset.as_view(), name='password_reset'),
-    path('password/reset/resend_otp/', PasswordResetResendOtp.as_view(), name='password_reset_resend_otp'),
-    path('confirm/password/reset/', PasswordResetCheck.as_view(), name='confirm_password_reset'),
-    path('new/password/reset/', SetNewPassword.as_view(), name='set_new_password'),
+    # path('password/reset/', PasswordReset.as_view(), name='password_reset'),
+    # path('password/reset/resend_otp/', PasswordResetResendOtp.as_view(), name='password_reset_resend_otp'),
+    # path('confirm/password/reset/', PasswordResetCheck.as_view(), name='confirm_password_reset'),
+    # path('new/password/reset/', SetNewPassword.as_view(), name='set_new_password'),
 
     # Password change when login.
     path('password/change/', PasswordChange.as_view(), name='password_change'),
@@ -81,9 +81,6 @@ urlpatterns = [
     path('change/phonenumber/', ChangePhoneNumber.as_view(), name='change_phone_number'),
     path('verify/phonenumber/', ChangePhoneNumberOtpMatch.as_view(), name='change_phone_number_verify'),
     path('phonenumber/change/resend_otp/', PasswordChangeResendOtp.as_view(), name='presend_otp'),
-
-    # Update Name.
-    path('update/name/', UpdateName.as_view(), name='update_name'),
 
     # Return User Details
     path('user/rides/', UserRides.as_view(), name='user_rides'),
@@ -98,6 +95,12 @@ urlpatterns = [
     # Delete User
     path('delete/user/', DeleteUser.as_view(), name='delete_user'),
 
-    # Delete User
+    # Update User
     path('update/email/', UpdateEmail.as_view(), name='update_email'),
+    path('update/name/', UpdateName.as_view(), name='update_name'),
+
+    # Password Reset
+    path('forgot/password/', ForgotPassword.as_view(), name='forgot_password'),
+    path('password/reset/', PasswordResetLink, name='password_reset_form'),
+    path('password/reset/done/', PasswordResetComplete, name='password_reset_done'),
 ]

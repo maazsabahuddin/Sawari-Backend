@@ -676,230 +676,230 @@ class UserLogout(APIView):
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
-class PasswordReset(generics.GenericAPIView, UserOTPMixin):
-
-    @staticmethod
-    def get_method_object(email, phone_number):
-        try:
-            if email and phone_number:
-                return PasswordReset.email_phone_otp
-            if email:
-                return PasswordReset.email_otp
-            if phone_number:
-                return PasswordReset.phone_otp
-
-        except Exception as e:
-            print(str(e))
-
-    @staticmethod
-    def email_phone_otp(user_otp_obj, otp, **kwargs):
-        try:
-            email = kwargs.get('email')
-            phone_number = kwargs.get('phone_number')
-            password_uuid = kwargs.get('password_uuid')
-
-            if EMAIL_VERIFICATION:
-                UserOTPMixin.send_otp_email(email, otp)
-
-            if PHONE_VERIFICATION:
-                UserOTPMixin.send_otp_phone(phone_number, otp)
-
-            UserMixinMethods.user_otp_save(user_otp_obj, otp)
-            UserMixinMethods.save_user_password_reset_uuid(user_otp_obj, password_uuid)
-
-            return JsonResponse({
-                'status': HTTP_200_OK,
-                'token_uuid': password_uuid,
-                'message': 'OTP has been successfully sent.',
-            })
-
-        except Exception as e:
-            print(str(e))
-
-    @staticmethod
-    def email_otp(user_otp_obj, otp, **kwargs):
-        try:
-            email = kwargs.get('email')
-            password_uuid = kwargs.get('password_uuid')
-
-            if EMAIL_VERIFICATION:
-                UserOTPMixin.send_otp_email(email, otp)
-
-            UserMixinMethods.user_otp_save(user_otp_obj, otp)
-            UserMixinMethods.save_user_password_reset_uuid(user_otp_obj, password_uuid)
-
-            return JsonResponse({
-                'status': HTTP_200_OK,
-                'token_uuid': password_uuid,
-                'message': 'OTP has been successfully sent.',
-            })
-
-        except Exception as e:
-            print(str(e))
-
-    @staticmethod
-    def phone_otp(user_otp_obj, otp, **kwargs):
-        try:
-            phone_number = kwargs.get('phone_number')
-            password_uuid = kwargs.get('password_uuid')
-
-            if PHONE_VERIFICATION:
-                UserOTPMixin.send_otp_phone(phone_number, otp)
-
-            UserMixinMethods.user_otp_save(user_otp_obj, otp)
-            UserMixinMethods.save_user_password_reset_uuid(user_otp_obj, password_uuid)
-
-            return JsonResponse({
-                'status': HTTP_200_OK,
-                'token_uuid': password_uuid,
-                'message': 'OTP has been successfully sent.',
-            })
-
-        except Exception as e:
-            print(str(e))
-
-    @transaction.atomic
-    def post(self, request):
-        try:
-            email_or_phone = request.data.get('email_or_phone')
-
-            if not email_or_phone:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Email/Phone is required'
-                })
-
-            is_phone_number = re.match(PHONE_NUMBER_REGEX, email_or_phone)
-            is_email = re.search(EMAIL_REGEX, email_or_phone)
-            if not is_phone_number and not is_email:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Invalid format Email/Phone',
-                })
-
-            user = CustomUserCheck.check_user(email_or_phone)
-            if not user:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'No such email/phone exist.',
-                })
-
-            if is_phone_number and is_email:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Invalid format Email/Phone',
-                })
-
-            user_otp_obj = UserOtp.objects.filter(user=user).first()
-            with transaction.atomic():
-
-                otp = UserOTPMixin.generate_otp()
-                password_uuid = uuid.uuid4()
-                print(otp)
-                # Factory method design pattern same as RegisterResend OTP
-                serializer = PasswordReset.get_method_object(user.email, user.phone_number)
-                return serializer(user_otp_obj, otp, email=user.email, phone_number=user.phone_number,
-                                  password_uuid=password_uuid)
-
-        except Exception as e:
-            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
-
-
-class PasswordResetCheck(generics.GenericAPIView):
-
-    @transaction.atomic
-    @password_reset_decorator
-    def post(self, request, data=None):
-        try:
-            user_otp = data['user']
-            otp = request.data.get('otp')
-
-            if not otp:
-                return JsonResponse({
-                    'status': HTTP_404_NOT_FOUND,
-                    'message': 'OTP required.',
-                })
-
-            with transaction.atomic():
-
-                if VerifyUser.verify_otp(user_otp.user, otp):
-                    return JsonResponse({
-                        'status': HTTP_200_OK,
-                        'message': 'Verified',
-                    })
-
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'OTP not matched.',
-                })
-
-        except Exception as e:
-            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
+# class PasswordReset(generics.GenericAPIView, UserOTPMixin):
+#
+#     @staticmethod
+#     def get_method_object(email, phone_number):
+#         try:
+#             if email and phone_number:
+#                 return PasswordReset.email_phone_otp
+#             if email:
+#                 return PasswordReset.email_otp
+#             if phone_number:
+#                 return PasswordReset.phone_otp
+#
+#         except Exception as e:
+#             print(str(e))
+#
+#     @staticmethod
+#     def email_phone_otp(user_otp_obj, otp, **kwargs):
+#         try:
+#             email = kwargs.get('email')
+#             phone_number = kwargs.get('phone_number')
+#             password_uuid = kwargs.get('password_uuid')
+#
+#             if EMAIL_VERIFICATION:
+#                 UserOTPMixin.send_otp_email(email, otp)
+#
+#             if PHONE_VERIFICATION:
+#                 UserOTPMixin.send_otp_phone(phone_number, otp)
+#
+#             UserMixinMethods.user_otp_save(user_otp_obj, otp)
+#             UserMixinMethods.save_user_password_reset_uuid(user_otp_obj, password_uuid)
+#
+#             return JsonResponse({
+#                 'status': HTTP_200_OK,
+#                 'token_uuid': password_uuid,
+#                 'message': 'OTP has been successfully sent.',
+#             })
+#
+#         except Exception as e:
+#             print(str(e))
+#
+#     @staticmethod
+#     def email_otp(user_otp_obj, otp, **kwargs):
+#         try:
+#             email = kwargs.get('email')
+#             password_uuid = kwargs.get('password_uuid')
+#
+#             if EMAIL_VERIFICATION:
+#                 UserOTPMixin.send_otp_email(email, otp)
+#
+#             UserMixinMethods.user_otp_save(user_otp_obj, otp)
+#             UserMixinMethods.save_user_password_reset_uuid(user_otp_obj, password_uuid)
+#
+#             return JsonResponse({
+#                 'status': HTTP_200_OK,
+#                 'token_uuid': password_uuid,
+#                 'message': 'OTP has been successfully sent.',
+#             })
+#
+#         except Exception as e:
+#             print(str(e))
+#
+#     @staticmethod
+#     def phone_otp(user_otp_obj, otp, **kwargs):
+#         try:
+#             phone_number = kwargs.get('phone_number')
+#             password_uuid = kwargs.get('password_uuid')
+#
+#             if PHONE_VERIFICATION:
+#                 UserOTPMixin.send_otp_phone(phone_number, otp)
+#
+#             UserMixinMethods.user_otp_save(user_otp_obj, otp)
+#             UserMixinMethods.save_user_password_reset_uuid(user_otp_obj, password_uuid)
+#
+#             return JsonResponse({
+#                 'status': HTTP_200_OK,
+#                 'token_uuid': password_uuid,
+#                 'message': 'OTP has been successfully sent.',
+#             })
+#
+#         except Exception as e:
+#             print(str(e))
+#
+#     @transaction.atomic
+#     def post(self, request):
+#         try:
+#             email_or_phone = request.data.get('email_or_phone')
+#
+#             if not email_or_phone:
+#                 return JsonResponse({
+#                     'status': HTTP_400_BAD_REQUEST,
+#                     'message': 'Email/Phone is required'
+#                 })
+#
+#             is_phone_number = re.match(PHONE_NUMBER_REGEX, email_or_phone)
+#             is_email = re.search(EMAIL_REGEX, email_or_phone)
+#             if not is_phone_number and not is_email:
+#                 return JsonResponse({
+#                     'status': HTTP_400_BAD_REQUEST,
+#                     'message': 'Invalid format Email/Phone',
+#                 })
+#
+#             user = CustomUserCheck.check_user(email_or_phone)
+#             if not user:
+#                 return JsonResponse({
+#                     'status': HTTP_404_NOT_FOUND,
+#                     'message': 'No such email/phone exist.',
+#                 })
+#
+#             if is_phone_number and is_email:
+#                 return JsonResponse({
+#                     'status': HTTP_400_BAD_REQUEST,
+#                     'message': 'Invalid format Email/Phone',
+#                 })
+#
+#             user_otp_obj = UserOtp.objects.filter(user=user).first()
+#             with transaction.atomic():
+#
+#                 otp = UserOTPMixin.generate_otp()
+#                 password_uuid = uuid.uuid4()
+#                 print(otp)
+#                 # Factory method design pattern same as RegisterResend OTP
+#                 serializer = PasswordReset.get_method_object(user.email, user.phone_number)
+#                 return serializer(user_otp_obj, otp, email=user.email, phone_number=user.phone_number,
+#                                   password_uuid=password_uuid)
+#
+#         except Exception as e:
+#             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
-class SetNewPassword(generics.GenericAPIView):
-
-    @password_reset_decorator
-    @transaction.atomic
-    def post(self, request, data=None):
-        try:
-            user_otp = data['user']
-            password = request.data.get('pin1')
-            confirm_password = request.data.get('pin2')
-
-            if not (password or confirm_password):
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Password field required.',
-                })
-
-            if password != confirm_password:
-                return JsonResponse({
-                    'status': HTTP_400_BAD_REQUEST,
-                    'message': 'Password Fields not matched.',
-                })
-
-            with transaction.atomic():
-
-                # Moving into UserOtp model then access the field user and then move to Auth user and get the password.
-                # So user.user.password.
-                if password == user_otp.user.password:
-                    return JsonResponse({
-                        'status': HTTP_400_BAD_REQUEST,
-                        'message': 'You cannot set old password as new password.',
-                    })
-
-                user_otp.user.set_password(password)
-                user_otp.user.is_active = True
-                user_otp.user.save()
-
-                return JsonResponse({
-                    'status': HTTP_200_OK,
-                    'message': "Password has been successfully reset.",
-                })
-
-        except Exception as e:
-            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
+# class PasswordResetCheck(generics.GenericAPIView):
+#
+#     @transaction.atomic
+#     @password_reset_decorator
+#     def post(self, request, data=None):
+#         try:
+#             user_otp = data['user']
+#             otp = request.data.get('otp')
+#
+#             if not otp:
+#                 return JsonResponse({
+#                     'status': HTTP_404_NOT_FOUND,
+#                     'message': 'OTP required.',
+#                 })
+#
+#             with transaction.atomic():
+#
+#                 if VerifyUser.verify_otp(user_otp.user, otp):
+#                     return JsonResponse({
+#                         'status': HTTP_200_OK,
+#                         'message': 'Verified',
+#                     })
+#
+#                 return JsonResponse({
+#                     'status': HTTP_400_BAD_REQUEST,
+#                     'message': 'OTP not matched.',
+#                 })
+#
+#         except Exception as e:
+#             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
-class PasswordResetResendOtp(generics.GenericAPIView, UserOTPMixin):
+# class SetNewPassword(generics.GenericAPIView):
+#
+#     @password_reset_decorator
+#     @transaction.atomic
+#     def post(self, request, data=None):
+#         try:
+#             user_otp = data['user']
+#             password = request.data.get('pin1')
+#             confirm_password = request.data.get('pin2')
+#
+#             if not (password or confirm_password):
+#                 return JsonResponse({
+#                     'status': HTTP_400_BAD_REQUEST,
+#                     'message': 'Password field required.',
+#                 })
+#
+#             if password != confirm_password:
+#                 return JsonResponse({
+#                     'status': HTTP_400_BAD_REQUEST,
+#                     'message': 'Password Fields not matched.',
+#                 })
+#
+#             with transaction.atomic():
+#
+#                 # Moving into UserOtp model then access the field user and then move to Auth user and get the password.
+#                 # So user.user.password.
+#                 if password == user_otp.user.password:
+#                     return JsonResponse({
+#                         'status': HTTP_400_BAD_REQUEST,
+#                         'message': 'You cannot set old password as new password.',
+#                     })
+#
+#                 user_otp.user.set_password(password)
+#                 user_otp.user.is_active = True
+#                 user_otp.user.save()
+#
+#                 return JsonResponse({
+#                     'status': HTTP_200_OK,
+#                     'message': "Password has been successfully reset.",
+#                 })
+#
+#         except Exception as e:
+#             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
-    @password_reset_decorator
-    @transaction.atomic
-    def post(self, request, data=None):
-        try:
-            user_otp = data['user']
 
-            with transaction.atomic():
-
-                otp = UserOTPMixin.generate_otp()
-                # FACTORY PATTERN it delegates the decision to the get_serializer method and
-                # return the object of concrete/implementation method
-                serializer = ResendOtpRegister.get_method_object(user_otp.user.email, user_otp.user.phone_number)
-                return serializer(user_otp, otp, email=user_otp.user.email, phone_number=user_otp.user.phone_number)
-
-        except Exception as e:
-            return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
+# class PasswordResetResendOtp(generics.GenericAPIView, UserOTPMixin):
+#
+#     @password_reset_decorator
+#     @transaction.atomic
+#     def post(self, request, data=None):
+#         try:
+#             user_otp = data['user']
+#
+#             with transaction.atomic():
+#
+#                 otp = UserOTPMixin.generate_otp()
+#                 # FACTORY PATTERN it delegates the decision to the get_serializer method and
+#                 # return the object of concrete/implementation method
+#                 serializer = ResendOtpRegister.get_method_object(user_otp.user.email, user_otp.user.phone_number)
+#                 return serializer(user_otp, otp, email=user_otp.user.email, phone_number=user_otp.user.phone_number)
+#
+#         except Exception as e:
+#             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
 
 class UpdateName(generics.GenericAPIView):
