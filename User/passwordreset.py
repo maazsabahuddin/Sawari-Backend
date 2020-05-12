@@ -3,11 +3,12 @@ import uuid
 from django.contrib.auth.hashers import make_password
 from django.http import JsonResponse
 from rest_framework import generics
+from twilio.base.exceptions import TwilioRestException
 from urllib3.connection import log
 from django import forms
 import A
 from A.settings.base import EMAIL_HOST_USER, NOT_CATCHABLE_ERROR_CODE, NOT_CATCHABLE_ERROR_MESSAGE, COUNTRY_CODE_PK, \
-    OTP_COUNTER_LIMIT
+    OTP_COUNTER_LIMIT, SENDER_PHONE_NUMBER
 from CustomAuthentication.backend_authentication import CustomUserCheck
 from User.decorators import password_reset_decorator
 from User.exceptions import MissingField, WrongPhonenumber, TwilioException, UserNotFound
@@ -19,11 +20,18 @@ from email.mime.text import MIMEText
 
 from User.models import UserOtp
 
+from django_twilio.client import Client
+client = Client(A.settings.base.TWILIO_ACCOUNT_SID, A.settings.base.TWILIO_AUTH_TOKEN)
+
+
+def generate_uuid():
+    return uuid.uuid4()
+
 
 class ForgotPassword(generics.GenericAPIView):
 
     @staticmethod
-    def send_password_reset_link(**kwargs):
+    def send_password_reset_link_to_email(**kwargs):
         user = kwargs.get('user')
         me = A.settings.base.EMAIL_HOST_USER
         you = user.email
@@ -33,7 +41,7 @@ class ForgotPassword(generics.GenericAPIView):
         msg['From'] = me
         msg['To'] = you
 
-        password_reset_uuid = uuid.uuid4()
+        password_reset_uuid = generate_uuid()
         from django.utils import timezone
         user_otp = UserOtp.objects.filter(user=user).first()
         if not user_otp:
@@ -73,16 +81,50 @@ class ForgotPassword(generics.GenericAPIView):
         mail.quit()
         return True
 
+    @staticmethod
+    def send_password_reset_link_to_phone(**kwargs):
+        try:
+            user = kwargs.get('user')
+            phone_number = user.phone_number
+            password_reset_uuid = generate_uuid()
+
+            link = "http://ec2-18-191-165-120.us-east-2.compute.amazonaws.com/password/reset/?token_uuid={}".\
+                format(password_reset_uuid)
+
+            message_body = 'Hey! This is Sawari, Please visit the following link to reset your password: {}'.\
+                format(link)
+
+            sender_phone_number = SENDER_PHONE_NUMBER
+
+            client.messages.create(
+                from_=sender_phone_number,
+                body=message_body,
+                to=phone_number,
+            )
+            return True
+
+        except TwilioRestException:
+            return False
+
     @password_reset_decorator
     def post(self, request, data=None):
         try:
             user = data.get('user')
 
-            sent_email = ForgotPassword.send_password_reset_link(user=user)
-            if not sent_email:
-                return JsonResponse({'status': 400, 'message': 'Email not sent. Check your email and try again.'})
-            return JsonResponse({'status': 200,
-                                 'message': 'Reset your password from the link sent to your email.'})
+            if user.email:
+                sent_link_email = ForgotPassword.send_password_reset_link_to_email(user=user)
+                if not sent_link_email:
+                    return JsonResponse({'status': 400, 'message': 'Email not sent. Check your email and try again.'})
+                return JsonResponse({'status': 200,
+                                     'message': 'Reset your password from the link sent to your email.'})
+
+            else:
+                sent_link_phone = ForgotPassword.send_password_reset_link_to_phone(user=user)
+                if not sent_link_phone:
+                    raise TwilioException(status_code=400,
+                                          message=user.phone_number + " is not verified on your Twilio trial account.")
+                return JsonResponse({'status': 200,
+                                     'message': 'Reset your password from the link sent to your phone.'})
 
         except (WrongPhonenumber, MissingField, UserNotFound, TwilioException) as e:
             return JsonResponse({

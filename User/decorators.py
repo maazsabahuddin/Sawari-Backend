@@ -93,6 +93,7 @@ def login_decorator(f):
 def password_reset_decorator(f):
     @wraps(f)
     def match_uuid(*args):
+        from .views_designpatterns import UserMixinMethods
         try:
             request = args[1]
             email_or_phone = request.data.get('email_or_phone')
@@ -105,22 +106,26 @@ def password_reset_decorator(f):
                 email_or_phone = "+" + COUNTRY_CODE_PK + email_or_phone[1:]
 
             if email_or_phone[0] == "+":
-                from User.views_designpatterns import UserMixinMethods
                 if len(email_or_phone) != 13 or not UserMixinMethods.validate_phone(email_or_phone):
-                    raise WrongPhonenumber(status_code=400, message='Invalid Phonenumber')
+                    raise WrongPhonenumber(status_code=400, message='Invalid Email/Phone.')
 
-            from User.views_designpatterns import UserMixinMethods
-            if not UserMixinMethods.validate_email(email_or_phone):
-                raise WrongPhonenumber(status_code=400, message='Invalid email address')
+            elif not UserMixinMethods.validate_email(email_or_phone):
+                raise WrongPhonenumber(status_code=400, message='Invalid Email/Phone.')
 
             # Check if user exist or not.
             user = CustomUserCheck.check_user(email_or_phone)
             if not user:
-                raise UserNotFound(status_code=400, message='Invalid Email/Phone.')
+                raise UserNotFound(status_code=400,
+                                   message='The sign-in credentials does not exist. Try again or create a new account.')
 
             data = {'user': user}
             return f(args[0], request, data)
 
+        except (MissingField, WrongPhonenumber, UserNotFound) as e:
+            return JsonResponse({
+                'status': e.status_code,
+                'message': e.message,
+            })
         except Exception as e:
             return JsonResponse({'status': NOT_CATCHABLE_ERROR_CODE, 'message': NOT_CATCHABLE_ERROR_MESSAGE})
 
