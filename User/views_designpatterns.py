@@ -1322,8 +1322,8 @@ class UserPlaces(generics.GenericAPIView):
                 for place in user_obj:
                     user_places.append({
                         'place_id': place.place_id.place_id, 'place_name': place.place_id.place_name,
-                        'place_type': place.place_type, 'latitude': place.place_id.latitude,
-                        'longitude': place.place_id.longitude
+                        'place_address': place.place_id.place_address, 'place_type': place.place_type,
+                        'latitude': place.place_id.latitude, 'longitude': place.place_id.longitude
                     })
 
             return JsonResponse({'status': HTTP_200_OK, 'places': user_places})

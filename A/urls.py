@@ -21,7 +21,7 @@ from django.contrib.auth import views as auth_views
 #     PasswordChange, SetNewPassword, ChangePhoneNumber
 from Reservation.views import UserRides, CancelRide, BookRide
 from User.passwordreset import ForgotPassword
-from User.views import PasswordResetLink, PasswordResetComplete
+from User.views import PasswordResetLink, PasswordResetComplete, HomePage
 from User.views_designpatterns import RegisterCase, UserLogin, UserLogout, ResendOtpRegister, \
     PasswordChange, ChangePhoneNumber, \
     ChangePhoneNumberOtpMatch, UpdateName, UserDetails, PasswordCheck, DeleteUser, PasswordChangeResendOtp, \
@@ -103,4 +103,6 @@ urlpatterns = [
     path('forgot/password/', ForgotPassword.as_view(), name='forgot_password'),
     path('password/reset/', PasswordResetLink, name='password_reset_form'),
     path('password/reset/done/', PasswordResetComplete, name='password_reset_done'),
+
+    path('', HomePage, name='password_reset_done'),
 ]

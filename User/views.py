@@ -812,21 +812,12 @@ def PasswordResetLink(self, request, data=None):
         pass
 
     form = PasswordResetForm()
-    return render(request, 'home.html', {'form': form})
+    return render(request, 'password_reset.html', {'form': form})
 
 
 def PasswordResetComplete(request):
-
-    # user = data.get('user')
-    # form = PasswordResetForm(request.POST)
-    # if form.is_valid():
-    #     password = request.POST['password']
-    #     password = make_password(password)
-    #     user.password = password
-    #     user.save()
-    #     return redirect('reset_done')
-    # else:
-    #     pass
-
-    # form = PasswordResetForm()
     return render(request, 'reset_done.html')
+
+
+def HomePage(request):
+    return render(request, 'homepage.html')
