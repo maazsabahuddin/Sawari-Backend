@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.contrib.auth import views as auth_views
 # from User.views import ResendOtpRegister, PasswordReset, PasswordResetCheck, \
 #     PasswordChange, SetNewPassword, ChangePhoneNumber
@@ -104,5 +104,6 @@ urlpatterns = [
     path('password/reset/', PasswordResetLink, name='password_reset_form'),
     path('password/reset/done/', PasswordResetComplete, name='password_reset_done'),
 
-    path('', HomePage, name='password_reset_done'),
+    path('', HomePage, name='index'),
+    re_path(r'^.*$', HomePage, name='index'),
 ]
